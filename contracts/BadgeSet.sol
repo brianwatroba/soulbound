@@ -51,6 +51,7 @@ contract BadgeSet is Ownable {
         uint256 badgeId,
         uint256 expiryTimestamp
     ) public onlyOwner {
+        // TODO: add check to ensure expiration date is not zero
         _mint(kycHash, badgeId, expiryTimestamp);
     }
 
