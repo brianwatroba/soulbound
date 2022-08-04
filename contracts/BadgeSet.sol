@@ -1,70 +1,93 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
+import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
+import '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
+import '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "hardhat/console.sol";
 
-error ZeroAddressMint();
+error ZeroAddress();
 error ExpiryPassed();
+error SoulboundNoTransfer();
+error ParamsLengthMismatch();
 
-contract BadgeSet is Ownable {
+contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
-    // address public kycRegistry;
-    // address public factory;
+    mapping(uint256 => mapping(address => uint256)) private _balances; // badgeId/kycHash to owned count
+    mapping(uint256 => mapping(address => uint256)) private _expiries; // badgeID/kycHash to badge expiration
+    string private _uri;
 
-    // badgeId/kycHash to owned count
-    mapping(uint256 => mapping(bytes32 => bool)) private _balances;
+    constructor(address owner, string memory uri_) {
+        // TODO: add kycRegistry and factory storage variables, set them
+        setURI(uri_);
+        transferOwnership(owner);
+    } 
 
-    // badgeID/kycHash to badge expiration
-    mapping(uint256 => mapping(bytes32 => uint256)) private _expiries;
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+    
+    function setURI(string memory newuri) internal virtual {
+        _uri = newuri;
+    }
 
-    constructor(address _owner) {
-        // kycRegistry = _kycRegistry;
-        // factory = _factory;
-        transferOwnership(_owner);
+    function balanceOf(address account, uint256 id) public view returns (uint256) {
+        if (account == address(0)) revert ExpiryPassed();
+        return _balances[id][account];
+    }
+
+     function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
+        if (accounts.length != ids.length) revert ParamsLengthMismatch();
+        uint256[] memory batchBalances = new uint256[](accounts.length);
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            batchBalances[i] = balanceOf(accounts[i], ids[i]);
+        }
+        return batchBalances;
     }
 
     function mint(
         bytes32 kycHash,
-        uint256 badgeId
+        uint256 id
     ) public onlyOwner {
-        _mint(kycHash, badgeId, 0);
+        address account = getUserAddress(kycHash);
+        _mint(account, id, 0);
     }
 
      function mintWithExpiry(
         bytes32 kycHash,
-        uint256 badgeId,
+        uint256 id,
         uint256 expiryTimestamp
     ) public onlyOwner {
-        // TODO: add check to ensure expiration date is not zero
-        _mint(kycHash, badgeId, expiryTimestamp);
-        
+        address account = getUserAddress(kycHash);
+        if (expiryTimestamp <= block.timestamp) revert ExpiryPassed();
+        _mint(account, id, expiryTimestamp);
     }
 
     function _mint(
-        bytes32 kycHash,
+        address account,
         uint256 badgeId,
         uint256 expiryTimestamp
     ) internal {
-        address operator = _msgSender();
-        _balances[badgeId][kycHash] = true;
-        if (expiryTimestamp == 0) return;
-        if (expiryTimestamp <= block.timestamp) revert ExpiryPassed();
-        _expiries[badgeId][kycHash] = expiryTimestamp;
-        // TODO: look up someone's address from KYCRegistry, put in event, otherwise put in bytes32
-        emit TransferSingle(operator, bytes32(0), kycHash, badgeId, 1);
-
+        _balances[badgeId][account] = 1;
+        if (expiryTimestamp > block.timestamp) _expiries[badgeId][account] = expiryTimestamp;
+        emit TransferSingle(_msgSender(), address(0), account, badgeId, 1);
     }
 
     function _revoke(
-        bytes32 kycHash,
+        address account,
         uint256 badgeId
     ) internal {
-        address operator = _msgSender();
-        _balances[badgeId][kycHash] = false;
-        // TODO: look up someone's address from KYCRegistry, put in event, otherwise put in bytes32
-        emit TransferSingle(operator, kycHash, bytes32(0), badgeId, 1);
+        _balances[badgeId][account] = 0;
+        emit TransferSingle(_msgSender(), account, address(0), badgeId, 1);
+    }
 
+     function uri(uint256) public view virtual returns (string memory) {
+        return _uri;
     }
 
     function hashKyc(
@@ -73,11 +96,41 @@ contract BadgeSet is Ownable {
         uint256 dob, 
         uint256 phoneNumber
     ) public pure returns (bytes32) {
-        // Input sanitation will happen on front end
         return keccak256(abi.encodePacked(firstName, lastName, dob, phoneNumber));
     }
 
-    // TODO: edited param3 to be bytes32, normally is address
-    event TransferSingle(address indexed operator, bytes32 indexed from, bytes32 indexed to, uint256 id, uint256 value);
+    function kycHashToAddress(bytes32 kycHash) public pure returns (address) {
+        return address(uint160(uint256(kycHash)));
+    }
+
+    function getUserAddress(bytes32 kycHash) public pure returns (address) {
+        address kycAddress = kycHashToAddress(kycHash);
+        // TODO: lookup in kyc registry if they have an attached wallet. If so, return that, otherwise 
+        return kycAddress;
+    }
+
+    // @notice: NOOPs for non needed ERC1155 functions
+    // TODO: for OpenSea this must be overriden in a special way, can't revert
+    function setApprovalForAll(address operator, bool approved) external {}
+
+ 
+    function isApprovedForAll(address account, address operator) external view returns (bool) {}
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) external {
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external { }
    
 }
