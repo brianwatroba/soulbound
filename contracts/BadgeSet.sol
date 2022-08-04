@@ -37,7 +37,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     }
 
     function balanceOf(address account, uint256 id) public view returns (uint256) {
-        if (account == address(0)) revert ExpiryPassed();
+        if (account == address(0)) revert ZeroAddress();
         return _balances[id][account];
     }
 
