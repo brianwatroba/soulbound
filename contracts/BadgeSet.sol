@@ -9,8 +9,8 @@ error ExpiryPassed();
 
 contract BadgeSet is Ownable {
 
-    address public kycRegistry;
-    address public factory;
+    // address public kycRegistry;
+    // address public factory;
 
     // badgeId/kycHash to owned count
     mapping(uint256 => mapping(bytes32 => bool)) private _balances;
@@ -18,25 +18,10 @@ contract BadgeSet is Ownable {
     // badgeID/kycHash to badge expiration
     mapping(uint256 => mapping(bytes32 => uint256)) private _expiries;
 
-    constructor(address _owner, address _kycRegistry, address _factory) {
-        kycRegistry = _kycRegistry;
-        factory = _factory;
-        if (_owner != _factory) transferOwnership(_owner);
-    }
-
-    function _mint(
-        bytes32 kycHash,
-        uint256 badgeId,
-        uint256 expiryTimestamp
-    ) internal {
-        address operator = _msgSender();
-        _balances[badgeId][kycHash] = true;
-        if (expiryTimestamp == 0) return;
-        if (expiryTimestamp <= block.timestamp) revert ExpiryPassed();
-        _expiries[badgeId][kycHash] = expiryTimestamp;
-        // TODO: look up someone's address from KYCRegistry, put in event, otherwise put in bytes32
-        emit TransferSingle(operator, address(0), kycHash, badgeId, 1);
-        // emit event
+    constructor(address _owner) {
+        // kycRegistry = _kycRegistry;
+        // factory = _factory;
+        transferOwnership(_owner);
     }
 
     function mint(
@@ -53,6 +38,33 @@ contract BadgeSet is Ownable {
     ) public onlyOwner {
         // TODO: add check to ensure expiration date is not zero
         _mint(kycHash, badgeId, expiryTimestamp);
+        
+    }
+
+    function _mint(
+        bytes32 kycHash,
+        uint256 badgeId,
+        uint256 expiryTimestamp
+    ) internal {
+        address operator = _msgSender();
+        _balances[badgeId][kycHash] = true;
+        if (expiryTimestamp == 0) return;
+        if (expiryTimestamp <= block.timestamp) revert ExpiryPassed();
+        _expiries[badgeId][kycHash] = expiryTimestamp;
+        // TODO: look up someone's address from KYCRegistry, put in event, otherwise put in bytes32
+        emit TransferSingle(operator, bytes32(0), kycHash, badgeId, 1);
+
+    }
+
+    function _revoke(
+        bytes32 kycHash,
+        uint256 badgeId
+    ) internal {
+        address operator = _msgSender();
+        _balances[badgeId][kycHash] = false;
+        // TODO: look up someone's address from KYCRegistry, put in event, otherwise put in bytes32
+        emit TransferSingle(operator, kycHash, bytes32(0), badgeId, 1);
+
     }
 
     function hashKyc(
@@ -66,6 +78,6 @@ contract BadgeSet is Ownable {
     }
 
     // TODO: edited param3 to be bytes32, normally is address
-    event TransferSingle(address indexed operator, address indexed from, bytes32 indexed to, uint256 id, uint256 value);
+    event TransferSingle(address indexed operator, bytes32 indexed from, bytes32 indexed to, uint256 id, uint256 value);
    
 }
