@@ -15,8 +15,8 @@ error ParamsLengthMismatch();
 
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
-    mapping(uint256 => mapping(address => uint256)) private _balances; // badgeId/kycHash to owned count
-    mapping(uint256 => mapping(address => uint256)) private _expiries; // badgeID/kycHash to badge expiration
+    mapping(uint256 => mapping(address => uint256)) private _balances; // id/address to owned count
+    mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
     string private _uri;
 
     constructor(address owner, string memory uri_) {
@@ -70,20 +70,20 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     function _mint(
         address account,
-        uint256 badgeId,
+        uint256 id,
         uint256 expiryTimestamp
     ) internal {
-        _balances[badgeId][account] = 1;
-        if (expiryTimestamp > block.timestamp) _expiries[badgeId][account] = expiryTimestamp;
-        emit TransferSingle(_msgSender(), address(0), account, badgeId, 1);
+        _balances[id][account] = 1;
+        if (expiryTimestamp > block.timestamp) _expiries[id][account] = expiryTimestamp;
+        emit TransferSingle(_msgSender(), address(0), account, id, 1);
     }
 
     function _revoke(
         address account,
-        uint256 badgeId
+        uint256 id
     ) internal {
-        _balances[badgeId][account] = 0;
-        emit TransferSingle(_msgSender(), account, address(0), badgeId, 1);
+        _balances[id][account] = 0;
+        emit TransferSingle(_msgSender(), account, address(0), id, 1);
     }
 
      function uri(uint256) public view virtual returns (string memory) {
