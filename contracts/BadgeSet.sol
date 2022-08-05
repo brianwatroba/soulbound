@@ -3,6 +3,7 @@ pragma solidity ^0.8.9;
 
 import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
 import '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
+import '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
@@ -58,7 +59,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _mint(account, id, 0);
     }
 
-     function mintWithExpiry(
+    function mintWithExpiry(
         bytes32 kycHash,
         uint256 id,
         uint256 expiryTimestamp
@@ -67,6 +68,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (expiryTimestamp <= block.timestamp) revert ExpiryPassed();
         _mint(account, id, expiryTimestamp);
     }
+
 
     function _mint(
         address account,
@@ -77,6 +79,8 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (expiryTimestamp > block.timestamp) _expiries[id][account] = expiryTimestamp;
         emit TransferSingle(_msgSender(), address(0), account, id, 1);
     }
+
+    
 
     function _revoke(
         address account,
@@ -107,6 +111,27 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         address kycAddress = kycHashToAddress(kycHash);
         // TODO: lookup in kyc registry if they have an attached wallet. If so, return that, otherwise 
         return kycAddress;
+    }
+
+    function _doSafeTransferAcceptanceCheck(
+        address operator,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) private {
+        if (to.code.length > 0) { // check if contract
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155Receiver.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+            }
+        }
     }
 
     // @notice: NOOPs for non needed ERC1155 functions
