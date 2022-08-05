@@ -13,6 +13,14 @@ error ZeroAddress();
 error ExpiryPassed();
 error SoulboundNoTransfer();
 error ParamsLengthMismatch();
+error InsufficientBalance();
+
+// TODO: token transfer hooks in _mint/_mintBatch
+// TODO: clean up and optimize custom errors, replace all error strings
+// TODO: implement: mintBatch(), mintBatchwithExpiry(), revoke(), revokeBatch(), _revoke();
+// TODO: implement batching so that multiple tokens can be minted to multiple people
+// TODO: add kycRegistry and factory storage variables, set them
+// TODO: access control instead of ownable?
 
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
@@ -21,7 +29,6 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     string private _uri;
 
     constructor(address owner, string memory uri_) {
-        // TODO: add kycRegistry and factory storage variables, set them
         setURI(uri_);
         transferOwnership(owner);
     } 
@@ -59,6 +66,13 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _mint(account, id, 0);
     }
 
+    function mintToAddress(
+        address account,
+        uint256 id
+    ) public onlyOwner {
+        _mint(account, id, 0);
+    }
+
     function mintWithExpiry(
         bytes32 kycHash,
         uint256 id,
@@ -68,7 +82,6 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (expiryTimestamp <= block.timestamp) revert ExpiryPassed();
         _mint(account, id, expiryTimestamp);
     }
-
 
     function _mint(
         address account,
@@ -80,19 +93,22 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         emit TransferSingle(_msgSender(), address(0), account, id, 1);
     }
 
-    
+     function uri(uint256) public view virtual returns (string memory) {
+        return _uri;
+    }
 
-    function _revoke(
+    function revokeByAddress(address account, uint256 id) public onlyOwner {
+        if (balanceOf(account, id) != 1) revert InsufficientBalance();
+        _revoke(account, id);
+    }
+
+   function _revoke(
         address account,
         uint256 id
     ) internal {
         _balances[id][account] = 0;
         emit TransferSingle(_msgSender(), account, address(0), id, 1);
-    }
-
-     function uri(uint256) public view virtual returns (string memory) {
-        return _uri;
-    }
+    } 
 
     function hashKyc(
         bytes32 firstName, 
@@ -124,6 +140,29 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (to.code.length > 0) { // check if contract
             try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+            }
+        }
+    }
+
+    function _doSafeBatchTransferAcceptanceCheck(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) private {
+        if (to.code.length > 0) { // check if contract
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+                bytes4 response
+            ) {
+                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
