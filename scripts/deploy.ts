@@ -1,4 +1,7 @@
+import { Provider } from "@ethersproject/abstract-provider";
+import * as dotenv from "dotenv";
 import { ethers } from "hardhat";
+dotenv.config();
 
 async function main() {
   const currentTimestampInSeconds = Math.round(Date.now() / 1000);
@@ -7,8 +10,8 @@ async function main() {
 
   const lockedAmount = ethers.utils.parseEther("1");
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  const BadgeSet = await ethers.getContractFactory("BadgeSet");
+  const badgeSet = await BadgeSet.deploy(forbes.address, "https://www.soulboundapi.com/");
 
   await lock.deployed();
 
