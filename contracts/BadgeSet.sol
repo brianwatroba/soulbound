@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.12;
 
 import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
 import '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
 import '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol';
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "hardhat/console.sol";
@@ -19,18 +20,23 @@ error InsufficientBalance();
 // TODO: clean up and optimize custom errors, replace all error strings
 // TODO: implement: mintBatch(), mintBatchwithExpiry(), revoke(), revokeBatch(), _revoke();
 // TODO: implement batching so that multiple tokens can be minted to multiple people
-// TODO: add kycRegistry and factory storage variables, set them
 // TODO: access control instead of ownable?
+// TODO: KYC pure functions more accessible across contracts
+// TODO: signature that it's part of the overall Soulbound collection/registered
 
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
+    address public kycRegistry;
+    address public factory;
     mapping(uint256 => mapping(address => uint256)) private _balances; // id/address to owned count
     mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
     string private _uri;
 
-    constructor(address owner, string memory uri_) {
+    constructor(address _owner, address _kycRegistry, address _factory, string memory uri_) {
         setURI(uri_);
-        transferOwnership(owner);
+        kycRegistry = _kycRegistry;
+        factory = _factory;
+        transferOwnership(_owner);
     } 
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
@@ -93,8 +99,8 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         emit TransferSingle(_msgSender(), address(0), account, id, 1);
     }
 
-     function uri(uint256) public view virtual returns (string memory) {
-        return _uri;
+     function uri(uint256 id) public view virtual returns (string memory) {
+        return string.concat(_uri, Strings.toString(id));
     }
 
     function revokeByAddress(address account, uint256 id) public onlyOwner {

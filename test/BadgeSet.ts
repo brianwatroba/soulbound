@@ -1,25 +1,21 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import deployBadgeSetFixture from "./fixtures/fixtures";
 
 describe("BadgeSet.sol", function () {
-  async function deployBadgeSetFixture() {
-    const [soulbound, forbes, padi] = await ethers.getSigners();
-    const BadgeSet = await ethers.getContractFactory("BadgeSet");
-    const badgeSet = await BadgeSet.deploy(forbes.address, "https://www.soulboundapi.com/");
-    const kyc = {
-      firstName: "john",
-      lastName: "smith",
-      dob: 12121989,
-      phoneNumber: 16461111,
-    };
-    return { badgeSet, soulbound, forbes, padi, kyc };
-  }
-
   describe("Deployment", function () {
-    it("Should set the organization owner", async () => {
+    it("Deploys successfully", async () => {
+      const { badgeSet } = await loadFixture(deployBadgeSetFixture);
+      expect(badgeSet.address).to.be.properAddress;
+    });
+    it("Sets organization owner", async () => {
       const { badgeSet, forbes } = await loadFixture(deployBadgeSetFixture);
       expect(await badgeSet.owner()).to.equal(forbes.address);
+    });
+    it("Sets URI", async () => {
+      const { badgeSet, uri } = await loadFixture(deployBadgeSetFixture);
+      expect(await badgeSet.uri(1)).to.equal(uri + "1");
     });
   });
 
@@ -42,7 +38,6 @@ describe("BadgeSet.sol", function () {
       expect(balanceAfter).to.equal(0);
     });
   });
-
   describe("View functions", function () {
     it("hashKyc(): should hash kyc correctly", async () => {
       const { badgeSet, kyc } = await loadFixture(deployBadgeSetFixture);
