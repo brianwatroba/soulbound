@@ -8,6 +8,8 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "../interfaces/IKycRegistry.sol";
+
 import "hardhat/console.sol";
 
 error ZeroAddress();
@@ -129,10 +131,14 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         return address(uint160(uint256(kycHash)));
     }
 
-    function getUserAddress(bytes32 kycHash) public pure returns (address) {
+    function getUserAddress(bytes32 kycHash) public view returns (address) {
         address kycAddress = kycHashToAddress(kycHash);
-        // TODO: lookup in kyc registry if they have an attached wallet. If so, return that, otherwise 
-        return kycAddress;
+        address walletAddress = IKycRegistry(kycRegistry).getWalletAddress(kycAddress);
+        if (walletAddress == address(0)) {
+            return walletAddress;
+        } else {
+            return kycAddress;
+        }
     }
 
     function _doSafeTransferAcceptanceCheck(

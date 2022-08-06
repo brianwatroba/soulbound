@@ -3,7 +3,7 @@ pragma solidity ^0.8.12;
 
 // TODO: add events
 
-interface KycRegistry { 
+interface IKycRegistry { 
 
   function linkWallet(address kycAddress, address walletAddress) external;
 
