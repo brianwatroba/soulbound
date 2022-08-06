@@ -7,8 +7,8 @@ contract BadgeSetFactory {
   
   address[] private _badgeSets;
 
-  function createBadgeSet(address owner, string memory uri) external {
-    address newBadgeSet = address(new BadgeSet(owner, uri));
+  function createBadgeSet(address owner, address kycRegistry, string memory uri) external {
+    address newBadgeSet = address(new BadgeSet(owner, kycRegistry, address(this), uri));
     _badgeSets.push(newBadgeSet);
   }
 

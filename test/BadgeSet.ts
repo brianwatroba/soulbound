@@ -1,12 +1,14 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import deployBadgeSetFixture from "./fixtures/fixtures";
+import * as fixtures from "./fixtures/fixtures";
+
+// TODO: more elegant import for fixtures
 
 describe("BadgeSet.sol", function () {
   describe("Deployment", function () {
     it("Deploys successfully", async () => {
-      const { badgeSet } = await loadFixture(deployBadgeSetFixture);
+      const { badgeSet } = await loadFixture(fixtures.deployBadgeSetFixture);
       expect(badgeSet.address).to.be.properAddress;
     });
     it("Sets organization owner", async () => {

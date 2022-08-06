@@ -1,5 +1,8 @@
 import { ethers } from "hardhat";
-async function deployBadgeSetFixture() {
+
+// TODO: break up fixtures to usable pieces
+
+export const deployBadgeSetFixture = async () => {
   const uri = "https://www.soulboundapi.com/";
 
   const [soulbound, forbes, padi] = await ethers.getSigners();
@@ -12,7 +15,7 @@ async function deployBadgeSetFixture() {
     await KycRegistry.connect(soulbound).deploy(badgeSetFactory.address)
   ).deployed();
 
-  await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, uri);
+  await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, kycRegistry.address, uri);
   const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
 
@@ -23,6 +26,4 @@ async function deployBadgeSetFixture() {
     phoneNumber: 16461111,
   };
   return { badgeSetFactory, badgeSet, kycRegistry, soulbound, forbes, padi, kyc, uri };
-}
-
-export default deployBadgeSetFixture;
+};
