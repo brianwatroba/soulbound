@@ -1,12 +1,12 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import deployBadgeSetFixture from "./fixtures/fixtures";
+import * as fixtures from "./fixtures/fixtures";
 
 describe("KycRegistry.sol", function () {
   describe("Deployment", function () {
     it("Deploys successfully", async () => {
-      const { kycRegistry } = await loadFixture(deployBadgeSetFixture);
+      const { kycRegistry } = await loadFixture(fixtures.deploy);
       expect(kycRegistry.address).to.be.properAddress;
     });
     // it("Sets organization owner", async () => {

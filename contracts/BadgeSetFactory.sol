@@ -2,8 +2,9 @@
 pragma solidity ^0.8.12;
 
 import "./BadgeSet.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract BadgeSetFactory {
+contract BadgeSetFactory is Ownable {
   
   address[] private _badgeSets;
 
