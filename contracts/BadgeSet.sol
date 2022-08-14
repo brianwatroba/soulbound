@@ -17,7 +17,10 @@ error ExpiryPassed();
 error SoulboundNoTransfer();
 error ParamsLengthMismatch();
 error InsufficientBalance();
+error InvalidURI();
 
+// TODO: add counter for specific token id besides token typeId. Use struct?
+// TODO: add name for contract, storage variable, and add that to baseURL + name + ID
 // TODO: token transfer hooks in _mint/_mintBatch
 // TODO: clean up and optimize custom errors, replace all error strings
 // TODO: implement: mintBatch(), mintBatchwithExpiry(), revoke(), revokeBatch(), _revoke();
@@ -207,6 +210,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256[] calldata ids,
         uint256[] calldata amounts,
         bytes calldata data
-    ) external { }
+    ) external {
+    }
    
 }
