@@ -8,7 +8,7 @@ contract BadgeSetFactory is Ownable {
   
   address[] private _badgeSets;
 
-  function createBadgeSet(address owner, address kycRegistry, string memory uri) external {
+  function createBadgeSet(address owner, address kycRegistry, string memory uri) external onlyOwner {
     address newBadgeSet = address(new BadgeSet(owner, kycRegistry, address(this), uri));
     _badgeSets.push(newBadgeSet);
   }
