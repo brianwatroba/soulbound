@@ -11,26 +11,32 @@ error WalletAlreadyLinked();
 // TODO: add events
 
 contract KycRegistry is Ownable { 
-  address public factoryAddress;
   mapping(address => address) private _walletAddresses; 
-  mapping(address => address) private _kycAddresses;
+  mapping(address => address) private _userAddresses;
 
-  constructor(address _factoryAddress) {
-    factoryAddress = _factoryAddress;
+  function linkWallet(address userAddress, address walletAddress) public onlyOwner {
+    if (_userAddresses[walletAddress] == walletAddress) revert WalletAlreadyLinked();
+    _walletAddresses[userAddress] = walletAddress;
+    _userAddresses[walletAddress] = userAddress;
   }
 
-  function linkWallet(address kycAddress, address walletAddress) public onlyOwner {
-    if (_kycAddresses[walletAddress] == walletAddress) revert WalletAlreadyLinked();
-    _walletAddresses[kycAddress] = walletAddress;
-    _kycAddresses[walletAddress] = kycAddress;
+  function getWalletAddress(address userAddress) public view returns (address) {
+    return _walletAddresses[userAddress];
   }
 
-  function getWalletAddress(address kycAddress) public view returns (address) {
-    return _walletAddresses[kycAddress];
+  function getUserAddress(address walletAddress) public view returns (address) {
+    return _userAddresses[walletAddress];
   }
 
-  function getKycAddress(address walletAddress) public view returns (address) {
-    return _kycAddresses[walletAddress];
+  function kycToUserAddress(bytes32 firstName, bytes32 lastName, uint256 dob, uint256 phoneNumber) public view returns (bytes32) {
+    bytes32 userHash = keccak256(abi.encodePacked(firstName, lastName, dob, phoneNumber));
+    address userAddress = address(uint160(uint256(userHash)));
+    address walletAddress = getWalletAddress(userAddress);
+    return userHash;
+    // if (walletAddress == address(0)) {
+    //     return userAddress;
+    // } else {
+    //     return walletAddress;
+    // }
   }
-
 }

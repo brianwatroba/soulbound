@@ -19,7 +19,7 @@ error ParamsLengthMismatch();
 error InsufficientBalance();
 error InvalidURI();
 
-// TODO: add counter for specific token id besides token typeId. Use struct?
+// TODO: make every mint need an expiry
 // TODO: add name for contract, storage variable, and add that to baseURL + name + ID
 // TODO: token transfer hooks in _mint/_mintBatch
 // TODO: clean up and optimize custom errors, replace all error strings
@@ -44,11 +44,8 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         transferOwnership(_owner);
     } 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return
-            interfaceId == type(IERC1155).interfaceId ||
-            interfaceId == type(IERC1155MetadataURI).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function uri(uint256 id) public view virtual returns (string memory) {
+        return string.concat(_uri, Strings.toString(id));
     }
     
     function setURI(string memory newuri) internal virtual {
@@ -56,7 +53,10 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     }
 
     function balanceOf(address account, uint256 id) public view returns (uint256) {
-        if (account == address(0)) revert ZeroAddress();
+        if (account == address(0)) revert ZeroAddress(); // need this?
+        uint256 expiryTimestamp = _expiries[id][account];
+        bool isExpired = expiryTimestamp > 0 && expiryTimestamp < block.timestamp;
+        if (isExpired) return 0;
         return _balances[id][account];
     }
 
@@ -70,28 +70,21 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     }
 
     function mint(
-        bytes32 kycHash,
-        uint256 id
-    ) public onlyOwner {
-        address account = getUserAddress(kycHash);
-        _mint(account, id, 0);
-    }
-
-    function mintToAddress(
         address account,
-        uint256 id
-    ) public onlyOwner {
-        _mint(account, id, 0);
-    }
-
-    function mintWithExpiry(
-        bytes32 kycHash,
         uint256 id,
         uint256 expiryTimestamp
     ) public onlyOwner {
-        address account = getUserAddress(kycHash);
-        if (expiryTimestamp <= block.timestamp) revert ExpiryPassed();
+        bool invalidExpiry = expiryTimestamp <= block.timestamp && expiryTimestamp != 0;
+        if (invalidExpiry) revert ExpiryPassed();
         _mint(account, id, expiryTimestamp);
+    }
+
+    function mintBatch(
+        address to, 
+        uint256[] memory ids, 
+        uint256[] memory expiryTimestamps
+    ) public onlyOwner {
+        _mintBatch(to, ids, expiryTimestamps);
     }
 
     function _mint(
@@ -99,16 +92,30 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 id,
         uint256 expiryTimestamp
     ) internal {
+        address operator = _msgSender();
         _balances[id][account] = 1;
         if (expiryTimestamp > block.timestamp) _expiries[id][account] = expiryTimestamp;
-        emit TransferSingle(_msgSender(), address(0), account, id, 1);
+        emit TransferSingle(operator, account, address(0), id, 1);
+        _doSafeTransferAcceptanceCheck(operator, address(0), account, id, 1, "");
     }
 
-     function uri(uint256 id) public view virtual returns (string memory) {
-        return string.concat(_uri, Strings.toString(id));
+    function _mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory expiryTimestamps
+    ) internal {
+        if (ids.length != expiryTimestamps.length) revert ParamsLengthMismatch();
+        address operator = _msgSender();
+        uint[] memory amounts = new uint[](ids.length);
+        for (uint256 i = 0; i < ids.length; i++) {
+            _balances[ids[i]][to] = 1;
+            amounts[i] = 1;
+        }
+        emit TransferBatch(operator, address(0), to, ids, amounts);
+        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, "");
     }
 
-    function revokeByAddress(address account, uint256 id) public onlyOwner {
+    function revoke(address account, uint256 id) public onlyOwner {
         if (balanceOf(account, id) != 1) revert InsufficientBalance();
         _revoke(account, id);
     }
@@ -120,29 +127,6 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _balances[id][account] = 0;
         emit TransferSingle(_msgSender(), account, address(0), id, 1);
     } 
-
-    function hashKyc(
-        bytes32 firstName, 
-        bytes32 lastName, 
-        uint256 dob, 
-        uint256 phoneNumber
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(firstName, lastName, dob, phoneNumber));
-    }
-
-    function kycHashToAddress(bytes32 kycHash) public pure returns (address) {
-        return address(uint160(uint256(kycHash)));
-    }
-
-    function getUserAddress(bytes32 kycHash) public view returns (address) {
-        address kycAddress = kycHashToAddress(kycHash);
-        address walletAddress = IKycRegistry(kycRegistry).getWalletAddress(kycAddress);
-        if (walletAddress == address(0)) {
-            return walletAddress;
-        } else {
-            return kycAddress;
-        }
-    }
 
     function _doSafeTransferAcceptanceCheck(
         address operator,
@@ -163,6 +147,13 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
                 revert("ERC1155: transfer to non-ERC1155Receiver implementer");
             }
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     function _doSafeBatchTransferAcceptanceCheck(
@@ -191,7 +182,6 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     // @notice: NOOPs for non needed ERC1155 functions
     // TODO: for OpenSea this must be overriden in a special way, can't revert
     function setApprovalForAll(address operator, bool approved) external {}
-
  
     function isApprovedForAll(address account, address operator) external view returns (bool) {}
 
@@ -212,5 +202,4 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         bytes calldata data
     ) external {
     }
-   
 }
