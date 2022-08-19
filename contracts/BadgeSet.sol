@@ -20,6 +20,7 @@ error InsufficientBalance();
 error InvalidURI();
 
 // TODO: make every mint need an expiry
+// TODO: remove factory
 // TODO: add name for contract, storage variable, and add that to baseURL + name + ID
 // TODO: token transfer hooks in _mint/_mintBatch
 // TODO: clean up and optimize custom errors, replace all error strings
@@ -32,15 +33,13 @@ error InvalidURI();
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
-    address public factory;
     mapping(uint256 => mapping(address => uint256)) private _balances; // id/address to owned count
     mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
     string private _uri;
 
-    constructor(address _owner, address _kycRegistry, address _factory, string memory uri_) {
+    constructor(address _owner, address _kycRegistry, string memory uri_) {
         setURI(uri_);
         kycRegistry = _kycRegistry;
-        factory = _factory;
         transferOwnership(_owner);
     } 
 
@@ -73,60 +72,57 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         address account,
         uint256 id,
         uint256 expiryTimestamp
-    ) public onlyOwner {
+    ) external onlyOwner {
         bool invalidExpiry = expiryTimestamp <= block.timestamp && expiryTimestamp != 0;
         if (invalidExpiry) revert ExpiryPassed();
-        _mint(account, id, expiryTimestamp);
-    }
-
-    function mintBatch(
-        address to, 
-        uint256[] memory ids, 
-        uint256[] memory expiryTimestamps
-    ) public onlyOwner {
-        _mintBatch(to, ids, expiryTimestamps);
-    }
-
-    function _mint(
-        address account,
-        uint256 id,
-        uint256 expiryTimestamp
-    ) internal {
-        address operator = _msgSender();
         _balances[id][account] = 1;
-        if (expiryTimestamp > block.timestamp) _expiries[id][account] = expiryTimestamp;
+        _expiries[id][account] = expiryTimestamp;
+        address operator = _msgSender();
         emit TransferSingle(operator, account, address(0), id, 1);
         _doSafeTransferAcceptanceCheck(operator, address(0), account, id, 1, "");
     }
 
-    function _mintBatch(
+    function mintBatch(
         address to,
         uint256[] memory ids,
         uint256[] memory expiryTimestamps
-    ) internal {
+    ) external onlyOwner {
         if (ids.length != expiryTimestamps.length) revert ParamsLengthMismatch();
-        address operator = _msgSender();
         uint[] memory amounts = new uint[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
+            bool invalidExpiry = expiryTimestamps[i] <= block.timestamp && expiryTimestamps[i] != 0;
+            if (invalidExpiry) revert ExpiryPassed();
             _balances[ids[i]][to] = 1;
+            _expiries[ids[i]][to] = expiryTimestamps[i];
             amounts[i] = 1;
         }
+        address operator = _msgSender();
         emit TransferBatch(operator, address(0), to, ids, amounts);
         _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, "");
     }
 
-    function revoke(address account, uint256 id) public onlyOwner {
-        if (balanceOf(account, id) != 1) revert InsufficientBalance();
-        _revoke(account, id);
-    }
-
-   function _revoke(
+   function revoke(
         address account,
         uint256 id
-    ) internal {
+    ) external onlyOwner {
+        if (balanceOf(account, id) != 1) revert InsufficientBalance();
         _balances[id][account] = 0;
         emit TransferSingle(_msgSender(), account, address(0), id, 1);
-    } 
+    }
+
+    function revokeBatch(
+        address to,
+        uint256[] memory ids
+    ) external onlyOwner {
+        address operator = _msgSender();
+        uint[] memory amounts = new uint[](ids.length);
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (balanceOf(to, ids[i]) != 1) revert InsufficientBalance();
+            _balances[ids[i]][to] = 0;
+            amounts[i] = 1;
+        }
+        emit TransferBatch(operator, address(0), to, ids, amounts);
+    }
 
     function _doSafeTransferAcceptanceCheck(
         address operator,
@@ -177,6 +173,10 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
                 revert("ERC1155: transfer to non-ERC1155Receiver implementer");
             }
         }
+    }
+
+    function validateExpiry(uint256 expiryTimestamp) internal view returns (bool) {
+        return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;
     }
 
     // @notice: NOOPs for non needed ERC1155 functions
