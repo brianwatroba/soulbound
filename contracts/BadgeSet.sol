@@ -19,6 +19,9 @@ error ParamsLengthMismatch();
 error InsufficientBalance();
 error InvalidURI();
 
+// TODO: how to handle minting some badges to kyc address, then some to real address?
+// TODO: consistency of "account" and "to"
+// TODO: swap order in private mappings expiries/balances to be address/id, not id/address
 // TODO: expiry shows you as owning 0 in balanceOf? Or you own but it's expired?
 // TODO: add name for contract, storage variable, and add that to baseURL + name + ID
 // TODO: token transfer hooks in _mint/_mintBatch

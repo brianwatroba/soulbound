@@ -5,10 +5,10 @@ pragma solidity ^0.8.12;
 
 interface IKycRegistry { 
 
-  function linkWallet(address kycAddress, address walletAddress) external;
+  function linkWallet(address userAddress, address walletAddress) external;
 
-  function getWalletAddress(address kycAddress) external view returns (address);
+  function getCurrentAddress(address userAddress) external view returns (address);
 
-  function getKycAddress(address walletAddress) external view returns (address);
+  function kycToUserAddress(bytes32 firstName, bytes32 lastName, uint256 dob, uint256 phoneNumber) external pure returns (address);
 
 }
