@@ -19,8 +19,7 @@ error ParamsLengthMismatch();
 error InsufficientBalance();
 error InvalidURI();
 
-// TODO: make every mint need an expiry
-// TODO: remove factory
+// TODO: expiry shows you as owning 0 in balanceOf? Or you own but it's expired?
 // TODO: add name for contract, storage variable, and add that to baseURL + name + ID
 // TODO: token transfer hooks in _mint/_mintBatch
 // TODO: clean up and optimize custom errors, replace all error strings
@@ -38,8 +37,8 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     string private _uri;
 
     constructor(address _owner, address _kycRegistry, string memory uri_) {
-        setURI(uri_);
         kycRegistry = _kycRegistry;
+        setURI(uri_);
         transferOwnership(_owner);
     } 
 
@@ -54,8 +53,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     function balanceOf(address account, uint256 id) public view returns (uint256) {
         if (account == address(0)) revert ZeroAddress(); // need this?
         uint256 expiryTimestamp = _expiries[id][account];
-        bool isExpired = expiryTimestamp > 0 && expiryTimestamp < block.timestamp;
-        if (isExpired) return 0;
+        if (isExpired(expiryTimestamp)) return 0;
         return _balances[id][account];
     }
 
@@ -73,8 +71,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 id,
         uint256 expiryTimestamp
     ) external onlyOwner {
-        bool invalidExpiry = expiryTimestamp <= block.timestamp && expiryTimestamp != 0;
-        if (invalidExpiry) revert ExpiryPassed();
+        if (isExpired(expiryTimestamp)) revert ExpiryPassed();
         _balances[id][account] = 1;
         _expiries[id][account] = expiryTimestamp;
         address operator = _msgSender();
@@ -90,8 +87,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (ids.length != expiryTimestamps.length) revert ParamsLengthMismatch();
         uint[] memory amounts = new uint[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
-            bool invalidExpiry = expiryTimestamps[i] <= block.timestamp && expiryTimestamps[i] != 0;
-            if (invalidExpiry) revert ExpiryPassed();
+            if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
             _balances[ids[i]][to] = 1;
             _expiries[ids[i]][to] = expiryTimestamps[i];
             amounts[i] = 1;
@@ -175,7 +171,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         }
     }
 
-    function validateExpiry(uint256 expiryTimestamp) internal view returns (bool) {
+    function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
         return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;
     }
 
