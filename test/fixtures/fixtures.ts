@@ -9,6 +9,8 @@ const userKycDetails = {
   phoneNumber: 16461111,
 };
 
+const userAddress = "0x64443F9CDBc6b3f12AD0c81083dde302d85Ef81E";
+
 export const deploy = async () => {
   const [soulbound, forbes, padi, user] = await ethers.getSigners();
   const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
@@ -21,7 +23,17 @@ export const deploy = async () => {
   const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
 
-  return { badgeSetFactory, badgeSet, kycRegistry, soulbound, forbes, uri, user, userKycDetails };
+  return {
+    badgeSetFactory,
+    badgeSet,
+    kycRegistry,
+    soulbound,
+    forbes,
+    uri,
+    user,
+    userKycDetails,
+    userAddress,
+  };
 };
 
 export default { deploy };

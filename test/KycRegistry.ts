@@ -34,15 +34,11 @@ describe("KycRegistry.sol", function () {
         [firstNameBytes, lastNameBytes, dobBN, phoneNumberBN]
       );
 
-      const reHash = ethers.utils.solidityKeccak256(["bytes32"], [hash]);
-
-      const testAddress = ethers.utils.computeAddress(reHash);
-      console.log("hash", hash);
-      console.log("contractHash", userAddress);
+      const hashAsAddress = ethers.utils.getAddress("0x" + hash.slice(-40));
 
       expect(userAddress).to.be.properAddress;
-      expect(testAddress).to.be.properAddress;
-      expect(userAddress).to.equal(testAddress);
+      expect(hashAsAddress).to.be.properAddress;
+      expect(userAddress).to.equal(hashAsAddress);
     });
   });
   describe("linkWallet()", () => {

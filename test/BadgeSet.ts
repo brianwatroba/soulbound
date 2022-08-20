@@ -26,8 +26,13 @@ describe("BadgeSet.sol", function () {
   });
 
   describe("Write functions", function () {
-    it("mintToAddress()", async () => {
-      const { badgeSet, soulbound, forbes } = await loadFixture(fixtures.deploy);
+    it("mint()", async () => {
+      const { badgeSet, soulbound, forbes, userAddress } = await loadFixture(fixtures.deploy);
+
+      const mint = await badgeSet.connect(forbes).mint(userAddress, 1, 0);
+      const balance = await badgeSet.balanceOf(userAddress, 1);
+
+      expect(balance).to.equal(1);
     });
     it("revokeByAddress()", async () => {
       const { badgeSet, soulbound, forbes } = await loadFixture(fixtures.deploy);
