@@ -18,9 +18,14 @@ error SoulboundNoTransfer();
 error ParamsLengthMismatch();
 error InsufficientBalance();
 error InvalidURI();
+error OnlyKycRegistry();
 
+// TODO: create helper array creation function for given length full of a value
+// TODO: do we need zero address checks?
+// TODO: function only KYC registry can call to emit events for all transferred
 // TODO: how to handle minting some badges to kyc address, then some to real address?
 // TODO: consistency of "account" and "to"
+// TODO: gas optimization in transitionAddress to loop events or loop array and single batch event
 // TODO: swap order in private mappings expiries/balances to be address/id, not id/address
 // TODO: expiry shows you as owning 0 in balanceOf? Or you own but it's expired?
 // TODO: add name for contract, storage variable, and add that to baseURL + name + ID
@@ -54,17 +59,18 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     }
 
     function balanceOf(address account, uint256 id) public view returns (uint256) {
-        if (account == address(0)) revert ZeroAddress(); // need this?
-        uint256 expiryTimestamp = _expiries[id][account];
+        address validatedAccount = validateAddress(account);
+        uint256 expiryTimestamp = _expiries[id][validatedAccount];
         if (isExpired(expiryTimestamp)) return 0;
-        return _balances[id][account];
+        return _balances[id][validatedAccount];
     }
 
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
         if (accounts.length != ids.length) revert ParamsLengthMismatch();
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
-            batchBalances[i] = balanceOf(accounts[i], ids[i]);
+            address validatedAccount = validateAddress(accounts[i]);
+            batchBalances[i] = balanceOf(validatedAccount, ids[i]);
         }
         return batchBalances;
     }
@@ -75,11 +81,12 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 expiryTimestamp
     ) external onlyOwner {
         if (isExpired(expiryTimestamp)) revert ExpiryPassed();
-        _balances[id][account] = 1;
-        _expiries[id][account] = expiryTimestamp;
+        address validatedAccount = validateAddress(account);
+        _balances[id][validatedAccount] = 1;
+        _expiries[id][validatedAccount] = expiryTimestamp;
         address operator = _msgSender();
-        emit TransferSingle(operator, account, address(0), id, 1);
-        _doSafeTransferAcceptanceCheck(operator, address(0), account, id, 1, "");
+        emit TransferSingle(operator, validatedAccount, address(0), id, 1);
+        _doSafeTransferAcceptanceCheck(operator, address(0), validatedAccount, id, 1, "");
     }
 
     function mintBatch(
@@ -88,16 +95,17 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256[] memory expiryTimestamps
     ) external onlyOwner {
         if (ids.length != expiryTimestamps.length) revert ParamsLengthMismatch();
+        address validatedAccount = validateAddress(to);
         uint[] memory amounts = new uint[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
             if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
-            _balances[ids[i]][to] = 1;
-            _expiries[ids[i]][to] = expiryTimestamps[i];
+            _balances[ids[i]][validatedAccount] = 1;
+            _expiries[ids[i]][validatedAccount] = expiryTimestamps[i];
             amounts[i] = 1;
         }
         address operator = _msgSender();
-        emit TransferBatch(operator, address(0), to, ids, amounts);
-        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, "");
+        emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
+        _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAccount, ids, amounts, "");
     }
 
    function revoke(
@@ -105,8 +113,9 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 id
     ) external onlyOwner {
         if (balanceOf(account, id) != 1) revert InsufficientBalance();
-        _balances[id][account] = 0;
-        emit TransferSingle(_msgSender(), account, address(0), id, 1);
+        address validatedAccount = validateAddress(account);
+        _balances[id][validatedAccount] = 0;
+        emit TransferSingle(_msgSender(), validatedAccount, address(0), id, 1);
     }
 
     function revokeBatch(
@@ -114,13 +123,29 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256[] memory ids
     ) external onlyOwner {
         address operator = _msgSender();
+        address validatedAccount = validateAddress(to);
         uint[] memory amounts = new uint[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
-            if (balanceOf(to, ids[i]) != 1) revert InsufficientBalance();
-            _balances[ids[i]][to] = 0;
+            if (balanceOf(validatedAccount, ids[i]) != 1) revert InsufficientBalance();
+            _balances[ids[i]][validatedAccount] = 0;
             amounts[i] = 1;
         }
-        emit TransferBatch(operator, address(0), to, ids, amounts);
+        emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
+    }
+
+    function transitionAddress(address userAddress, address walletAddress, uint256[] memory ids) public {
+        address operator = _msgSender();
+        if (operator != kycRegistry) revert OnlyKycRegistry();
+        uint length = ids.length;
+        uint[] memory amounts = new uint[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            _balances[ids[i]][walletAddress] = _balances[ids[i]][userAddress];
+            _expiries[ids[i]][walletAddress] = _expiries[ids[i]][userAddress];
+            amounts[i] = 1;
+        }
+        emit TransferBatch(operator, userAddress, walletAddress, ids, amounts);
+
     }
 
     function _doSafeTransferAcceptanceCheck(
@@ -176,6 +201,10 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
         return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;
+    }
+
+    function validateAddress(address _address) public view returns (address) {
+        return IKycRegistry(kycRegistry).getCurrentAddress(_address);
     }
 
     // @notice: NOOPs for non needed ERC1155 functions

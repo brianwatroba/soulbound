@@ -21,10 +21,10 @@ contract KycRegistry is Ownable {
     // emit event
   }
 
-  function getCurrentAddress(address userAddress) external view returns (address) {
-    address walletAddress = _walletAddresses[userAddress];
-    if (walletAddress == address(0)) return userAddress;
-    return walletAddress;
+  function getCurrentAddress(address _address) external view returns (address) {
+    address mappedAddress = _walletAddresses[_address];
+    if (mappedAddress == address(0)) return _address;
+    return mappedAddress
   }
 
   function kycToUserAddress(bytes32 firstName, bytes32 lastName, uint256 dob, uint256 phoneNumber) external pure returns (address) {
