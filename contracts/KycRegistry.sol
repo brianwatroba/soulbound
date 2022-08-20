@@ -17,6 +17,7 @@ contract KycRegistry is Ownable {
   function linkWallet(address userAddress, address walletAddress) external onlyOwner {
     if (_walletAddresses[userAddress] != address(0)) revert WalletAlreadyLinked();
     _walletAddresses[userAddress] = walletAddress;
+    // call badgeset contract and emit transfer events in loop
     // emit event
   }
 
