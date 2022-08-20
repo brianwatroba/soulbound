@@ -50,11 +50,11 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         transferOwnership(_owner);
     } 
 
-    function uri(uint256 id) public view virtual returns (string memory) {
+    function uri(uint256 id) public view returns (string memory) {
         return string.concat(_uri, Strings.toString(id));
     }
     
-    function setURI(string memory newuri) internal virtual {
+    function setURI(string memory newuri) public onlyOwner {
         _uri = newuri;
     }
 
@@ -140,6 +140,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint[] memory amounts = new uint[](length);
 
         for (uint256 i = 0; i < length; i++) {
+            // ensure is owned
             _balances[ids[i]][walletAddress] = _balances[ids[i]][userAddress];
             _expiries[ids[i]][walletAddress] = _expiries[ids[i]][userAddress];
             amounts[i] = 1;
@@ -169,7 +170,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         }
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IERC1155).interfaceId ||
             interfaceId == type(IERC1155MetadataURI).interfaceId ||
@@ -211,7 +212,8 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     // TODO: for OpenSea this must be overriden in a special way, can't revert
     function setApprovalForAll(address operator, bool approved) external {}
  
-    function isApprovedForAll(address account, address operator) external view returns (bool) {}
+    function isApprovedForAll(address account, address operator) external view returns (bool) {
+    }
 
     function safeTransferFrom(
         address from,

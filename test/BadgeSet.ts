@@ -19,10 +19,6 @@ describe("BadgeSet.sol", function () {
       const { badgeSet, kycRegistry } = await loadFixture(fixtures.deploy);
       expect(kycRegistry.address).to.equal(await badgeSet.kycRegistry());
     });
-    it("Sets BadgesetFactory address", async () => {
-      const { badgeSet, badgeSetFactory } = await loadFixture(fixtures.deploy);
-      expect(badgeSetFactory.address).to.equal(await badgeSet.factory());
-    });
     it("Transfers ownership to correct owner", async () => {
       const { badgeSet, forbes } = await loadFixture(fixtures.deploy);
       expect(await badgeSet.owner()).to.equal(forbes.address);

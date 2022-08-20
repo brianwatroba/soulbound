@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
 
-describe.only("KycRegistry.sol", function () {
+describe("KycRegistry.sol", function () {
   describe("Deployment", function () {
     it("Deploys successfully", async () => {
       const { kycRegistry } = await loadFixture(fixtures.deploy);

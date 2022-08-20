@@ -27,7 +27,6 @@ describe("BadgeSetFactory.sol", function () {
       const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
       const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
       expect(badgeSet.address).to.be.properAddress;
-      expect(await badgeSet.factory()).to.equal(badgeSetFactory.address);
     });
     it("reverts if not owner", async () => {
       const { badgeSetFactory, forbes, kycRegistry, uri } = await loadFixture(fixtures.deploy);

@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.12;
 
-// TODO: add events
-
 interface IKycRegistry { 
 
-  function linkWallet(address userAddress, address walletAddress) external;
+  function linkWallet(address userAddress, address walletAddress, address badgeSet, uint256[] memory ids) external;
 
   function getCurrentAddress(address userAddress) external view returns (address);
 
