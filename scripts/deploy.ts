@@ -4,27 +4,27 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-  const provider = ethers.getDefaultProvider();
+  const rinkebyKey = process.env.RINKEBY_KEY || "";
+  const provider = new ethers.providers.AlchemyProvider("rinkeby", rinkebyKey);
   const signer = new ethers.Wallet(process.env.PRIVATE_KEY ?? "", provider);
 
   const uri = "https://ipsai94oog.execute-api.us-east-1.amazonaws.com/badgeMetadata/";
 
   // const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
   // const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy()).deployed();
+  // console.log("BadgeSetFactory deployed to:", badgeSetFactory.address);
 
-  // const KycRegistry = await ethers.getContractFactory("KycRegistry");
-  // const kycRegistry = await KycRegistry.connect(signer).deploy();
-  // await kycRegistry.deployed();
+  const KycRegistry = await ethers.getContractFactory("KycRegistry");
+  const kycRegistry = await KycRegistry.connect(signer).deploy();
+  await kycRegistry.deployed();
+  console.log("KycRegistry deployed to: ", kycRegistry.address);
 
   // await badgeSetFactory.connect(signer).createBadgeSet(signer.address, kycRegistry.address, uri);
   // const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
   const BadgeSet = await ethers.getContractFactory("BadgeSet");
-  const badgeSet = await (
-    await BadgeSet.connect(signer).deploy(signer.address, signer.address, uri)
-  ).deployed();
+  const badgeSet = await BadgeSet.connect(signer).deploy(signer.address, kycRegistry.address, uri);
+  await badgeSet.deployed();
 
-  // console.log("BadgeSetFactory deployed to:", badgeSetFactory.address);
-  // console.log("KYC contract deployed to: ", kycRegistry.address);
   console.log("Badgeset deployed to: ", badgeSet.address);
 }
 

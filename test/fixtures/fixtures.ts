@@ -1,6 +1,8 @@
 import { ethers } from "hardhat";
 
-const uri = "https://www.soulboundapi.com/";
+const provider = ethers.getDefaultProvider();
+
+const uri = "https://ipsai94oog.execute-api.us-east-1.amazonaws.com/badgeMetadata/";
 
 const userKycDetails = {
   firstName: "john",
@@ -23,6 +25,10 @@ export const deploy = async () => {
   const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
 
+  const blockTimestamp = (await provider.getBlock("latest")).timestamp;
+  const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year
+  const invalidExpiry = blockTimestamp - 60 * 60 * 24 * 365; // 1 year
+
   return {
     badgeSetFactory,
     badgeSet,
@@ -33,6 +39,9 @@ export const deploy = async () => {
     user,
     userKycDetails,
     userAddress,
+    blockTimestamp,
+    validExpiry,
+    invalidExpiry,
   };
 };
 

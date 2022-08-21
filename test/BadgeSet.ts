@@ -25,20 +25,25 @@ describe("BadgeSet.sol", function () {
     });
   });
 
-  describe("Write functions", function () {
-    it("mint()", async () => {
-      const { badgeSet, soulbound, forbes, userAddress } = await loadFixture(fixtures.deploy);
+  describe("mint()", function () {
+    it("Mints a token without expiry", async () => {
+      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
 
-      const mint = await badgeSet.connect(forbes).mint(userAddress, 1, 0);
+      await badgeSet.connect(forbes).mint(userAddress, 1, 0);
       const balance = await badgeSet.balanceOf(userAddress, 1);
-
       expect(balance).to.equal(1);
     });
-    it("revokeByAddress()", async () => {
-      const { badgeSet, soulbound, forbes } = await loadFixture(fixtures.deploy);
+    it("Mints a token with expiry", async () => {
+      const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
+      await badgeSet.connect(forbes).mint(userAddress, 1, validExpiry);
+      const balance = await badgeSet.balanceOf(userAddress, 1);
+      expect(balance).to.equal(1);
     });
-  });
-  describe("View functions", function () {
-    it("hashKyc(): should hash kyc correctly", async () => {});
+    it("Reverts if token already owned", async () => {
+      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
+
+      await badgeSet.connect(forbes).mint(userAddress, 1, 0);
+      await expect(badgeSet.connect(forbes).mint(userAddress, 1, 0)).to.be.reverted;
+    });
   });
 });

@@ -10,13 +10,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "../interfaces/IKycRegistry.sol";
 
-import "hardhat/console.sol";
-
 error ZeroAddress();
 error ExpiryPassed();
 error SoulboundNoTransfer();
 error ParamsLengthMismatch();
 error InsufficientBalance();
+error TokenAlreadyOwned();
 error InvalidURI();
 error OnlyKycRegistry();
 
@@ -81,6 +80,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 expiryTimestamp
     ) external onlyOwner {
         if (isExpired(expiryTimestamp)) revert ExpiryPassed();
+        if (balanceOf(account, id) > 0) revert TokenAlreadyOwned();
         address validatedAccount = validateAddress(account);
         _balances[id][validatedAccount] = 1;
         _expiries[id][validatedAccount] = expiryTimestamp;
