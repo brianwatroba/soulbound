@@ -19,6 +19,7 @@ error TokenAlreadyOwned();
 error InvalidURI();
 error OnlyKycRegistry();
 
+// TODO: add parameters to custom errors so there's a trace/message
 // TODO: create helper array creation function for given length full of a value
 // TODO: do we need zero address checks?
 // TODO: function only KYC registry can call to emit events for all transferred
@@ -99,6 +100,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint[] memory amounts = new uint[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
             if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
+            if (_balances[ids[i]][validatedAccount] == 1) revert TokenAlreadyOwned();
             _balances[ids[i]][validatedAccount] = 1;
             _expiries[ids[i]][validatedAccount] = expiryTimestamps[i];
             amounts[i] = 1;
@@ -140,7 +142,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint[] memory amounts = new uint[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            // ensure is owned
+            // TODO: ensure is owned
             _balances[ids[i]][walletAddress] = _balances[ids[i]][userAddress];
             _expiries[ids[i]][walletAddress] = _expiries[ids[i]][userAddress];
             amounts[i] = 1;

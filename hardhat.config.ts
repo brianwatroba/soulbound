@@ -21,6 +21,11 @@ const config: HardhatUserConfig = {
       url: process.env.RINKEBY_URL || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    matic: {
+      url: process.env.POLYGON_MAINNET_URL || "",
+      accounts:
+        process.env.POLYGON_PRIVATE_KEY !== undefined ? [process.env.POLYGON_PRIVATE_KEY] : [],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

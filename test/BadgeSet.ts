@@ -7,7 +7,7 @@ import * as fixtures from "./fixtures/fixtures";
 
 describe("BadgeSet.sol", function () {
   describe("Deployment", function () {
-    it("Deploys successfully", async () => {
+    it("Deploys", async () => {
       const { badgeSet } = await loadFixture(fixtures.deploy);
       expect(badgeSet.address).to.be.properAddress;
     });
@@ -19,31 +19,92 @@ describe("BadgeSet.sol", function () {
       const { badgeSet, kycRegistry } = await loadFixture(fixtures.deploy);
       expect(kycRegistry.address).to.equal(await badgeSet.kycRegistry());
     });
-    it("Transfers ownership to correct owner", async () => {
+    it("Transfers ownership", async () => {
       const { badgeSet, forbes } = await loadFixture(fixtures.deploy);
       expect(await badgeSet.owner()).to.equal(forbes.address);
     });
   });
 
-  describe("mint()", function () {
-    it("Mints a token without expiry", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
+  describe("uri", () => {
+    it("Returns URI for tokenId", async () => {
+      const { badgeSet, uri } = await loadFixture(fixtures.deploy);
+      expect(await badgeSet.uri(1)).to.equal(uri + "1");
+    });
+  });
 
+  describe("setURI", () => {
+    it("Sets new URI", async () => {
+      const newUri = "https://example.com/";
+      const { badgeSet, forbes } = await loadFixture(fixtures.deploy);
+      await badgeSet.connect(forbes).setURI(newUri);
+      expect(await badgeSet.uri(1)).to.equal(newUri + "1");
+    });
+    it("Reverts: not owner", async () => {
+      const newUri = "https://example.com/";
+      const { badgeSet, user } = await loadFixture(fixtures.deploy);
+      await expect(badgeSet.connect(user).setURI(newUri)).to.be.reverted;
+    });
+  });
+
+  describe("mint()", function () {
+    it("Mints without expiry", async () => {
+      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, 0);
       const balance = await badgeSet.balanceOf(userAddress, 1);
       expect(balance).to.equal(1);
     });
-    it("Mints a token with expiry", async () => {
+    it("Mints with expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, validExpiry);
       const balance = await badgeSet.balanceOf(userAddress, 1);
       expect(balance).to.equal(1);
     });
-    it("Reverts if token already owned", async () => {
+    it("Reverts: not owner", async () => {
+      const { badgeSet, user, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
+      await expect(badgeSet.connect(user).mint(userAddress, 1, invalidExpiry)).to.be.reverted;
+    });
+    it("Reverts: invalid expiry", async () => {
+      const { badgeSet, forbes, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
+      await expect(badgeSet.connect(forbes).mint(userAddress, 1, invalidExpiry)).to.be.reverted;
+    });
+    it("Reverts: token already owned", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-
       await badgeSet.connect(forbes).mint(userAddress, 1, 0);
       await expect(badgeSet.connect(forbes).mint(userAddress, 1, 0)).to.be.reverted;
+    });
+  });
+
+  describe("mintBatch()", function () {
+    it("Mints without expiry", async () => {
+      const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2];
+      const expiries = [0, 0];
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      expect(await badgeSet.balanceOf(userAddress, 1)).to.equal(1);
+      expect(await badgeSet.balanceOf(userAddress, 2)).to.equal(1);
+    });
+    it("Mints with expiry", async () => {
+      const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2];
+      const expiries = [validExpiry, validExpiry];
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      expect(await badgeSet.balanceOf(userAddress, 1)).to.equal(1);
+      expect(await badgeSet.balanceOf(userAddress, 2)).to.equal(1);
+    });
+    it("Reverts: invalid expiry", async () => {
+      const { badgeSet, forbes, userAddress, invalidExpiry, validExpiry } = await loadFixture(
+        fixtures.deploy
+      );
+      const ids = [1, 2];
+      const expiries = [invalidExpiry, validExpiry];
+      await expect(badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries)).to.be.reverted;
+    });
+    it("Reverts if token already owned", async () => {
+      const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2];
+      const expiries = [validExpiry, validExpiry];
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      await expect(badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries)).to.be.reverted;
     });
   });
 });
