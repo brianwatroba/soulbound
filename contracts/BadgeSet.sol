@@ -151,6 +151,39 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     }
 
+    function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
+        return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;
+    }
+
+    function validateAddress(address _address) public view returns (address) {
+        return IKycRegistry(kycRegistry).getCurrentAddress(_address);
+    }
+
+    // @notice: NOOPs for non needed ERC1155 functions
+    // TODO: for OpenSea this must be overriden in a special way, can't revert
+    function setApprovalForAll(address operator, bool approved) external {}
+ 
+    function isApprovedForAll(address account, address operator) external view returns (bool) {
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) external {
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external {
+    }
+
     function _doSafeTransferAcceptanceCheck(
         address operator,
         address from,
@@ -200,38 +233,5 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
                 revert("ERC1155: transfer to non-ERC1155Receiver implementer");
             }
         }
-    }
-
-    function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
-        return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;
-    }
-
-    function validateAddress(address _address) public view returns (address) {
-        return IKycRegistry(kycRegistry).getCurrentAddress(_address);
-    }
-
-    // @notice: NOOPs for non needed ERC1155 functions
-    // TODO: for OpenSea this must be overriden in a special way, can't revert
-    function setApprovalForAll(address operator, bool approved) external {}
- 
-    function isApprovedForAll(address account, address operator) external view returns (bool) {
-    }
-
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes calldata data
-    ) external {
-    }
-
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
-    ) external {
     }
 }
