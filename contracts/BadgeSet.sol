@@ -16,9 +16,10 @@ error SoulboundNoTransfer();
 error ParamsLengthMismatch();
 error InsufficientBalance();
 error TokenAlreadyOwned();
+error 
 error InvalidURI();
-error OnlyKycRegistry();
 
+// TODO: move errors and events to IBadgeSet.sol
 // TODO: add parameters to custom errors so there's a trace/message
 // TODO: create helper array creation function for given length full of a value
 // TODO: do we need zero address checks?
@@ -70,7 +71,9 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
             address validatedAccount = validateAddress(accounts[i]);
-            batchBalances[i] = balanceOf(validatedAccount, ids[i]);
+            uint256 expiryTimestamp = _expiries[ids[i]][validatedAccount];
+            uint256 balance = isExpired(expiryTimestamp) ? 0 : _balances[ids[i]][validatedAccount];
+            batchBalances[i] = balance;
         }
         return batchBalances;
     }
@@ -117,6 +120,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (balanceOf(account, id) != 1) revert InsufficientBalance();
         address validatedAccount = validateAddress(account);
         _balances[id][validatedAccount] = 0;
+        _expiries[ids][validatedAccount] = 0;
         emit TransferSingle(_msgSender(), validatedAccount, address(0), id, 1);
     }
 
@@ -135,20 +139,15 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
     }
 
-    function transitionAddress(address userAddress, address walletAddress, uint256[] memory ids) public {
-        address operator = _msgSender();
-        if (operator != kycRegistry) revert OnlyKycRegistry();
+    function transitionAddress(address userAddress, uint256[] memory ids) onlyOwner public {
         uint length = ids.length;
         uint[] memory amounts = new uint[](length);
-
+        address validatedAccount = validateAddress(userAddress);
+        if (validatedAccount == validatedAccount) revert InvalidAddress();
         for (uint256 i = 0; i < length; i++) {
-            // TODO: ensure is owned
-            _balances[ids[i]][walletAddress] = _balances[ids[i]][userAddress];
-            _expiries[ids[i]][walletAddress] = _expiries[ids[i]][userAddress];
-            amounts[i] = 1;
+            if (balanceOf(account, ids[i]) != 1) revert InsufficientBalance();
         }
         emit TransferBatch(operator, userAddress, walletAddress, ids, amounts);
-
     }
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
