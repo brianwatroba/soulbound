@@ -18,6 +18,7 @@ error InsufficientBalance();
 error TokenAlreadyOwned();
 error InvalidAddress();
 error InvalidURI();
+error AddressAlreadyTransitioned();
 
 // Trigger it by doing balanceOf?
 
@@ -43,6 +44,7 @@ error InvalidURI();
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
+    mapping(address => bool) _addressTransitioned;
     mapping(uint256 => mapping(address => uint256)) private _balances; // id/address to owned count
     mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
     string private _uri;
@@ -61,9 +63,15 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _uri = newuri;
     }
 
+    // expiryOf() returns the expiry of the badge with the given id
+
     function balanceOf(address account, uint256 id) public view returns (uint256) {
         address validatedAccount = validateAddress(account);
         return _balances[id][validatedAccount];
+    }
+
+    balanceOfUserAddress(address userAddress, uint256 id) public view returns (uint256) {
+        return _balances[id][userAddress];
     }
 
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
@@ -117,8 +125,8 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     ) external onlyOwner {
         if (balanceOf(account, id) != 1) revert InsufficientBalance();
         address validatedAccount = validateAddress(account);
-        _balances[id][validatedAccount] = 0;
-        _expiries[id][validatedAccount] = 0;
+        delete _balances[id][validatedAccount];
+        delete _expiries[id][validatedAccount];
         emit TransferSingle(_msgSender(), validatedAccount, address(0), id, 1);
     }
 
@@ -131,19 +139,25 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint[] memory amounts = new uint[](ids.length);
         for (uint256 i = 0; i < ids.length; i++) {
             if (balanceOf(validatedAccount, ids[i]) != 1) revert InsufficientBalance();
-            _balances[ids[i]][validatedAccount] = 0;
+            delete _balances[ids[i]][validatedAccount];
+            delete _expiries[ids[i]][validatedAccount];
             amounts[i] = 1;
         }
         emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
     }
 
     function transitionAddress(address userAddress, uint256[] memory ids) public {
+        // make sure this hasn't been called yet
+        // make sure they actually linked their account
+        // loop through their involved tokens, will add the array at mint
+        // check each if they owned before, if so
+        if (validateAddress(userAddress) == userAddress) revert InvalidAddress(); // not yet transitioned on KYC contract
+        if (_addressTransitioned[userAddress]) revert AddressAlreadyTransitioned();
+        // address validatedAccount = validateAddress(userAddress);
         uint length = ids.length;
         uint[] memory amounts = new uint[](length);
-        address validatedAccount = validateAddress(userAddress);
-        if (validatedAccount == userAddress) revert InvalidAddress(); // haven't linked wallet yet
+        
         for (uint256 i = 0; i < length; i++) {
-            if ()
             if (balanceOfUserAddress(userAddress, ids[i]) != 1) revert InsufficientBalance();
         }
         emit TransferBatch(_msgSender(), userAddress, validatedAccount, ids, amounts);
