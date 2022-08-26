@@ -110,7 +110,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAccount, ids, amounts, "");
     }
 
-   function revoke(
+    function revoke(
         address account,
         uint256 id
     ) external onlyOwner {
