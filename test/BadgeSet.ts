@@ -143,4 +143,23 @@ describe("BadgeSet.sol", () => {
       await expect(badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2])).to.be.reverted;
     });
   });
+
+  describe("revokeBatch()", () => {
+    it("Revokes", async () => {
+      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
+      await badgeSet.connect(forbes).mint(userAddress, 1, 0);
+      await badgeSet.connect(forbes).mint(userAddress, 2, 0);
+      await badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2]);
+      expect(await badgeSet.balanceOf(userAddress, 1)).to.equal(0);
+      expect(await badgeSet.balanceOf(userAddress, 2)).to.equal(0);
+    });
+    it("Reverts: not owner", async () => {
+      const { badgeSet, user, userAddress } = await loadFixture(fixtures.deploy);
+      await expect(badgeSet.connect(user).revokeBatch(userAddress, [1, 2])).to.be.reverted;
+    });
+    it("Reverts: token not owned", async () => {
+      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
+      await expect(badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2])).to.be.reverted;
+    });
+  });
 });

@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // need to convert this to interface
 // import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
-import "hardhat/console.sol";
 
 error WalletAlreadyLinked();
 
@@ -16,14 +15,9 @@ contract KycRegistry is Ownable {
 
   mapping(address => address) private _walletAddresses; 
 
-  function linkWallet(address userAddress, address walletAddress
-  // , 
-  //address badgeSet,
-   //uint256[] memory ids
-   ) external onlyOwner {
+  function linkWallet(address userAddress, address walletAddress) external onlyOwner {
     if (_walletAddresses[userAddress] != address(0)) revert WalletAlreadyLinked();
     _walletAddresses[userAddress] = walletAddress;
-    // IBadgeSet(badgeSet).transitionAddress(userAddress, walletAddress, ids);
   }
 
   function getCurrentAddress(address _address) external view returns (address) {
