@@ -16,8 +16,10 @@ error SoulboundNoTransfer();
 error ParamsLengthMismatch();
 error InsufficientBalance();
 error TokenAlreadyOwned();
-error 
+error InvalidAddress();
 error InvalidURI();
+
+// Trigger it by doing balanceOf?
 
 // TODO: move errors and events to IBadgeSet.sol
 // TODO: add parameters to custom errors so there's a trace/message
@@ -61,8 +63,6 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     function balanceOf(address account, uint256 id) public view returns (uint256) {
         address validatedAccount = validateAddress(account);
-        uint256 expiryTimestamp = _expiries[id][validatedAccount];
-        if (isExpired(expiryTimestamp)) return 0;
         return _balances[id][validatedAccount];
     }
 
@@ -71,9 +71,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
             address validatedAccount = validateAddress(accounts[i]);
-            uint256 expiryTimestamp = _expiries[ids[i]][validatedAccount];
-            uint256 balance = isExpired(expiryTimestamp) ? 0 : _balances[ids[i]][validatedAccount];
-            batchBalances[i] = balance;
+            batchBalances[i] = _balances[ids[i]][validatedAccount];
         }
         return batchBalances;
     }
@@ -120,7 +118,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (balanceOf(account, id) != 1) revert InsufficientBalance();
         address validatedAccount = validateAddress(account);
         _balances[id][validatedAccount] = 0;
-        _expiries[ids][validatedAccount] = 0;
+        _expiries[id][validatedAccount] = 0;
         emit TransferSingle(_msgSender(), validatedAccount, address(0), id, 1);
     }
 
@@ -139,15 +137,16 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
     }
 
-    function transitionAddress(address userAddress, uint256[] memory ids) onlyOwner public {
+    function transitionAddress(address userAddress, uint256[] memory ids) public {
         uint length = ids.length;
         uint[] memory amounts = new uint[](length);
         address validatedAccount = validateAddress(userAddress);
-        if (validatedAccount == validatedAccount) revert InvalidAddress();
+        if (validatedAccount == userAddress) revert InvalidAddress(); // haven't linked wallet yet
         for (uint256 i = 0; i < length; i++) {
-            if (balanceOf(account, ids[i]) != 1) revert InsufficientBalance();
+            if ()
+            if (balanceOfUserAddress(userAddress, ids[i]) != 1) revert InsufficientBalance();
         }
-        emit TransferBatch(operator, userAddress, walletAddress, ids, amounts);
+        emit TransferBatch(_msgSender(), userAddress, validatedAccount, ids, amounts);
     }
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {

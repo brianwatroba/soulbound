@@ -2,13 +2,11 @@
 pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-// need to convert this to interface
-// import "../interfaces/IKycRegistry.sol";
-import "../interfaces/IBadgeSet.sol";
 
 error WalletAlreadyLinked();
 
 // TODO: batch get functions?
+// TODO: update interface and inherit
 // TODO: add events
 
 contract KycRegistry is Ownable { 

@@ -12,6 +12,7 @@ const userKycDetails = {
 };
 
 const userAddress = "0x64443F9CDBc6b3f12AD0c81083dde302d85Ef81E";
+const walletAddress = "0x20A3d0288B393dF8901BB6415C6Ac538F17B94fE";
 
 export const deploy = async () => {
   const [soulbound, forbes, padi, user] = await ethers.getSigners();
@@ -39,6 +40,7 @@ export const deploy = async () => {
     user,
     userKycDetails,
     userAddress,
+    walletAddress,
     blockTimestamp,
     validExpiry,
     invalidExpiry,

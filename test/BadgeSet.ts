@@ -167,18 +167,33 @@ describe("BadgeSet.sol", () => {
 
   describe("transitionAddress()", () => {
     it("Emits events for all owned tokens", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      await badgeSet.connect(forbes).mint(userAddress, 1, 0);
-      await badgeSet.connect(forbes).mint(userAddress, 2, 0);
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, validExpiry } =
+        await loadFixture(fixtures.deploy);
+
+      const ids = [1, 2, 3];
+      const expiries = [validExpiry, validExpiry, validExpiry];
+
+      // mint to userAddress
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+
+      // linkWallet on KycRegistry
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+
+      // transitionAddress on BadgeSet
+      await expect(badgeSet.connect(forbes).transitionAddress(userAddress, ids)).to.emit(
+        badgeSet,
+        "TransferBatch"
+      );
     });
-    // reverts
-    it("Reverts: not owner", async () => {
-      const { badgeSet, user, userAddress } = await loadFixture(fixtures.deploy);
-      await expect(badgeSet.connect(user).revokeBatch(userAddress, [1, 2])).to.be.reverted;
-    });
-    it("Reverts: token not owned", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      await expect(badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2])).to.be.reverted;
-    });
+    // reverts if one not owned
+    // reverts if no claimed address
+    // it("Reverts: not owner", async () => {
+    //   const { badgeSet, user, userAddress } = await loadFixture(fixtures.deploy);
+    //   await expect(badgeSet.connect(user).revokeBatch(userAddress, [1, 2])).to.be.reverted;
+    // });
+    // it("Reverts: token not owned", async () => {
+    //   const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
+    //   await expect(badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2])).to.be.reverted;
+    // });
   });
 });
