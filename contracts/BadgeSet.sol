@@ -70,10 +70,6 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         return _balances[id][validatedAccount];
     }
 
-    balanceOfUserAddress(address userAddress, uint256 id) public view returns (uint256) {
-        return _balances[id][userAddress];
-    }
-
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
         if (accounts.length != ids.length) revert ParamsLengthMismatch();
         uint256[] memory batchBalances = new uint256[](accounts.length);
@@ -147,20 +143,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     }
 
     function transitionAddress(address userAddress, uint256[] memory ids) public {
-        // make sure this hasn't been called yet
-        // make sure they actually linked their account
-        // loop through their involved tokens, will add the array at mint
-        // check each if they owned before, if so
-        if (validateAddress(userAddress) == userAddress) revert InvalidAddress(); // not yet transitioned on KYC contract
-        if (_addressTransitioned[userAddress]) revert AddressAlreadyTransitioned();
-        // address validatedAccount = validateAddress(userAddress);
-        uint length = ids.length;
-        uint[] memory amounts = new uint[](length);
         
-        for (uint256 i = 0; i < length; i++) {
-            if (balanceOfUserAddress(userAddress, ids[i]) != 1) revert InsufficientBalance();
-        }
-        emit TransferBatch(_msgSender(), userAddress, validatedAccount, ids, amounts);
     }
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
