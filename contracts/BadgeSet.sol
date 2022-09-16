@@ -22,6 +22,7 @@ error AddressAlreadyTransitioned();
 
 // Trigger it by doing balanceOf?
 
+// TODO: contract level metadata uri: docs.opensea.io/docs/contract-level-metadata
 // TODO: move errors and events to IBadgeSet.sol
 // TODO: add parameters to custom errors so there's a trace/message
 // TODO: create helper array creation function for given length full of a value
@@ -44,14 +45,15 @@ error AddressAlreadyTransitioned();
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
-    mapping(address => bool) _addressTransitioned;
     mapping(uint256 => mapping(address => uint256)) private _balances; // id/address to owned count
     mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
     string private _uri;
+    string private _contractURI;
 
-    constructor(address _owner, address _kycRegistry, string memory uri_) {
+    constructor(address _owner, address _kycRegistry, string memory uri_, string memory contractURI_) {
         kycRegistry = _kycRegistry;
         setURI(uri_);
+        setContractURI(contractURI_);
         transferOwnership(_owner);
     } 
 
@@ -63,19 +65,25 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _uri = newuri;
     }
 
+    function contractURI() public view returns (string memory) {
+        return _uri;
+    }
+
+    function setContractURI(string memory newuri) public onlyOwner {
+        _contractURI = newuri;
+    }
+    
     // expiryOf() returns the expiry of the badge with the given id
 
     function balanceOf(address account, uint256 id) public view returns (uint256) {
-        address validatedAccount = validateAddress(account);
-        return _balances[id][validatedAccount];
+        return _balances[id][account];
     }
 
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
         if (accounts.length != ids.length) revert ParamsLengthMismatch();
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
-            address validatedAccount = validateAddress(accounts[i]);
-            batchBalances[i] = _balances[ids[i]][validatedAccount];
+            batchBalances[i] = _balances[ids[i]][accounts[i]];
         }
         return batchBalances;
     }
