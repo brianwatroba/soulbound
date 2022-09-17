@@ -50,13 +50,15 @@ describe("BadgeSet.sol", () => {
     it("Mints without expiry", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, 0);
-      const balance = await badgeSet.balanceOf(userAddress, 1);
+      const tokenId = await badgeSet.encodeTokenId(1, userAddress);
+      const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
     it("Mints with expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, validExpiry);
-      const balance = await badgeSet.balanceOf(userAddress, 1);
+      const tokenId = await badgeSet.encodeTokenId(1, userAddress);
+      const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
     it("Reverts: not owner", async () => {

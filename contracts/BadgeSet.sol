@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "../interfaces/IKycRegistry.sol";
+import "hardhat/console.sol";
 
 error ZeroAddress();
 error ExpiryPassed();
@@ -113,10 +114,20 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (isExpired(expiryTimestamp)) revert ExpiryPassed();
         address validatedAddress = validateAddress(account);
         uint256 tokenId = encodeTokenId(badgeType, validatedAddress);
+        // console.log('tokenId', tokenId);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
         uint256 bitmapIndex = tokenId / 256;
         uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
-        bitmap = bitmap | (1 << badgeType); // set it to 1
+        // if (bitmap == 0) {
+        //     uint256 newBitmap = 1 << badgeType;
+        //     _ownershipBitmaps[validatedAddress][bitmapIndex] = newBitmap | (1 << badgeType);
+        // } else {
+        //     _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmap | (1 << badgeType);
+        // }
+        // console.log('bitmap', bitmap);
+
+        _ownershipBitmaps[validatedAddress][bitmapIndex] =  bitmap | (1 << badgeType); // set it to 1
+        // console.log('adter', _ownershipBitmaps[validatedAddress][bitmapIndex]);
         _expiries[tokenId][validatedAddress] = expiryTimestamp;
         address operator = _msgSender();
         emit TransferSingle(operator, validatedAddress, address(0), tokenId, 1);
