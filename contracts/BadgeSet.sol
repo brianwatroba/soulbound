@@ -22,7 +22,7 @@ error AddressAlreadyTransitioned();
 
 // Trigger it by doing balanceOf?
 
-// TODO: contract level metadata uri: docs.opensea.io/docs/contract-level-metadata
+// TODO: don't want contracts to receive? Remove IERC1155Receiver?
 // TODO: move errors and events to IBadgeSet.sol
 // TODO: add parameters to custom errors so there's a trace/message
 // TODO: create helper array creation function for given length full of a value
@@ -160,6 +160,14 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     function validateAddress(address _address) public view returns (address) {
         return IKycRegistry(kycRegistry).getCurrentAddress(_address);
+    }
+
+    function decode(bytes memory data) public pure returns (address _address, uint96 _badgeType) {
+        (_address, _badgeType) = abi.decode(data, (address, uint96));            
+    }
+
+    function encode(address _address, uint96 _badgeType) public view returns (bytes memory){
+        return abi.encode(_address, _badgeType);
     }
 
     // @notice: NOOPs for non needed ERC1155 functions
