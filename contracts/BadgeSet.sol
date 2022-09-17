@@ -148,32 +148,33 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenIds, amounts, "");
     }
 
-    // function revoke(
-    //     address account,
-    //     uint256 id
-    // ) external onlyOwner {
-    //     if (balanceOf(account, id) != 1) revert InsufficientBalance();
-    //     address validatedAccount = validateAddress(account);
-    //     delete _balances[id][validatedAccount];
-    //     delete _expiries[id][validatedAccount];
-    //     emit TransferSingle(_msgSender(), validatedAccount, address(0), id, 1);
-    // }
+    function revoke(
+        address account,
+        uint96 badgeType
+    ) public onlyOwner {
+        if (balanceOf(account, badgeType) != 1) revert InsufficientBalance();
+        address validatedAddress = validateAddress(account);
+        uint256 tokenId = encodeTokenId(badgeType, validatedAddress);
+        if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
+        uint256 bitmapIndex = tokenId / 256;
+        uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
+        bitmap = bitmap & (1 << badgeType); // set it to 0
+        delete _expiries[tokenId][validatedAddress];
+        emit TransferSingle(_msgSender(), validatedAddress, address(0), tokenId, 1);
+    }
 
-    // function revokeBatch(
-    //     address to,
-    //     uint256[] memory ids
-    // ) external onlyOwner {
-    //     address operator = _msgSender();
-    //     address validatedAccount = validateAddress(to);
-    //     uint[] memory amounts = new uint[](ids.length);
-    //     for (uint256 i = 0; i < ids.length; i++) {
-    //         if (balanceOf(validatedAccount, ids[i]) != 1) revert InsufficientBalance();
-    //         delete _balances[ids[i]][validatedAccount];
-    //         delete _expiries[ids[i]][validatedAccount];
-    //         amounts[i] = 1;
-    //     }
-    //     emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
-    // }
+    function revokeBatch(
+        address to,
+        uint96[] memory badgeTypes
+    ) external onlyOwner {
+        address operator = _msgSender();
+        address validatedAccount = validateAddress(to);
+        uint[] memory amounts = new uint[](badgeTypes.length);
+        for (uint256 i = 0; i < badgeTypes.length; i++) {
+            revoke(validatedAccount, badgeTypes[i]);
+        }
+        // emit TransferBatch(operator, address(0), validatedAccount, badgeTypes, amounts); // can't be badge types, change
+    }
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
         return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;

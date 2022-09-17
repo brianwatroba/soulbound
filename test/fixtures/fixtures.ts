@@ -40,6 +40,7 @@ export const deploy = async () => {
     soulbound,
     forbes,
     uri,
+    contractUri,
     user,
     userKycDetails,
     userAddress,

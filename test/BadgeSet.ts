@@ -166,25 +166,6 @@ describe("BadgeSet.sol", () => {
   });
 
   describe("transitionAddress()", () => {
-    it("Emits events for all owned tokens", async () => {
-      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, validExpiry } =
-        await loadFixture(fixtures.deploy);
-
-      const ids = [1, 2, 3];
-      const expiries = [validExpiry, validExpiry, validExpiry];
-
-      // mint to userAddress
-      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
-
-      // linkWallet on KycRegistry
-      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-
-      // transitionAddress on BadgeSet
-      await expect(badgeSet.connect(forbes).transitionAddress(userAddress, ids)).to.emit(
-        badgeSet,
-        "TransferBatch"
-      );
-    });
     // reverts if one not owned
     // reverts if no claimed address
     // it("Reverts: not owner", async () => {
