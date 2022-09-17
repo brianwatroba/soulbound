@@ -49,7 +49,7 @@ describe("BadgeSet.sol", () => {
   describe.only("mint()", () => {
     it("Mints without expiry", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      await badgeSet.connect(forbes).mint(userAddress, 1, 0);
+      badgeSet.connect(forbes).mint(userAddress, 1, 0);
       const tokenId = await badgeSet.encodeTokenId(1, userAddress);
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
@@ -76,22 +76,26 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe("mintBatch()", () => {
+  describe.only("mintBatch()", () => {
     it("Mints without expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
       const ids = [1, 2];
       const expiries = [0, 0];
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
-      expect(await badgeSet.balanceOf(userAddress, 1)).to.equal(1);
-      expect(await badgeSet.balanceOf(userAddress, 2)).to.equal(1);
+      const tokenId1 = await badgeSet.encodeTokenId(1, userAddress);
+      const tokenId2 = await badgeSet.encodeTokenId(2, userAddress);
+      expect(await badgeSet.balanceOf(userAddress, tokenId1)).to.equal(1);
+      expect(await badgeSet.balanceOf(userAddress, tokenId2)).to.equal(1);
     });
     it("Mints with expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
       const ids = [1, 2];
       const expiries = [validExpiry, validExpiry];
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
-      expect(await badgeSet.balanceOf(userAddress, 1)).to.equal(1);
-      expect(await badgeSet.balanceOf(userAddress, 2)).to.equal(1);
+      const tokenId1 = await badgeSet.encodeTokenId(1, userAddress);
+      const tokenId2 = await badgeSet.encodeTokenId(2, userAddress);
+      expect(await badgeSet.balanceOf(userAddress, tokenId1)).to.equal(1);
+      expect(await badgeSet.balanceOf(userAddress, tokenId2)).to.equal(1);
     });
     it("Reverts: invalid expiry", async () => {
       const { badgeSet, forbes, userAddress, invalidExpiry, validExpiry } = await loadFixture(

@@ -110,24 +110,14 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         address account,
         uint96 badgeType,
         uint256 expiryTimestamp
-    ) external onlyOwner {
+    ) external onlyOwner returns (uint256 tokenId) {
         if (isExpired(expiryTimestamp)) revert ExpiryPassed();
         address validatedAddress = validateAddress(account);
-        uint256 tokenId = encodeTokenId(badgeType, validatedAddress);
-        // console.log('tokenId', tokenId);
+        tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
         uint256 bitmapIndex = tokenId / 256;
-        uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
-        // if (bitmap == 0) {
-        //     uint256 newBitmap = 1 << badgeType;
-        //     _ownershipBitmaps[validatedAddress][bitmapIndex] = newBitmap | (1 << badgeType);
-        // } else {
-        //     _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmap | (1 << badgeType);
-        // }
-        // console.log('bitmap', bitmap);
-
-        _ownershipBitmaps[validatedAddress][bitmapIndex] =  bitmap | (1 << badgeType); // set it to 1
-        // console.log('adter', _ownershipBitmaps[validatedAddress][bitmapIndex]);
+        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeType);
+        _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
         _expiries[tokenId][validatedAddress] = expiryTimestamp;
         address operator = _msgSender();
         emit TransferSingle(operator, validatedAddress, address(0), tokenId, 1);
@@ -148,8 +138,8 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
             uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
             if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
             uint256 bitmapIndex = tokenId / 256;
-            uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
-            bitmap = bitmap | (1 << badgeTypes[i]); // set it to 1
+            uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeTypes[i]);
+            _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
             _expiries[tokenId][validatedAddress] = expiryTimestamps[i];
             tokenIds[i] = tokenId;
             amounts[i] = 1;

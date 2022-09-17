@@ -21,7 +21,7 @@ function uri(uint256 id) external view returns (string memory);
       address account,
       uint96 badgeType,
       uint256 expiryTimestamp
-  ) external;
+  ) external returns (uint256 tokenId);
 
   function mintBatch(
       address to,
