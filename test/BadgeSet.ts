@@ -133,14 +133,16 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe.skip("revokeBatch()", () => {
+  describe("revokeBatch()", () => {
     it("Revokes token and expiry", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, 0);
       await badgeSet.connect(forbes).mint(userAddress, 2, 0);
       await badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2]);
-      expect(await badgeSet.balanceOf(userAddress, 1)).to.equal(0);
-      expect(await badgeSet.balanceOf(userAddress, 2)).to.equal(0);
+      const tokenId1 = await badgeSet.encodeTokenId(1, userAddress);
+      const tokenId2 = await badgeSet.encodeTokenId(2, userAddress);
+      expect(await badgeSet.balanceOf(userAddress, tokenId1)).to.equal(0);
+      expect(await badgeSet.balanceOf(userAddress, tokenId2)).to.equal(0);
       // TODO: test expiry
     });
     it("Reverts: not owner", async () => {

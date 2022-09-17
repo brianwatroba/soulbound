@@ -152,9 +152,9 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     function revoke(
         address account,
         uint96 badgeType
-    ) public onlyOwner {
+    ) public onlyOwner returns(uint256 tokenId) {
         address validatedAddress = validateAddress(account);
-        uint256 tokenId = encodeTokenId(badgeType, validatedAddress);
+        tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
         uint256 bitmapIndex = badgeType / 256;
         uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] &~ (1 << badgeType);
@@ -170,10 +170,13 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         address operator = _msgSender();
         address validatedAccount = validateAddress(to);
         uint[] memory amounts = new uint[](badgeTypes.length);
+        uint[] memory tokenIds = new uint[](badgeTypes.length);
         for (uint256 i = 0; i < badgeTypes.length; i++) {
-            revoke(validatedAccount, badgeTypes[i]);
+            uint256 tokenId = revoke(validatedAccount, badgeTypes[i]);
+            amounts[i] = 1;
+            tokenIds[i] = tokenId;
         }
-        // emit TransferBatch(operator, address(0), validatedAccount, badgeTypes, amounts); // can't be badge types, change
+        emit TransferBatch(operator, address(0), validatedAccount, tokenIds, amounts);
     }
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
@@ -190,7 +193,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     function decodeTokenId(uint256 data) public pure returns (uint96 _tokenType, address _address) {
         _tokenType = uint96(data >> 160);
-        _address = address(uint160(uint256(((bytes32(data) << 96) >> 96))));
+        _address = address(uint160(uint256(((bytes32(data) << 96) >> 96)))); // use this https://medium.com/@imolfar/bitwise-operations-and-bit-manipulation-in-solidity-ethereum-1751f3d2e216
     }
 
     // @notice: NOOPs for non needed ERC1155 functions
