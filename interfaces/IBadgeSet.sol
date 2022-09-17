@@ -11,15 +11,13 @@ function balanceOf(address account, uint256 id) external view returns (uint256);
 
 function balanceOfBatch(address[] memory accounts, uint256[] memory ids) external view returns (uint256[] memory);
 
-function mint(address account, uint256 id, uint256 expiryTimestamp) external;
+// function mint(address account, uint256 id, uint256 expiryTimestamp) external;
 
-function mintBatch(address to, uint256[] memory ids, uint256[] memory expiryTimestamps) external;
+// function mintBatch(address to, uint256[] memory ids, uint256[] memory expiryTimestamps) external;
 
-function revoke(address account, uint256 id) external;
+// function revoke(address account, uint256 id) external;
 
-function revokeBatch(address to, uint256[] memory ids) external;
-
-function transitionAddress(address userAddress, address walletAddress, uint256[] memory ids) external;
+// function revokeBatch(address to, uint256[] memory ids) external;
 
 function supportsInterface(bytes4 interfaceId) external view returns (bool);
 

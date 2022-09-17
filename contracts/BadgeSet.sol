@@ -80,15 +80,15 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     // expiryOf() returns the expiry of the badge with the given id
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
-        (address _address, uint96 _badgeType) = decode(id);
+        (uint96 _badgeType, address _address) = decodeTokenId(id);
         if (_address != account) return 0;
         uint256 bitmapIndex = id / 256;
         uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
         uint256 bitValue = getBitValue(bitmap, _badgeType);
-        balance = uint256(bitValue > 0);
+        balance = bitValue > 0 ? 1 : 0;
     }
 
-    function getBitValue(uint256 bitmap, uint256 tokenId) private returns(uint256){
+    function getBitValue(uint256 bitmap, uint256 tokenId) private pure returns(uint256){
         return bitmap & (1 << tokenId);
     }
 
@@ -112,7 +112,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     ) external onlyOwner {
         if (isExpired(expiryTimestamp)) revert ExpiryPassed();
         address validatedAddress = validateAddress(account);
-        uint256 tokenId = encode(validatedAddress, badgeType);
+        uint256 tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
         uint256 bitmapIndex = tokenId / 256;
         uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
@@ -123,25 +123,30 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _doSafeTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenId, 1, "");
     }
 
-    // function mintBatch(
-    //     address to,
-    //     uint256[] memory ids,
-    //     uint256[] memory expiryTimestamps
-    // ) external onlyOwner {
-    //     if (ids.length != expiryTimestamps.length) revert ParamsLengthMismatch();
-    //     address validatedAccount = validateAddress(to);
-    //     uint[] memory amounts = new uint[](ids.length);
-    //     for (uint256 i = 0; i < ids.length; i++) {
-    //         if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
-    //         if (_balances[ids[i]][validatedAccount] == 1) revert TokenAlreadyOwned();
-    //         _balances[ids[i]][validatedAccount] = 1;
-    //         _expiries[ids[i]][validatedAccount] = expiryTimestamps[i];
-    //         amounts[i] = 1;
-    //     }
-    //     address operator = _msgSender();
-    //     emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
-    //     _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAccount, ids, amounts, "");
-    // }
+    function mintBatch(
+        address to,
+        uint96[] memory badgeTypes,
+        uint256[] memory expiryTimestamps
+    ) external onlyOwner {
+        if (badgeTypes.length != expiryTimestamps.length) revert ParamsLengthMismatch();
+        address validatedAddress = validateAddress(to);
+        uint[] memory tokenIds = new uint[](badgeTypes.length);
+        uint[] memory amounts = new uint[](badgeTypes.length);
+        for (uint256 i = 0; i < badgeTypes.length; i++) {
+            if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
+            uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
+            if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
+            uint256 bitmapIndex = tokenId / 256;
+            uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
+            bitmap = bitmap | (1 << badgeTypes[i]); // set it to 1
+            _expiries[tokenId][validatedAddress] = expiryTimestamps[i];
+            tokenIds[i] = tokenId;
+            amounts[i] = 1;
+        }
+        address operator = _msgSender();
+        emit TransferBatch(operator, address(0), validatedAddress, tokenIds, amounts);
+        _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenIds, amounts, "");
+    }
 
     // function revoke(
     //     address account,
@@ -178,12 +183,12 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         return IKycRegistry(kycRegistry).getCurrentAddress(_address);
     }
 
-    function encode(uint96 _badgeType, address _address) public pure returns (uint256){
-        return uint256(bytes32(abi.encodePacked(_badgeType, _address)));
+    function encodeTokenId(uint96 _tokenType, address _address) public pure returns (uint256){
+        return uint256(bytes32(abi.encodePacked(_tokenType, _address)));
     }
 
-    function decode(uint256 data) public pure returns (uint96 _badgeType, address _address) {
-        _badgeType = uint96(data >> 160);
+    function decodeTokenId(uint256 data) public pure returns (uint96 _tokenType, address _address) {
+        _tokenType = uint96(data >> 160);
         _address = address(uint160(uint256(((bytes32(data) << 96) >> 96))));
     }
 
