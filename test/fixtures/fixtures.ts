@@ -27,8 +27,8 @@ export const deploy = async () => {
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
 
   const blockTimestamp = (await provider.getBlock("latest")).timestamp;
-  const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year
-  const invalidExpiry = blockTimestamp - 60 * 60 * 24 * 365; // 1 year
+  const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year ahead
+  const invalidExpiry = blockTimestamp - 60 * 60 * 24 * 365; // 1 year ago
 
   return {
     badgeSetFactory,

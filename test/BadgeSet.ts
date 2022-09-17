@@ -46,7 +46,7 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe("mint()", () => {
+  describe.only("mint()", () => {
     it("Mints without expiry", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, 0);

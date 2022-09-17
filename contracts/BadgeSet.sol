@@ -8,6 +8,7 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "../interfaces/IKycRegistry.sol";
 
 error ZeroAddress();
@@ -22,6 +23,9 @@ error AddressAlreadyTransitioned();
 
 // Trigger it by doing balanceOf?
 
+// TODO: don't let send to contracts
+// TODO: largest tokenid storage
+// TODO: write get single, 
 // TODO: don't want contracts to receive? Remove IERC1155Receiver?
 // TODO: move errors and events to IBadgeSet.sol
 // TODO: add parameters to custom errors so there's a trace/message
@@ -45,7 +49,7 @@ error AddressAlreadyTransitioned();
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
-    mapping(uint256 => mapping(address => uint256)) private _balances; // id/address to owned count
+    mapping(address => mapping(uint256 => uint256)) private _ownershipBitmaps;
     mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
     string private _uri;
     string private _contractURI;
@@ -75,84 +79,96 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     
     // expiryOf() returns the expiry of the badge with the given id
 
-    function balanceOf(address account, uint256 id) public view returns (uint256) {
-        return _balances[id][account];
+    function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
+        (address _address, uint96 _badgeType) = decode(id);
+        if (_address != account) return 0;
+        uint256 bitmapIndex = id / 256;
+        uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
+        uint256 bitValue = getBitValue(bitmap, _badgeType);
+        balance = uint256(bitValue > 0);
     }
+
+    function getBitValue(uint256 bitmap, uint256 tokenId) private returns(uint256){
+        return bitmap & (1 << tokenId);
+    }
+
+    // function setBitValue(uint256 storage bitmap, uint256 tokenId) private {
+    //     bitmap = bitmap | (1 << tokenId);
+    // }
 
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
         if (accounts.length != ids.length) revert ParamsLengthMismatch();
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
-            batchBalances[i] = _balances[ids[i]][accounts[i]];
+            batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
         return batchBalances;
     }
 
     function mint(
         address account,
-        uint256 id,
+        uint96 badgeType,
         uint256 expiryTimestamp
     ) external onlyOwner {
         if (isExpired(expiryTimestamp)) revert ExpiryPassed();
-        if (balanceOf(account, id) > 0) revert TokenAlreadyOwned();
-        address validatedAccount = validateAddress(account);
-        _balances[id][validatedAccount] = 1;
-        _expiries[id][validatedAccount] = expiryTimestamp;
+        address validatedAddress = validateAddress(account);
+        uint256 tokenId = encode(validatedAddress, badgeType);
+        if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
+        uint256 bitmapIndex = tokenId / 256;
+        uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
+        bitmap = bitmap | (1 << badgeType); // set it to 1
+        _expiries[tokenId][validatedAddress] = expiryTimestamp;
         address operator = _msgSender();
-        emit TransferSingle(operator, validatedAccount, address(0), id, 1);
-        _doSafeTransferAcceptanceCheck(operator, address(0), validatedAccount, id, 1, "");
+        emit TransferSingle(operator, validatedAddress, address(0), tokenId, 1);
+        _doSafeTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenId, 1, "");
     }
 
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory expiryTimestamps
-    ) external onlyOwner {
-        if (ids.length != expiryTimestamps.length) revert ParamsLengthMismatch();
-        address validatedAccount = validateAddress(to);
-        uint[] memory amounts = new uint[](ids.length);
-        for (uint256 i = 0; i < ids.length; i++) {
-            if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
-            if (_balances[ids[i]][validatedAccount] == 1) revert TokenAlreadyOwned();
-            _balances[ids[i]][validatedAccount] = 1;
-            _expiries[ids[i]][validatedAccount] = expiryTimestamps[i];
-            amounts[i] = 1;
-        }
-        address operator = _msgSender();
-        emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
-        _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAccount, ids, amounts, "");
-    }
+    // function mintBatch(
+    //     address to,
+    //     uint256[] memory ids,
+    //     uint256[] memory expiryTimestamps
+    // ) external onlyOwner {
+    //     if (ids.length != expiryTimestamps.length) revert ParamsLengthMismatch();
+    //     address validatedAccount = validateAddress(to);
+    //     uint[] memory amounts = new uint[](ids.length);
+    //     for (uint256 i = 0; i < ids.length; i++) {
+    //         if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
+    //         if (_balances[ids[i]][validatedAccount] == 1) revert TokenAlreadyOwned();
+    //         _balances[ids[i]][validatedAccount] = 1;
+    //         _expiries[ids[i]][validatedAccount] = expiryTimestamps[i];
+    //         amounts[i] = 1;
+    //     }
+    //     address operator = _msgSender();
+    //     emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
+    //     _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAccount, ids, amounts, "");
+    // }
 
-    function revoke(
-        address account,
-        uint256 id
-    ) external onlyOwner {
-        if (balanceOf(account, id) != 1) revert InsufficientBalance();
-        address validatedAccount = validateAddress(account);
-        delete _balances[id][validatedAccount];
-        delete _expiries[id][validatedAccount];
-        emit TransferSingle(_msgSender(), validatedAccount, address(0), id, 1);
-    }
+    // function revoke(
+    //     address account,
+    //     uint256 id
+    // ) external onlyOwner {
+    //     if (balanceOf(account, id) != 1) revert InsufficientBalance();
+    //     address validatedAccount = validateAddress(account);
+    //     delete _balances[id][validatedAccount];
+    //     delete _expiries[id][validatedAccount];
+    //     emit TransferSingle(_msgSender(), validatedAccount, address(0), id, 1);
+    // }
 
-    function revokeBatch(
-        address to,
-        uint256[] memory ids
-    ) external onlyOwner {
-        address operator = _msgSender();
-        address validatedAccount = validateAddress(to);
-        uint[] memory amounts = new uint[](ids.length);
-        for (uint256 i = 0; i < ids.length; i++) {
-            if (balanceOf(validatedAccount, ids[i]) != 1) revert InsufficientBalance();
-            delete _balances[ids[i]][validatedAccount];
-            delete _expiries[ids[i]][validatedAccount];
-            amounts[i] = 1;
-        }
-        emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
-    }
-
-    function transitionAddress(address userAddress, uint256[] memory ids) public {
-        
-    }
+    // function revokeBatch(
+    //     address to,
+    //     uint256[] memory ids
+    // ) external onlyOwner {
+    //     address operator = _msgSender();
+    //     address validatedAccount = validateAddress(to);
+    //     uint[] memory amounts = new uint[](ids.length);
+    //     for (uint256 i = 0; i < ids.length; i++) {
+    //         if (balanceOf(validatedAccount, ids[i]) != 1) revert InsufficientBalance();
+    //         delete _balances[ids[i]][validatedAccount];
+    //         delete _expiries[ids[i]][validatedAccount];
+    //         amounts[i] = 1;
+    //     }
+    //     emit TransferBatch(operator, address(0), validatedAccount, ids, amounts);
+    // }
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
         return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;
@@ -162,12 +178,13 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         return IKycRegistry(kycRegistry).getCurrentAddress(_address);
     }
 
-    function decode(bytes memory data) public pure returns (address _address, uint96 _badgeType) {
-        (_address, _badgeType) = abi.decode(data, (address, uint96));            
+    function encode(uint96 _badgeType, address _address) public pure returns (uint256){
+        return uint256(bytes32(abi.encodePacked(_badgeType, _address)));
     }
 
-    function encode(address _address, uint96 _badgeType) public view returns (bytes memory){
-        return abi.encode(_address, _badgeType);
+    function decode(uint256 data) public pure returns (uint96 _badgeType, address _address) {
+        _badgeType = uint96(data >> 160);
+        _address = address(uint160(uint256(((bytes32(data) << 96) >> 96))));
     }
 
     // @notice: NOOPs for non needed ERC1155 functions
