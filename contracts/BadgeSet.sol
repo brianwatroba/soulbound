@@ -83,7 +83,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
         (uint96 _badgeType, address _address) = decodeTokenId(id);
         if (_address != account) return 0;
-        uint256 bitmapIndex = id / 256;
+        uint256 bitmapIndex = _badgeType / 256;
         uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
         uint256 bitValue = getBitValue(bitmap, _badgeType);
         balance = bitValue > 0 ? 1 : 0;
@@ -115,7 +115,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         address validatedAddress = validateAddress(account);
         tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-        uint256 bitmapIndex = tokenId / 256;
+        uint256 bitmapIndex = badgeType / 256;
         uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeType);
         _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
         _expiries[tokenId][validatedAddress] = expiryTimestamp;
@@ -137,7 +137,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
             if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
             uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
             if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-            uint256 bitmapIndex = tokenId / 256;
+            uint256 bitmapIndex = badgeTypes[i] / 256;
             uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeTypes[i]);
             _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
             _expiries[tokenId][validatedAddress] = expiryTimestamps[i];
@@ -153,13 +153,12 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         address account,
         uint96 badgeType
     ) public onlyOwner {
-        if (balanceOf(account, badgeType) != 1) revert InsufficientBalance();
         address validatedAddress = validateAddress(account);
         uint256 tokenId = encodeTokenId(badgeType, validatedAddress);
-        if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-        uint256 bitmapIndex = tokenId / 256;
-        uint256 bitmap = _ownershipBitmaps[validatedAddress][bitmapIndex];
-        bitmap = bitmap & (1 << badgeType); // set it to 0
+        if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
+        uint256 bitmapIndex = badgeType / 256;
+        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] &~ (1 << badgeType);
+        _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 0
         delete _expiries[tokenId][validatedAddress];
         emit TransferSingle(_msgSender(), validatedAddress, address(0), tokenId, 1);
     }
