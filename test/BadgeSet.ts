@@ -155,27 +155,26 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  // describe("revokeBatch()", () => {
-  //   it("Revokes token and expiry", async () => {
-  //     const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-  //     await badgeSet.connect(forbes).mint(userAddress, 1, 0);
-  //     await badgeSet.connect(forbes).mint(userAddress, 2, 0);
-  //     await badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2]);
-  //     expect(await badgeSet.balanceOf(userAddress, 1)).to.equal(0);
-  //     expect(await badgeSet.balanceOf(userAddress, 2)).to.equal(0);
-  //     // TODO: test expiry
-  //   });
-  //   it("Reverts: not owner", async () => {
-  //     const { badgeSet, user, userAddress } = await loadFixture(fixtures.deploy);
-  //     await expect(badgeSet.connect(user).revokeBatch(userAddress, [1, 2])).to.be.reverted;
-  //   });
-  //   it("Reverts: token not owned", async () => {
-  //     const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-  //     await expect(badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2])).to.be.reverted;
-  //   });
-  // });
-
-  describe("transitionAddress()", () => {
+  describe.only("transitionWallet()", () => {
+    it("transitions wallet", async () => {
+      const { badgeSet, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2, 3, 20, 100, 200];
+      const expiries = [0, 0, 0, 0, 0, 0];
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
+      const userAccounts = ids.map((id) => userAddress);
+      const userTokenIds = await Promise.all(
+        ids.map((id) => badgeSet.encodeTokenId(id, userAddress))
+      );
+      const walletAccounts = ids.map((id) => walletAddress);
+      const walletTokenIds = await Promise.all(
+        ids.map((id) => badgeSet.encodeTokenId(id, walletAddress))
+      );
+      const result0 = ids.map((id) => ethers.BigNumber.from(0));
+      const result1 = ids.map((id) => ethers.BigNumber.from(1));
+      expect(await badgeSet.balanceOfBatch(walletAccounts, walletTokenIds)).to.deep.equal(result1);
+      expect(await badgeSet.balanceOfBatch(userAccounts, userTokenIds)).to.deep.equal(result0);
+    });
     // reverts if one not owned
     // reverts if no claimed address
     // it("Reverts: not owner", async () => {

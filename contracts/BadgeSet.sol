@@ -50,8 +50,10 @@ error AddressAlreadyTransitioned();
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
+    uint96 public tokenTypeCount;
     mapping(address => mapping(uint256 => uint256)) private _ownershipBitmaps;
     mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
+    
     string private _uri;
     string private _contractURI;
 
@@ -119,6 +121,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeType);
         _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
         _expiries[tokenId][validatedAddress] = expiryTimestamp;
+        if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
         address operator = _msgSender();
         emit TransferSingle(operator, validatedAddress, address(0), tokenId, 1);
         _doSafeTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenId, 1, "");
@@ -141,6 +144,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
             uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeTypes[i]);
             _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
             _expiries[tokenId][validatedAddress] = expiryTimestamps[i];
+            if (tokenTypeCount < badgeTypes[i]) tokenTypeCount = badgeTypes[i];
             tokenIds[i] = tokenId;
             amounts[i] = 1;
         }
@@ -177,6 +181,26 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
             tokenIds[i] = tokenId;
         }
         emit TransferBatch(operator, address(0), validatedAccount, tokenIds, amounts);
+    }
+
+    function transitionWallet(address kycAddress, address walletAddress) external onlyOwner {
+       uint256 bitmapCount = tokenTypeCount / 256;
+       console.log('BITMAPCOUNT', bitmapCount);
+         for (uint256 i = 0; i <= bitmapCount; i++) {
+              uint256 bitmap = _ownershipBitmaps[kycAddress][i];
+              transitionBitmap(bitmap, kycAddress, walletAddress);
+              _ownershipBitmaps[walletAddress][i] = bitmap;
+              delete _ownershipBitmaps[kycAddress][i];
+         }
+    }
+
+    function transitionBitmap(uint256 bitmap, address kycAddress, address walletAddress) private {
+        for(uint256 i = 0; i < 256; i++) {
+            if (bitmap & (1 << i) > 0) {
+                emit TransferSingle(_msgSender(), address(0), walletAddress, encodeTokenId(uint96(i), walletAddress), 1);
+                emit TransferSingle(_msgSender(), kycAddress, address(0), encodeTokenId(uint96(i), kycAddress), 1);
+            }
+        } 
     }
 
     function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
