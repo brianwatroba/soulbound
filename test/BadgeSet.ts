@@ -54,6 +54,13 @@ describe("BadgeSet.sol", () => {
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
+    it("Mints without expiry above tokenType 256", async () => {
+      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
+      badgeSet.connect(forbes).mint(userAddress, 300, 0);
+      const tokenId = await badgeSet.encodeTokenId(300, userAddress);
+      const balance = await badgeSet.balanceOf(userAddress, tokenId);
+      expect(balance).to.equal(1);
+    });
     it("Mints with expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, validExpiry);
@@ -155,23 +162,23 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe.only("transitionWallet()", () => {
+  describe("transitionWallet()", () => {
     it("transitions wallet", async () => {
       const { badgeSet, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
-      const ids = [1, 2, 3, 20, 100, 200];
-      const expiries = [0, 0, 0, 0, 0, 0];
+      const ids = [1, 2, 3, 20, 100, 350, 100000];
+      const expiries = ids.map(() => 0);
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
       await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
-      const userAccounts = ids.map((id) => userAddress);
+      const userAccounts = ids.map(() => userAddress);
       const userTokenIds = await Promise.all(
         ids.map((id) => badgeSet.encodeTokenId(id, userAddress))
       );
-      const walletAccounts = ids.map((id) => walletAddress);
+      const walletAccounts = ids.map(() => walletAddress);
       const walletTokenIds = await Promise.all(
         ids.map((id) => badgeSet.encodeTokenId(id, walletAddress))
       );
-      const result0 = ids.map((id) => ethers.BigNumber.from(0));
-      const result1 = ids.map((id) => ethers.BigNumber.from(1));
+      const result0 = ids.map(() => ethers.BigNumber.from(0));
+      const result1 = ids.map(() => ethers.BigNumber.from(1));
       expect(await badgeSet.balanceOfBatch(walletAccounts, walletTokenIds)).to.deep.equal(result1);
       expect(await badgeSet.balanceOfBatch(userAccounts, userTokenIds)).to.deep.equal(result0);
     });

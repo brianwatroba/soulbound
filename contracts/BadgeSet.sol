@@ -87,17 +87,13 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         if (_address != account) return 0;
         uint256 bitmapIndex = _badgeType / 256;
         uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
-        uint256 bitValue = getBitValue(bitmap, _badgeType);
+        uint256 bitValue = getBitValue(bitmap, _badgeType - (bitmapIndex * 256)); // correct number for in the 256 bit bitmap
         balance = bitValue > 0 ? 1 : 0;
     }
 
     function getBitValue(uint256 bitmap, uint256 tokenId) private pure returns(uint256){
         return bitmap & (1 << tokenId);
     }
-
-    // function setBitValue(uint256 storage bitmap, uint256 tokenId) private {
-    //     bitmap = bitmap | (1 << tokenId);
-    // }
 
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
         if (accounts.length != ids.length) revert ParamsLengthMismatch();
@@ -118,7 +114,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
         uint256 bitmapIndex = badgeType / 256;
-        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeType);
+        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeType - (bitmapIndex * 256));
         _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
         _expiries[tokenId][validatedAddress] = expiryTimestamp;
         if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
@@ -141,7 +137,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
             uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
             if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
             uint256 bitmapIndex = badgeTypes[i] / 256;
-            uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeTypes[i]);
+            uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeTypes[i] - (bitmapIndex * 256));
             _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
             _expiries[tokenId][validatedAddress] = expiryTimestamps[i];
             if (tokenTypeCount < badgeTypes[i]) tokenTypeCount = badgeTypes[i];
@@ -185,7 +181,6 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     function transitionWallet(address kycAddress, address walletAddress) external onlyOwner {
        uint256 bitmapCount = tokenTypeCount / 256;
-       console.log('BITMAPCOUNT', bitmapCount);
          for (uint256 i = 0; i <= bitmapCount; i++) {
               uint256 bitmap = _ownershipBitmaps[kycAddress][i];
               transitionBitmap(bitmap, kycAddress, walletAddress);
