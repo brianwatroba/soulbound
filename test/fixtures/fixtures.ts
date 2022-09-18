@@ -9,23 +9,24 @@ const userKycDetails = {
   firstName: "john",
   lastName: "smith",
   dob: 12121989,
-  phoneNumber: 16461111,
+  phoneNumber: 6461111,
 };
 
 const userAddress = "0x64443F9CDBc6b3f12AD0c81083dde302d85Ef81E";
 const walletAddress = "0x20A3d0288B393dF8901BB6415C6Ac538F17B94fE";
 
 export const deploy = async () => {
-  const [soulbound, forbes, padi, user] = await ethers.getSigners();
-  const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
-  const badgeSetFactory = await (await BadgeSetFactory.connect(soulbound).deploy()).deployed();
+  const [soulbound, forbes, user] = await ethers.getSigners();
 
   const KycRegistry = await ethers.getContractFactory("KycRegistry");
   const kycRegistry = await (await KycRegistry.connect(soulbound).deploy()).deployed();
 
-  await badgeSetFactory
-    .connect(soulbound)
-    .createBadgeSet(forbes.address, kycRegistry.address, uri, contractUri);
+  const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
+  const badgeSetFactory = await (
+    await BadgeSetFactory.connect(soulbound).deploy(kycRegistry.address)
+  ).deployed();
+
+  await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, uri, contractUri);
   const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
 

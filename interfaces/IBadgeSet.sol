@@ -11,7 +11,7 @@ function uri(uint256 id) external view returns (string memory);
 
   function setContractURI(string memory newuri) external;
   
-  // expiryOf() returns the expiry of the badge with the given id
+  function expiryOf(uint256 tokenId) external view returns (uint256);
 
   function balanceOf(address account, uint256 id) external view returns (uint256 balance);
 
@@ -38,6 +38,8 @@ function uri(uint256 id) external view returns (string memory);
       address to,
       uint96[] memory badgeTypes
   ) external;
+
+  function transitionWallet(address kycAddress, address walletAddress) external;
 
   function validateAddress(address _address) external view returns (address);
 

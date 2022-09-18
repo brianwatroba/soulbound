@@ -52,7 +52,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     address public kycRegistry;
     uint96 public tokenTypeCount;
     mapping(address => mapping(uint256 => uint256)) private _ownershipBitmaps;
-    mapping(uint256 => mapping(address => uint256)) private _expiries; // id/address to badge expiration
+    mapping(uint256 => uint256) private _expiries; // id/address to badge expiration
     
     string private _uri;
     string private _contractURI;
@@ -80,7 +80,9 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _contractURI = newuri;
     }
     
-    // expiryOf() returns the expiry of the badge with the given id
+    function expiryOf(uint256 tokenId) public view returns (uint256) {
+        return _expiries[tokenId];
+    }
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
         (uint96 _badgeType, address _address) = decodeTokenId(id);
@@ -116,7 +118,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 bitmapIndex = badgeType / 256;
         uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeType - (bitmapIndex * 256));
         _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
-        _expiries[tokenId][validatedAddress] = expiryTimestamp;
+        _expiries[tokenId] = expiryTimestamp;
         if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
         address operator = _msgSender();
         emit TransferSingle(operator, validatedAddress, address(0), tokenId, 1);
@@ -139,7 +141,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
             uint256 bitmapIndex = badgeTypes[i] / 256;
             uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeTypes[i] - (bitmapIndex * 256));
             _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
-            _expiries[tokenId][validatedAddress] = expiryTimestamps[i];
+            _expiries[tokenId] = expiryTimestamps[i];
             if (tokenTypeCount < badgeTypes[i]) tokenTypeCount = badgeTypes[i];
             tokenIds[i] = tokenId;
             amounts[i] = 1;
@@ -159,7 +161,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         uint256 bitmapIndex = badgeType / 256;
         uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] &~ (1 << badgeType);
         _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 0
-        delete _expiries[tokenId][validatedAddress];
+        delete _expiries[tokenId];
         emit TransferSingle(_msgSender(), validatedAddress, address(0), tokenId, 1);
     }
 
@@ -179,14 +181,17 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         emit TransferBatch(operator, address(0), validatedAccount, tokenIds, amounts);
     }
 
-    function transitionWallet(address kycAddress, address walletAddress) external onlyOwner {
-       uint256 bitmapCount = tokenTypeCount / 256;
-         for (uint256 i = 0; i <= bitmapCount; i++) {
-              uint256 bitmap = _ownershipBitmaps[kycAddress][i];
-              transitionBitmap(bitmap, kycAddress, walletAddress);
-              _ownershipBitmaps[walletAddress][i] = bitmap;
-              delete _ownershipBitmaps[kycAddress][i];
-         }
+    function transitionWallet(address kycAddress, address walletAddress) external {
+        if (validateAddress(kycAddress) != walletAddress) revert InvalidAddress();
+        uint256 bitmapCount = tokenTypeCount / 256;
+        for (uint256 i = 0; i <= bitmapCount; i++) {
+            uint256 bitmap = _ownershipBitmaps[kycAddress][i];
+            if (bitmap != 0) {
+                transitionBitmap(bitmap, kycAddress, walletAddress);
+                _ownershipBitmaps[walletAddress][i] = bitmap;
+                delete _ownershipBitmaps[kycAddress][i];
+            }
+        }
     }
 
     function transitionBitmap(uint256 bitmap, address kycAddress, address walletAddress) private {
@@ -203,7 +208,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     }
 
     function validateAddress(address _address) public view returns (address) {
-        return IKycRegistry(kycRegistry).getCurrentAddress(_address);
+        return IKycRegistry(kycRegistry).getLinkedWallet(_address);
     }
 
     function encodeTokenId(uint96 _tokenType, address _address) public pure returns (uint256){

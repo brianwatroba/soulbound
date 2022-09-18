@@ -164,8 +164,12 @@ describe("BadgeSet.sol", () => {
 
   describe("transitionWallet()", () => {
     it("transitions wallet", async () => {
-      const { badgeSet, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
-      const ids = [1, 2, 3, 20, 100, 350, 100000];
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } =
+        await loadFixture(fixtures.deploy);
+
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+
+      const ids = [1, 2, 3, 20, 100, 350, 10000];
       const expiries = ids.map(() => 0);
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
       await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);

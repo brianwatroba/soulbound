@@ -6,9 +6,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract BadgeSetFactory is Ownable {
   
+  address public kycRegistry;
   address[] private _badgeSets;
 
-  function createBadgeSet(address owner, address kycRegistry, string memory uri, string memory contractURI) external onlyOwner {
+  constructor(address _kycRegistry) {
+    kycRegistry = _kycRegistry;
+  }
+
+  function createBadgeSet(address owner, string memory uri, string memory contractURI) external onlyOwner {
     address newBadgeSet = address(new BadgeSet(owner, kycRegistry, uri, contractURI));
     _badgeSets.push(newBadgeSet);
   }

@@ -26,6 +26,13 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.POLYGON_PRIVATE_KEY !== undefined ? [process.env.POLYGON_PRIVATE_KEY] : [],
     },
+    mumbai: {
+      url: process.env.POLYGON_MUMBAI_URL || "",
+      accounts:
+        process.env.POLYGON_MUMBAI_PRIVATE_KEY !== undefined
+          ? [process.env.POLYGON_MUMBAI_PRIVATE_KEY]
+          : [],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

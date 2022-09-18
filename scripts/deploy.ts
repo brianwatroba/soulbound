@@ -9,6 +9,7 @@ async function main() {
   const signer = new ethers.Wallet(process.env.POLYGON_PRIVATE_KEY ?? "", provider);
 
   const uri = "https://soulbound-api-test.herokuapp.com/api/token/";
+  const contractUri = "https://soulbound-api-test.herokuapp.com/api/contract/";
 
   // const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
   // const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy()).deployed();
