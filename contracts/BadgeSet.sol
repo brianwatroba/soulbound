@@ -57,23 +57,23 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
     string private _uri;
     string private _contractURI;
 
-    constructor(address _owner, address _kycRegistry, string memory uri_, string memory contractURI_) {
+    constructor(address _owner, address _kycRegistry, string memory _baseUri) {
         kycRegistry = _kycRegistry;
-        setURI(string.concat(uri_, Strings.toHexString(uint160(address(this)), 20), "/"));
-        setContractURI(contractURI_);
+        setURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/"));
+        setContractURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/"));
         transferOwnership(_owner);
     } 
 
     function uri(uint256 id) public view returns (string memory) {
         return string.concat(_uri, Strings.toString(id));
     }
+
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
+    }
     
     function setURI(string memory newuri) public onlyOwner {
         _uri = newuri;
-    }
-
-    function contractURI() public view returns (string memory) {
-        return _uri;
     }
 
     function setContractURI(string memory newuri) public onlyOwner {
