@@ -59,7 +59,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     constructor(address _owner, address _kycRegistry, string memory uri_, string memory contractURI_) {
         kycRegistry = _kycRegistry;
-        setURI(uri_);
+        setURI(string.concat(uri_, Strings.toHexString(uint160(address(this)), 20), "/"));
         setContractURI(contractURI_);
         transferOwnership(_owner);
     } 
@@ -121,7 +121,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
         _expiries[tokenId] = expiryTimestamp;
         if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
         address operator = _msgSender();
-        emit TransferSingle(operator, validatedAddress, address(0), tokenId, 1);
+        emit TransferSingle(operator, address(0), validatedAddress, tokenId, 1);
         _doSafeTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenId, 1, "");
     }
 
@@ -178,7 +178,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
             amounts[i] = 1;
             tokenIds[i] = tokenId;
         }
-        emit TransferBatch(operator, address(0), validatedAccount, tokenIds, amounts);
+        emit TransferBatch(operator, validatedAccount, address(0), tokenIds, amounts);
     }
 
     function transitionWallet(address kycAddress, address walletAddress) external {

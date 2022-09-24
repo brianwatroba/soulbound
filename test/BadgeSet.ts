@@ -11,9 +11,11 @@ describe("BadgeSet.sol", () => {
       const { badgeSet } = await loadFixture(fixtures.deploy);
       expect(badgeSet.address).to.be.properAddress;
     });
-    it("Sets URI", async () => {
+    it("Sets URI (ends with BadgeSet address)", async () => {
       const { badgeSet, uri } = await loadFixture(fixtures.deploy);
-      expect(await badgeSet.uri(1)).to.equal(uri + "1");
+      const tokenId = "1702821156235119098028961288950624277471988302368";
+      const expectedUri = `${uri}${badgeSet.address.toLowerCase()}/${tokenId}`;
+      expect(await badgeSet.uri(tokenId)).to.equal(expectedUri);
     });
     it("Sets kycRegistry address", async () => {
       const { badgeSet, kycRegistry } = await loadFixture(fixtures.deploy);
@@ -28,7 +30,9 @@ describe("BadgeSet.sol", () => {
   describe("uri", () => {
     it("Returns URI for tokenId", async () => {
       const { badgeSet, uri } = await loadFixture(fixtures.deploy);
-      expect(await badgeSet.uri(1)).to.equal(uri + "1");
+      const tokenId = "1702821156235119098028961288950624277471988302368";
+      const expectedUri = `${uri}${badgeSet.address.toLowerCase()}/${tokenId}`;
+      expect(await badgeSet.uri(tokenId)).to.equal(expectedUri);
     });
   });
 
