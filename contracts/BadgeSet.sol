@@ -10,25 +10,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "../interfaces/IKycRegistry.sol";
+import "../interfaces/IBadgeSet.sol";
 import "hardhat/console.sol";
 
-error ZeroAddress();
-error ExpiryPassed();
-error SoulboundNoTransfer();
-error ParamsLengthMismatch();
-error InsufficientBalance();
-error TokenAlreadyOwned();
-error InvalidAddress();
-error InvalidURI();
-error AddressAlreadyTransitioned();
-
-// Trigger it by doing balanceOf?
-
-// TODO: don't let send to contracts
-// TODO: largest tokenid storage
-// TODO: write get single, 
 // TODO: don't want contracts to receive? Remove IERC1155Receiver?
-// TODO: move errors and events to IBadgeSet.sol
 // TODO: add parameters to custom errors so there's a trace/message
 // TODO: create helper array creation function for given length full of a value
 // TODO: do we need zero address checks?
@@ -192,6 +177,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
                 delete _ownershipBitmaps[kycAddress][i];
             }
         }
+        emit TransitionWallet(kycAddress, walletAddress);
     }
 
     function transitionBitmap(uint256 bitmap, address kycAddress, address walletAddress) private {
