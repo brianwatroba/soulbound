@@ -13,6 +13,7 @@ import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "hardhat/console.sol";
 
+// TODO: consolidate interfaces and split them so there isn't duplication
 // TODO: don't want contracts to receive? Remove IERC1155Receiver?
 // TODO: add parameters to custom errors so there's a trace/message
 // TODO: create helper array creation function for given length full of a value
