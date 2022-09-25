@@ -1,14 +1,11 @@
 import { ethers } from "hardhat";
 
 const provider = ethers.getDefaultProvider();
-
-const uri = "https://ipsai94oog.execute-api.us-east-1.amazonaws.com/badgeMetadata/";
-const contractUri = "https://ipsai94oog.execute-api.us-east-1.amazonaws.com/contractMetadata/";
+const baseUri = "https://soulbound-api-test.herokuapp.com/metadata/";
 
 const userKycDetails = {
   firstName: "john",
   lastName: "smith",
-  dob: 12121989,
   phoneNumber: 6461111,
 };
 
@@ -26,8 +23,8 @@ export const deploy = async () => {
     await BadgeSetFactory.connect(soulbound).deploy(kycRegistry.address)
   ).deployed();
 
-  await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, uri, contractUri);
-  const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
+  await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, baseUri);
+  const [badgeSetAddress] = await badgeSetFactory.badgeSets();
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
 
   const blockTimestamp = (await provider.getBlock("latest")).timestamp;
@@ -40,8 +37,7 @@ export const deploy = async () => {
     kycRegistry,
     soulbound,
     forbes,
-    uri,
-    contractUri,
+    baseUri,
     user,
     userKycDetails,
     userAddress,

@@ -16,11 +16,10 @@ describe("KycRegistry.sol", function () {
   });
   describe("kycToUserAddress()", () => {
     it("should convert KYC to the correct userAddress", async () => {
-      const { kycRegistry, soulbound, userKycDetails } = await loadFixture(fixtures.deploy);
-      const { firstName, lastName, dob, phoneNumber } = userKycDetails;
+      const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
+      const { firstName, lastName, phoneNumber } = userKycDetails;
       const firstNameBytes = ethers.utils.formatBytes32String(firstName);
       const lastNameBytes = ethers.utils.formatBytes32String(lastName);
-      const dobBN = ethers.BigNumber.from(dob);
       const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
       const userAddress = await kycRegistry.hashKycToUserAddress(
         firstNameBytes,

@@ -12,9 +12,9 @@ describe("BadgeSet.sol", () => {
       expect(badgeSet.address).to.be.properAddress;
     });
     it("Sets URI (ends with BadgeSet address)", async () => {
-      const { badgeSet, uri } = await loadFixture(fixtures.deploy);
+      const { badgeSet, baseUri } = await loadFixture(fixtures.deploy);
       const tokenId = "1702821156235119098028961288950624277471988302368";
-      const expectedUri = `${uri}${badgeSet.address.toLowerCase()}/${tokenId}`;
+      const expectedUri = `${baseUri}${badgeSet.address.toLowerCase()}/${tokenId}`;
       expect(await badgeSet.uri(tokenId)).to.equal(expectedUri);
     });
     it("Sets kycRegistry address", async () => {
@@ -29,9 +29,9 @@ describe("BadgeSet.sol", () => {
 
   describe("uri", () => {
     it("Returns URI for tokenId", async () => {
-      const { badgeSet, uri } = await loadFixture(fixtures.deploy);
+      const { badgeSet, baseUri } = await loadFixture(fixtures.deploy);
       const tokenId = "1702821156235119098028961288950624277471988302368";
-      const expectedUri = `${uri}${badgeSet.address.toLowerCase()}/${tokenId}`;
+      const expectedUri = `${baseUri}${badgeSet.address.toLowerCase()}/${tokenId}`;
       expect(await badgeSet.uri(tokenId)).to.equal(expectedUri);
     });
   });

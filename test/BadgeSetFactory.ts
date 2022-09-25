@@ -18,19 +18,16 @@ describe("BadgeSetFactory.sol", function () {
   });
   describe("createBadgeSet", () => {
     it("deploys a badgeSet", async () => {
-      const { badgeSetFactory, soulbound, forbes, kycRegistry, uri, contractUri } =
-        await loadFixture(fixtures.deploy);
-      await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, uri, contractUri);
+      const { badgeSetFactory, soulbound, forbes, baseUri } = await loadFixture(fixtures.deploy);
+      await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, baseUri);
       const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
       const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
       expect(badgeSet.address).to.be.properAddress;
     });
     it("reverts if not owner", async () => {
-      const { badgeSetFactory, forbes, kycRegistry, uri, contractUri } = await loadFixture(
-        fixtures.deploy
-      );
+      const { badgeSetFactory, forbes, baseUri } = await loadFixture(fixtures.deploy);
       await expect(
-        badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, uri, contractUri)
+        badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)
       ).to.be.revertedWith(NotOwnerError);
     });
   });

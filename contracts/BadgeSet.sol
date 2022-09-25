@@ -33,6 +33,12 @@ import "hardhat/console.sol";
 // TODO: KYC pure functions more accessible across contracts
 // TODO: signature that it's part of the overall Soulbound collection/registered
 
+error ExpiryPassed();
+error ParamsLengthMismatch();
+error InsufficientBalance();
+error TokenAlreadyOwned();
+error InvalidAddress();
+
 contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
@@ -178,7 +184,7 @@ contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
                 delete _ownershipBitmaps[kycAddress][i];
             }
         }
-        emit TransitionWallet(kycAddress, walletAddress);
+        // emit TransitionWallet(kycAddress, walletAddress);
     }
 
     function transitionBitmap(uint256 bitmap, address kycAddress, address walletAddress) private {
