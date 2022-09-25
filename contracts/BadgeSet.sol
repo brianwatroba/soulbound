@@ -33,12 +33,6 @@ import "hardhat/console.sol";
 // TODO: KYC pure functions more accessible across contracts
 // TODO: signature that it's part of the overall Soulbound collection/registered
 
-error ExpiryPassed();
-error ParamsLengthMismatch();
-error InsufficientBalance();
-error TokenAlreadyOwned();
-error InvalidAddress();
-
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;

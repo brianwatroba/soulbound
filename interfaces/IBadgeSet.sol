@@ -3,6 +3,12 @@ pragma solidity ^0.8.12;
 
 interface IBadgeSet {
 
+    error ExpiryPassed();
+    error ParamsLengthMismatch();
+    error InsufficientBalance();
+    error TokenAlreadyOwned();
+    error InvalidAddress();
+
     event TransitionWallet(address indexed kycAddress, address indexed walletAddress);
 
     function contractURI() external view returns (string memory);
