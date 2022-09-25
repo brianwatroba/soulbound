@@ -5,13 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 
-error WalletAlreadyLinked();
-
-// TODO: batch get functions?
-// TODO: update interface and inherit
-// TODO: add events
-
-contract KycRegistry is Ownable { 
+contract KycRegistry is IKycRegistry, Ownable { 
 
   mapping(address => address) private _walletsToUsers; 
   mapping(address => address) private _usersToWallets;

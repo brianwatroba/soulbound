@@ -3,6 +3,8 @@ pragma solidity ^0.8.12;
 
 interface IKycRegistry { 
 
+  error WalletAlreadyLinked();
+
   function linkWallet(address userAddress, address walletAddress) external;
 
   function getLinkedWallet(address userAddress) external view returns (address);

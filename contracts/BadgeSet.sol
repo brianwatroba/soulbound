@@ -13,26 +13,6 @@ import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "hardhat/console.sol";
 
-// TODO: consolidate interfaces and split them so there isn't duplication
-// TODO: don't want contracts to receive? Remove IERC1155Receiver?
-// TODO: add parameters to custom errors so there's a trace/message
-// TODO: create helper array creation function for given length full of a value
-// TODO: do we need zero address checks?
-// TODO: function only KYC registry can call to emit events for all transferred
-// TODO: how to handle minting some badges to kyc address, then some to real address?
-// TODO: consistency of "account" and "to"
-// TODO: gas optimization in transitionAddress to loop events or loop array and single batch event
-// TODO: swap order in private mappings expiries/balances to be address/id, not id/address
-// TODO: expiry shows you as owning 0 in balanceOf? Or you own but it's expired?
-// TODO: add name for contract, storage variable, and add that to baseURL + name + ID
-// TODO: token transfer hooks in _mint/_mintBatch
-// TODO: clean up and optimize custom errors, replace all error strings
-// TODO: implement: mintBatch(), mintBatchwithExpiry(), revoke(), revokeBatch(), _revoke();
-// TODO: implement batching so that multiple tokens can be minted to multiple people
-// TODO: access control instead of ownable?
-// TODO: KYC pure functions more accessible across contracts
-// TODO: signature that it's part of the overall Soulbound collection/registered
-
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
@@ -178,7 +158,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
                 delete _ownershipBitmaps[kycAddress][i];
             }
         }
-        // emit TransitionWallet(kycAddress, walletAddress);
+        emit TransitionWallet(kycAddress, walletAddress);
     }
 
     function transitionBitmap(uint256 bitmap, address kycAddress, address walletAddress) private {
