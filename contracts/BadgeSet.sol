@@ -13,6 +13,10 @@ import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "hardhat/console.sol";
 
+/// @title BadgeSet
+/// @author Brian watroba
+/// @dev Modified ERC-1155 contract allowing for Soulbound (non-transferrable), semi-fungible NFT. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address.
+/// @custom:version 1.0.2
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
@@ -184,11 +188,11 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function decodeTokenId(uint256 data) public pure returns (uint96 _tokenType, address _address) {
         _tokenType = uint96(data >> 160);
-        _address = address(uint160(uint256(((bytes32(data) << 96) >> 96)))); // use this https://medium.com/@imolfar/bitwise-operations-and-bit-manipulation-in-solidity-ethereum-1751f3d2e216
+        _address = address(uint160(uint256(((bytes32(data) << 96) >> 96))));
     }
 
-    // @notice: NOOPs for non needed ERC1155 functions
-    // TODO: for OpenSea this must be overriden in a special way, can't revert
+    // NOOPs for non needed ERC1155 functions
+
     function setApprovalForAll(address operator, bool approved) external {}
  
     function isApprovedForAll(address account, address operator) external view returns (bool) {
