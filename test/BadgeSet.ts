@@ -1,9 +1,15 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { BigNumber } from "ethers";
 import * as fixtures from "./fixtures/fixtures";
 
 // TODO: more elegant import for fixtures
+
+const encodeTokenIdJs = (tokenType: BigNumber, address: string) => {
+  const packed = ethers.utils.solidityPack(["uint96", "address"], [tokenType, address]);
+  return packed;
+};
 
 describe("BadgeSet.sol", () => {
   describe("Deployment", () => {
@@ -109,9 +115,7 @@ describe("BadgeSet.sol", () => {
       expect(await badgeSet.balanceOf(userAddress, tokenId2)).to.equal(1);
     });
     it("Reverts: invalid expiry", async () => {
-      const { badgeSet, forbes, userAddress, invalidExpiry, validExpiry } = await loadFixture(
-        fixtures.deploy
-      );
+      const { badgeSet, forbes, userAddress, invalidExpiry, validExpiry } = await loadFixture(fixtures.deploy);
       const ids = [1, 2];
       const expiries = [invalidExpiry, validExpiry];
       await expect(badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries)).to.be.reverted;
@@ -166,10 +170,19 @@ describe("BadgeSet.sol", () => {
     });
   });
 
+  describe("encodeTokenId()", () => {
+    it("Encodes a tokenType and address together", async () => {
+      const { badgeSet, userAddress } = await loadFixture(fixtures.deploy);
+      const tokenType = ethers.BigNumber.from(1);
+      const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
+      const localTokenId = encodeTokenIdJs(tokenType, userAddress);
+      expect(tokenId).to.equal(localTokenId);
+    });
+  });
+
   describe("transitionWallet()", () => {
     it("transitions wallet", async () => {
-      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } =
-        await loadFixture(fixtures.deploy);
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
 
       await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
 
@@ -178,13 +191,9 @@ describe("BadgeSet.sol", () => {
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
       await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
       const userAccounts = ids.map(() => userAddress);
-      const userTokenIds = await Promise.all(
-        ids.map((id) => badgeSet.encodeTokenId(id, userAddress))
-      );
+      const userTokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
       const walletAccounts = ids.map(() => walletAddress);
-      const walletTokenIds = await Promise.all(
-        ids.map((id) => badgeSet.encodeTokenId(id, walletAddress))
-      );
+      const walletTokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, walletAddress)));
       const result0 = ids.map(() => ethers.BigNumber.from(0));
       const result1 = ids.map(() => ethers.BigNumber.from(1));
       expect(await badgeSet.balanceOfBatch(walletAccounts, walletTokenIds)).to.deep.equal(result1);
