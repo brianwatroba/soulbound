@@ -13,15 +13,11 @@ interface IBadgeSet {
     
     function expiryOf(uint256 tokenId) external view returns (uint256);
 
-    function balanceOf(address account, uint256 id) external view returns (uint256 balance);
-
-    function balanceOfBatch(address[] memory accounts, uint256[] memory ids) external view returns (uint256[] memory);
-
     function mint(
         address account,
         uint96 badgeType,
         uint256 expiryTimestamp
-    ) external;
+    ) external returns (uint256 tokenId);
 
     function mintBatch(
         address to,

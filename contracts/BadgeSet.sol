@@ -39,7 +39,7 @@ error InsufficientBalance();
 error TokenAlreadyOwned();
 error InvalidAddress();
 
-contract BadgeSet is Context, ERC165, IERC1155, Ownable, IERC1155MetadataURI {
+contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
     address public kycRegistry;
     uint96 public tokenTypeCount;
