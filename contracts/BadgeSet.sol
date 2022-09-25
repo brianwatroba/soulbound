@@ -15,7 +15,7 @@ import "hardhat/console.sol";
 
 /// @title BadgeSet
 /// @author Brian watroba
-/// @dev Modified ERC-1155 contract allowing for Soulbound (non-transferrable), semi-fungible NFT. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address.
+/// @dev Modified ERC-1155 contract allowing for Soulbound (non-transferrable), semi-fungible NFT. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
 /// @custom:version 1.0.2
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
