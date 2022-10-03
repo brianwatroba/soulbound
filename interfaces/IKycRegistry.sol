@@ -4,6 +4,7 @@ pragma solidity ^0.8.12;
 interface IKycRegistry { 
 
   error WalletAlreadyLinked();
+  error StringTooLong();
 
   function linkWallet(address userAddress, address walletAddress) external;
 

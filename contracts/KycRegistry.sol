@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 
+import 'hardhat/console.sol';
+
 /// @title KycRegistry
 /// @author Brian watroba
 /// @dev Registry mapping of user read-only addresses to linked wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address.
@@ -38,9 +40,12 @@ contract KycRegistry is IKycRegistry, Ownable {
         string memory lastName,
         uint256 phoneNumber
     ) external pure returns (address) {
-        bytes32(bytes(firstName));
+        bytes memory firstNameBytes = bytes(firstName);
+        bytes memory lastNameBytes = bytes(lastName);
+        if (firstNameBytes.length > 31 || lastNameBytes.length > 31)
+            revert StringTooLong();
         bytes32 userHash = keccak256(
-            abi.encodePacked(bytes32(bytes(firstName)), bytes32(bytes(lastName)), phoneNumber)
+            abi.encodePacked(bytes32(firstNameBytes), bytes32(lastNameBytes), phoneNumber)
         );
         address userAddress = address(uint160(uint256(userHash)));
         return userAddress;

@@ -31,6 +31,26 @@ describe("KycRegistry.sol", function () {
       expect(hashAsAddress).to.be.properAddress;
       expect(userAddress).to.equal(hashAsAddress);
     });
+    it.only("should revert for firstName longer than 32", async () => {
+      const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
+      const { lastName, phoneNumber } = userKycDetails;
+      const firstName = "This is a string that is longer than 32 characters";
+      const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
+      await expect(kycRegistry.hashKycToUserAddress(firstName, lastName, phoneNumberBN)).to.be.revertedWithCustomError(
+        kycRegistry,
+        "StringTooLong"
+      );
+    });
+    it.only("should revert for lastName longer than 32", async () => {
+      const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
+      const { firstName, phoneNumber } = userKycDetails;
+      const lastName = "This is a string that is longer than 32 characters";
+      const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
+      await expect(kycRegistry.hashKycToUserAddress(firstName, lastName, phoneNumberBN)).to.be.revertedWithCustomError(
+        kycRegistry,
+        "StringTooLong"
+      );
+    });
   });
   describe("linkWallet()", () => {
     it("should link wallet to kycRegistry", async () => {
