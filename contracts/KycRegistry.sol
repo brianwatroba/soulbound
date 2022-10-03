@@ -34,12 +34,13 @@ contract KycRegistry is IKycRegistry, Ownable {
     }
 
     function hashKycToUserAddress(
-        bytes32 firstName,
-        bytes32 lastName,
+        string memory firstName,
+        string memory lastName,
         uint256 phoneNumber
     ) external pure returns (address) {
+        bytes32(bytes(firstName));
         bytes32 userHash = keccak256(
-            abi.encodePacked(firstName, lastName, phoneNumber)
+            abi.encodePacked(bytes32(bytes(firstName)), bytes32(bytes(lastName)), phoneNumber)
         );
         address userAddress = address(uint160(uint256(userHash)));
         return userAddress;

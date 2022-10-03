@@ -15,19 +15,17 @@ describe("KycRegistry.sol", function () {
     });
   });
   describe("kycToUserAddress()", () => {
-    it("should convert KYC to the correct userAddress", async () => {
+    it.only("should convert KYC to the correct userAddress", async () => {
       const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
       const { firstName, lastName, phoneNumber } = userKycDetails;
       const firstNameBytes = ethers.utils.formatBytes32String(firstName);
       const lastNameBytes = ethers.utils.formatBytes32String(lastName);
       const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
-      const userAddress = await kycRegistry.hashKycToUserAddress(firstNameBytes, lastNameBytes, phoneNumberBN);
+      const userAddress = await kycRegistry.hashKycToUserAddress(firstName, lastName, phoneNumberBN);
 
       const hash = ethers.utils.solidityKeccak256(["bytes32", "bytes32", "uint256"], [firstNameBytes, lastNameBytes, phoneNumberBN]);
 
       const hashAsAddress = ethers.utils.getAddress("0x" + hash.slice(-40));
-
-      console.log("hash", hashAsAddress);
 
       expect(userAddress).to.be.properAddress;
       expect(hashAsAddress).to.be.properAddress;

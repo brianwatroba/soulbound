@@ -9,7 +9,7 @@ interface IKycRegistry {
 
   function getLinkedWallet(address userAddress) external view returns (address);
 
-  function hashKycToUserAddress(bytes32 firstName, bytes32 lastName, uint256 phoneNumber) external pure returns (address);
+  function hashKycToUserAddress(string memory firstName, string memory lastName, uint256 phoneNumber) external pure returns (address);
 
   function transitionBadgesByContracts(address kycAddress, address walletAddress, address[] memory contracts) external;
   
