@@ -56,7 +56,9 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
         (uint96 _badgeType, address _address) = decodeTokenId(id);
-        if (_address != account) return 0;
+        // TODO: added next line:
+        address validatedAddress = validateAddress(_address);
+        if (validatedAddress != account) return 0;
         uint256 bitmapIndex = _badgeType / 256;
         uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
         uint256 bitValue = getBitValue(bitmap, _badgeType - (bitmapIndex * 256)); // correct number for in the 256 bit bitmap
@@ -168,8 +170,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     function transitionBitmap(uint256 bitmap, address kycAddress, address walletAddress) private {
         for(uint256 i = 0; i < 256; i++) {
             if (bitmap & (1 << i) > 0) {
-                emit TransferSingle(_msgSender(), address(0), walletAddress, encodeTokenId(uint96(i), walletAddress), 1);
-                emit TransferSingle(_msgSender(), kycAddress, address(0), encodeTokenId(uint96(i), kycAddress), 1);
+                emit TransferSingle(_msgSender(), kycAddress, walletAddress, encodeTokenId(uint96(i), kycAddress), 1);
+
             }
         } 
     }

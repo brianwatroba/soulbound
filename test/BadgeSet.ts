@@ -184,11 +184,11 @@ describe("BadgeSet.sol", () => {
     it("transitions wallet", async () => {
       const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
 
-      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-
       const ids = [1, 2, 3, 20, 100, 350, 10000];
       const expiries = ids.map(() => 0);
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+      // it passes because once we link them, we look up balance at end, and it returns
       await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
       const userAccounts = ids.map(() => userAddress);
       const userTokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
@@ -198,6 +198,18 @@ describe("BadgeSet.sol", () => {
       const result1 = ids.map(() => ethers.BigNumber.from(1));
       expect(await badgeSet.balanceOfBatch(walletAccounts, walletTokenIds)).to.deep.equal(result1);
       expect(await badgeSet.balanceOfBatch(userAccounts, userTokenIds)).to.deep.equal(result0);
+    });
+    it("emits events", async () => {
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
+
+      const ids = [1, 2, 3, 20, 100, 350, 550, 1000];
+      const expiries = ids.map(() => 0);
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+      const transitionWalletCall = await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
+      const { events } = await transitionWalletCall.wait();
+      expect(events).to.not.be.undefined;
+      expect(events).to.have.length(ids.length + 1);
     });
     // reverts if one not owned
     // reverts if no claimed address

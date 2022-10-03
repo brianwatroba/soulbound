@@ -8,8 +8,8 @@ async function main() {
   const provider = new ethers.providers.AlchemyProvider("maticmum", polygonMumbaiKey);
   const signer = new ethers.Wallet(process.env.POLYGON_MUMBAI_PRIVATE_KEY ?? "", provider);
 
-  const uri = "https://soulbound-api-test.herokuapp.com/api/token/";
-  const contractUri = "https://soulbound-api-test.herokuapp.com/api/contract/";
+  // const uri = "https://soulbound-api-test.herokuapp.com/api/token/";
+  // const contractUri = "https://soulbound-api-test.herokuapp.com/api/contract/";
 
   const KycRegistry = await ethers.getContractFactory("KycRegistry");
   const kycRegistry = await KycRegistry.connect(signer)
@@ -22,9 +22,7 @@ async function main() {
   console.log("KycRegistry deployed to: ", kycRegistry.address);
 
   const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
-  const badgeSetFactory = await (
-    await BadgeSetFactory.connect(signer).deploy(kycRegistry.address)
-  ).deployed();
+  const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy(kycRegistry.address)).deployed();
   console.log("BadgeSetFactory deployed to:", badgeSetFactory.address);
 
   // await badgeSetFactory.connect(signer).createBadgeSet(signer.address, kycRegistry.address, uri);

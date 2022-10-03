@@ -1,4 +1,4 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
@@ -15,7 +15,7 @@ describe("KycRegistry.sol", function () {
     });
   });
   describe("kycToUserAddress()", () => {
-    it.only("should convert KYC to the correct userAddress", async () => {
+    it("should convert KYC to the correct userAddress", async () => {
       const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
       const { firstName, lastName, phoneNumber } = userKycDetails;
       const firstNameBytes = ethers.utils.formatBytes32String(firstName);
@@ -31,7 +31,7 @@ describe("KycRegistry.sol", function () {
       expect(hashAsAddress).to.be.properAddress;
       expect(userAddress).to.equal(hashAsAddress);
     });
-    it.only("should revert for firstName longer than 32", async () => {
+    it("should revert for firstName longer than 32", async () => {
       const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
       const { lastName, phoneNumber } = userKycDetails;
       const firstName = "This is a string that is longer than 32 characters";
@@ -41,7 +41,7 @@ describe("KycRegistry.sol", function () {
         "StringTooLong"
       );
     });
-    it.only("should revert for lastName longer than 32", async () => {
+    it("should revert for lastName longer than 32", async () => {
       const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
       const { firstName, phoneNumber } = userKycDetails;
       const lastName = "This is a string that is longer than 32 characters";
