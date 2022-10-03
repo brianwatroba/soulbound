@@ -21,18 +21,13 @@ describe("KycRegistry.sol", function () {
       const firstNameBytes = ethers.utils.formatBytes32String(firstName);
       const lastNameBytes = ethers.utils.formatBytes32String(lastName);
       const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
-      const userAddress = await kycRegistry.hashKycToUserAddress(
-        firstNameBytes,
-        lastNameBytes,
-        phoneNumberBN
-      );
+      const userAddress = await kycRegistry.hashKycToUserAddress(firstNameBytes, lastNameBytes, phoneNumberBN);
 
-      const hash = ethers.utils.solidityKeccak256(
-        ["bytes32", "bytes32", "uint256"],
-        [firstNameBytes, lastNameBytes, phoneNumberBN]
-      );
+      const hash = ethers.utils.solidityKeccak256(["bytes32", "bytes32", "uint256"], [firstNameBytes, lastNameBytes, phoneNumberBN]);
 
       const hashAsAddress = ethers.utils.getAddress("0x" + hash.slice(-40));
+
+      console.log("hash", hashAsAddress);
 
       expect(userAddress).to.be.properAddress;
       expect(hashAsAddress).to.be.properAddress;
