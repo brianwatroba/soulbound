@@ -11,6 +11,15 @@ const encodeTokenIdJs = (tokenType: BigNumber, address: string) => {
   return packed;
 };
 
+const randomIntFromInterval = (min: number, max: number) => {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
+const arrayOfSingleNumber = (length: number, number: number) => {
+  return Array.from({ length }, () => number);
+};
+
 describe("BadgeSet.sol", () => {
   describe("Deployment", () => {
     it("Deploys", async () => {
@@ -59,15 +68,18 @@ describe("BadgeSet.sol", () => {
   describe("mint()", () => {
     it("Mints without expiry", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      badgeSet.connect(forbes).mint(userAddress, 1, 0);
-      const tokenId = await badgeSet.encodeTokenId(1, userAddress);
+      const tokenType = 1;
+
+      badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
+      const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
     it("Mints without expiry above tokenType 256", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      badgeSet.connect(forbes).mint(userAddress, 300, 0);
-      const tokenId = await badgeSet.encodeTokenId(300, userAddress);
+      const tokenType = randomIntFromInterval(257, 100000);
+      badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
+      const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
@@ -78,6 +90,7 @@ describe("BadgeSet.sol", () => {
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
+
     it("Reverts: not owner", async () => {
       const { badgeSet, user, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
       await expect(badgeSet.connect(user).mint(userAddress, 1, invalidExpiry)).to.be.reverted;
@@ -86,10 +99,11 @@ describe("BadgeSet.sol", () => {
       const { badgeSet, forbes, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
       await expect(badgeSet.connect(forbes).mint(userAddress, 1, invalidExpiry)).to.be.reverted;
     });
-    it("Reverts: token already owned", async () => {
+    it("Reverts: token type already owned", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      await badgeSet.connect(forbes).mint(userAddress, 1, 0);
-      await expect(badgeSet.connect(forbes).mint(userAddress, 1, 0)).to.be.reverted;
+      const tokenType = randomIntFromInterval(1, 9999);
+      await badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
+      await expect(badgeSet.connect(forbes).mint(userAddress, tokenType, 0)).to.be.reverted;
     });
   });
 
@@ -148,17 +162,23 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe("revokeBatch()", () => {
+  describe.only("revokeBatch()", () => {
     it("Revokes token and expiry", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      await badgeSet.connect(forbes).mint(userAddress, 1, 0);
-      await badgeSet.connect(forbes).mint(userAddress, 2, 0);
-      await badgeSet.connect(forbes).revokeBatch(userAddress, [1, 2]);
-      const tokenId1 = await badgeSet.encodeTokenId(1, userAddress);
-      const tokenId2 = await badgeSet.encodeTokenId(2, userAddress);
-      expect(await badgeSet.balanceOf(userAddress, tokenId1)).to.equal(0);
-      expect(await badgeSet.balanceOf(userAddress, tokenId2)).to.equal(0);
-      // TODO: test expiry
+      const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
+      const tokenTypes = [1, 300];
+      const expiries = arrayOfSingleNumber(tokenTypes.length, validExpiry);
+      const [tokenId1, tokenId2] = await Promise.all(tokenTypes.map((id) => badgeSet.encodeTokenId(id, userAddress)));
+
+      await badgeSet.connect(forbes).mintBatch(userAddress, tokenTypes, expiries);
+      expect(await badgeSet.expiryOf(tokenId1)).to.equal(validExpiry);
+      expect(await badgeSet.expiryOf(tokenId2)).to.equal(validExpiry);
+
+      await badgeSet.connect(forbes).revokeBatch(userAddress, tokenTypes);
+
+      const expectedAmounts = arrayOfSingleNumber(tokenTypes.length, 0); // 0 for each token
+      expect(await badgeSet.balanceOfBatch([userAddress, userAddress], [tokenId1, tokenId2])).to.deep.equal(expectedAmounts);
+      expect(await badgeSet.expiryOf(tokenId1)).to.equal(0);
+      expect(await badgeSet.expiryOf(tokenId2)).to.equal(0);
     });
     it("Reverts: not owner", async () => {
       const { badgeSet, user, userAddress } = await loadFixture(fixtures.deploy);

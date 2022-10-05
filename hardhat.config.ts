@@ -11,7 +11,7 @@ const config: HardhatUserConfig = {
       optimizer: { enabled: true, runs: 200 },
     },
   },
-  gasReporter: { enabled: true },
+  gasReporter: { enabled: false },
   networks: {
     hardhat: {
       accounts: {

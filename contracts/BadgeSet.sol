@@ -13,6 +13,11 @@ import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "hardhat/console.sol";
 
+
+// TODO: add bitmap class and static methods
+// TODO: add address validation function on the type?
+// TODO: revert noops
+
 /// @title BadgeSet
 /// @author Brian watroba
 /// @dev Modified ERC-1155 contract allowing for Soulbound (non-transferrable), semi-fungible NFT. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
@@ -26,6 +31,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     
     string private _uri;
     string private _contractURI;
+    uint256 private constant BITMAP_SIZE = 256;
 
     constructor(address _owner, address _kycRegistry, string memory _baseUri) {
         kycRegistry = _kycRegistry;
@@ -59,7 +65,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         // TODO: added next line:
         address validatedAddress = validateAddress(_address);
         if (validatedAddress != account) return 0;
-        uint256 bitmapIndex = _badgeType / 256;
+        uint256 bitmapIndex = _badgeType / BITMAP_SIZE;
         uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
         uint256 bitValue = getBitValue(bitmap, _badgeType - (bitmapIndex * 256)); // correct number for in the 256 bit bitmap
         balance = bitValue > 0 ? 1 : 0;
@@ -131,7 +137,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
         uint256 bitmapIndex = badgeType / 256;
-        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] &~ (1 << badgeType);
+        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] &~ (1 << badgeType - (bitmapIndex * 256));
         _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 0
         delete _expiries[tokenId];
         emit TransferSingle(_msgSender(), validatedAddress, address(0), tokenId, 1);

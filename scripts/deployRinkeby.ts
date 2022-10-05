@@ -1,3 +1,4 @@
+import { Provider } from "@ethersproject/abstract-provider";
 import { ethers } from "hardhat";
 import * as dotenv from "dotenv";
 dotenv.config();
