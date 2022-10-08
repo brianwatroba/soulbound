@@ -8,15 +8,16 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
+import "./BitMaps.sol";
 import "hardhat/console.sol";
 
 
 // TODO: add bitmap class and static methods
 // TODO: add address validation function on the type?
 // TODO: revert noops
+// TODO: guards against minting way too high of a token
 
 /// @title BadgeSet
 /// @author Brian watroba
@@ -24,10 +25,13 @@ import "hardhat/console.sol";
 /// @custom:version 1.0.2
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
+    using BitMaps for BitMaps.BitMap;
+
     address public kycRegistry;
     uint96 public tokenTypeCount;
     mapping(address => mapping(uint256 => uint256)) private _ownershipBitmaps;
-    mapping(uint256 => uint256) private _expiries; // id/address to badge expiration
+    mapping(address => BitMaps.BitMap) private tokenBalances;
+    mapping(uint256 => uint256) private _expiries; // badgeId to expiration timestamp
     
     string private _uri;
     string private _contractURI;
@@ -65,6 +69,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         // TODO: added next line:
         address validatedAddress = validateAddress(_address);
         if (validatedAddress != account) return 0;
+        BitMaps.BitMap storage bitmap = tokenBalances[validatedAddress];
+        uint256 balance = BitMaps.get(bitmap, id);
         uint256 bitmapIndex = _badgeType / BITMAP_SIZE;
         uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
         uint256 bitValue = getBitValue(bitmap, _badgeType - (bitmapIndex * 256)); // correct number for in the 256 bit bitmap
