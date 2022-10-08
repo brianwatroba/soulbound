@@ -72,10 +72,6 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         return owned ? 1 : 0;
     }
 
-    function getBitValue(uint256 bitmap, uint256 tokenId) private pure returns(uint256){
-        return bitmap & (1 << tokenId);
-    }
-
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
         if (accounts.length != ids.length) revert ParamsLengthMismatch();
         uint256[] memory batchBalances = new uint256[](accounts.length);
@@ -161,6 +157,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         if (validateAddress(kycAddress) != walletAddress) revert InvalidAddress();
         uint256 bitmapCount = tokenTypeCount / 256;
         for (uint256 i = 0; i <= bitmapCount; i++) {
+            // TODO: needs to get the full bitmap
+            // TODO can we do something clever with shifting instead of looking at each bit via math?
             uint256 bitmap = _ownershipBitmaps[kycAddress][i];
             if (bitmap != 0) {
                 transitionBitmap(bitmap, kycAddress, walletAddress);
