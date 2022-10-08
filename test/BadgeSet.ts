@@ -65,7 +65,7 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe("mint()", () => {
+  describe.only("mint()", () => {
     it("Mints without expiry", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
       const tokenType = 1;
@@ -107,7 +107,7 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe("mintBatch()", () => {
+  describe.only("mintBatch()", () => {
     it("Mints without expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
       const ids = [1, 2];
@@ -143,7 +143,7 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe("revoke()", () => {
+  describe.only("revoke()", () => {
     it("Revokes", async () => {
       const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
       await badgeSet.connect(forbes).mint(userAddress, 1, 0);
@@ -162,7 +162,7 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe.only("revokeBatch()", () => {
+  describe("revokeBatch()", () => {
     it("Revokes token and expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
       const tokenTypes = [1, 300];

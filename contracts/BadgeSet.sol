@@ -13,8 +13,6 @@ import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
 import "hardhat/console.sol";
 
-
-// TODO: add bitmap class and static methods
 // TODO: add address validation function on the type?
 // TODO: revert noops
 // TODO: guards against minting way too high of a token
@@ -30,12 +28,13 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     address public kycRegistry;
     uint96 public tokenTypeCount;
     mapping(address => mapping(uint256 => uint256)) private _ownershipBitmaps;
-    mapping(address => BitMaps.BitMap) private tokenBalances;
+    mapping(address => BitMaps.BitMap) private _tokenBalances;
     mapping(uint256 => uint256) private _expiries; // badgeId to expiration timestamp
     
     string private _uri;
     string private _contractURI;
     uint256 private constant BITMAP_SIZE = 256;
+    address private constant ZERO_ADDRESS = address(0);
 
     constructor(address _owner, address _kycRegistry, string memory _baseUri) {
         kycRegistry = _kycRegistry;
@@ -66,15 +65,11 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
         (uint96 _badgeType, address _address) = decodeTokenId(id);
-        // TODO: added next line:
         address validatedAddress = validateAddress(_address);
         if (validatedAddress != account) return 0;
-        BitMaps.BitMap storage bitmap = tokenBalances[validatedAddress];
-        uint256 balance = BitMaps.get(bitmap, id);
-        uint256 bitmapIndex = _badgeType / BITMAP_SIZE;
-        uint256 bitmap = _ownershipBitmaps[account][bitmapIndex];
-        uint256 bitValue = getBitValue(bitmap, _badgeType - (bitmapIndex * 256)); // correct number for in the 256 bit bitmap
-        balance = bitValue > 0 ? 1 : 0;
+        BitMaps.BitMap storage bitmap = _tokenBalances[validatedAddress];
+        bool owned = BitMaps.get(bitmap, _badgeType);
+        return owned ? 1 : 0;
     }
 
     function getBitValue(uint256 bitmap, uint256 tokenId) private pure returns(uint256){
@@ -99,14 +94,13 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         address validatedAddress = validateAddress(account);
         tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-        uint256 bitmapIndex = badgeType / 256;
-        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeType - (bitmapIndex * 256));
-        _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
+        BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
+        BitMaps.set(balances, badgeType);
         _expiries[tokenId] = expiryTimestamp;
         if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
         address operator = _msgSender();
-        emit TransferSingle(operator, address(0), validatedAddress, tokenId, 1);
-        _doSafeTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenId, 1, "");
+        emit TransferSingle(operator, ZERO_ADDRESS, validatedAddress, tokenId, 1);
+        _doSafeTransferAcceptanceCheck(operator, ZERO_ADDRESS, validatedAddress, tokenId, 1, "");
     }
 
     function mintBatch(
@@ -122,17 +116,16 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
             if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
             uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
             if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-            uint256 bitmapIndex = badgeTypes[i] / 256;
-            uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] | (1 << badgeTypes[i] - (bitmapIndex * 256));
-            _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 1
-            _expiries[tokenId] = expiryTimestamps[i];
+            BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
+            BitMaps.set(balances, badgeTypes[i]);
+            _expiries[tokenId] = expiryTimestamps[i];  
             if (tokenTypeCount < badgeTypes[i]) tokenTypeCount = badgeTypes[i];
             tokenIds[i] = tokenId;
             amounts[i] = 1;
         }
         address operator = _msgSender();
-        emit TransferBatch(operator, address(0), validatedAddress, tokenIds, amounts);
-        _doSafeBatchTransferAcceptanceCheck(operator, address(0), validatedAddress, tokenIds, amounts, "");
+        emit TransferBatch(operator, ZERO_ADDRESS, validatedAddress, tokenIds, amounts);
+        _doSafeBatchTransferAcceptanceCheck(operator, ZERO_ADDRESS, validatedAddress, tokenIds, amounts, "");
     }
 
     function revoke(
@@ -142,11 +135,10 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         address validatedAddress = validateAddress(account);
         tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
-        uint256 bitmapIndex = badgeType / 256;
-        uint256 bitmapChanged = _ownershipBitmaps[validatedAddress][bitmapIndex] &~ (1 << badgeType - (bitmapIndex * 256));
-        _ownershipBitmaps[validatedAddress][bitmapIndex] = bitmapChanged; // set it to 0
+        BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
+        BitMaps.unset(balances, badgeType);
         delete _expiries[tokenId];
-        emit TransferSingle(_msgSender(), validatedAddress, address(0), tokenId, 1);
+        emit TransferSingle(_msgSender(), validatedAddress, ZERO_ADDRESS, tokenId, 1);
     }
 
     function revokeBatch(
@@ -162,7 +154,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
             amounts[i] = 1;
             tokenIds[i] = tokenId;
         }
-        emit TransferBatch(operator, validatedAccount, address(0), tokenIds, amounts);
+        emit TransferBatch(operator, validatedAccount, ZERO_ADDRESS, tokenIds, amounts);
     }
 
     function transitionWallet(address kycAddress, address walletAddress) external {
@@ -207,9 +199,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     // NOOPs for non needed ERC1155 functions
 
-    function setApprovalForAll(address operator, bool approved) external {}
+    function setApprovalForAll(address operator, bool approved) external {
+        revert TokenNonTransferable();
+    }
  
     function isApprovedForAll(address account, address operator) external view returns (bool) {
+        revert TokenNonTransferable();
     }
 
     function safeTransferFrom(
@@ -219,6 +214,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint256 amount,
         bytes calldata data
     ) external {
+        revert TokenNonTransferable();
     }
 
     function safeBatchTransferFrom(
@@ -228,6 +224,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint256[] calldata amounts,
         bytes calldata data
     ) external {
+        revert TokenNonTransferable();
     }
 
     function _doSafeTransferAcceptanceCheck(
