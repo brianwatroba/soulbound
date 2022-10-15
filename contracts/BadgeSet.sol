@@ -11,7 +11,6 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
-import "hardhat/console.sol";
 
 // TODO: guards against minting way too high of a token
 // TODO: don't redeploy bitmaps for every badge set
@@ -20,7 +19,7 @@ import "hardhat/console.sol";
 /// @title BadgeSet
 /// @author Brian watroba
 /// @dev Modified ERC-1155 contract allowing for Soulbound (non-transferrable), semi-fungible NFT. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
-/// @custom:version 1.0.2
+/// @custom:version 1.0.3
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
     using BitMaps for BitMaps.BitMap;

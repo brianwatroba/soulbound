@@ -1,5 +1,5 @@
 import { Provider } from "@ethersproject/abstract-provider";
-import { ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -8,9 +8,13 @@ async function main() {
   const provider = new ethers.providers.AlchemyProvider("maticmum", polygonMumbaiKey);
   const signer = new ethers.Wallet(process.env.POLYGON_MUMBAI_PRIVATE_KEY ?? "", provider);
 
-  // const uri = "https://soulbound-api-test.herokuapp.com/api/token/";
-  // const contractUri = "https://soulbound-api-test.herokuapp.com/api/contract/";
+  const uri = "https://soulbound-api-test.herokuapp.com/metadata/";
+  const contractUri = "https://soulbound-api-test.herokuapp.com/metadata/";
 
+  console.log(`STARTING SOULBOUND DEPLOYMENT TO: POLYGON MUMBAI | DEPLOYER: ${signer.address}`);
+  console.log("___________________________");
+
+  console.log("Deploying: KycRegistry...");
   const KycRegistry = await ethers.getContractFactory("KycRegistry");
   const kycRegistry = await KycRegistry.connect(signer)
     .deploy
@@ -19,26 +23,64 @@ async function main() {
     // }
     ();
   await kycRegistry.deployed();
-  console.log("KycRegistry deployed to: ", kycRegistry.address);
+  console.log("SUCCESS: KycRegistry deployed to: ", kycRegistry.address);
+  console.log("___________________________");
 
+  console.log("Deploying: BadgeSetFactory...");
   const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
   const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy(kycRegistry.address)).deployed();
-  console.log("BadgeSetFactory deployed to:", badgeSetFactory.address);
+  console.log("SUCCESS: BadgeSetFactory deployed to:", badgeSetFactory.address);
+  console.log("___________________________");
 
-  // await badgeSetFactory.connect(signer).createBadgeSet(signer.address, kycRegistry.address, uri);
-  // const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
-  // const BadgeSet = await ethers.getContractFactory("BadgeSet");
-  // const badgeSet = await BadgeSet.connect(signer).deploy(
-  //   signer.address,
-  //   "0x9517955157F2DA793FB5d4A7396c0021F8b39D19", // fake KYC?
-  //   uri,
-  //   contractUri,
-  //   {
-  //     gasPrice: 60000000000,
-  //   }
-  // );
-  // await badgeSet.deployed();
-  // console.log("Badgeset deployed to: ", badgeSet.address);
+  console.log("Deploying: Creating Northern Michigan Athletic Club...");
+  const nmaa = await badgeSetFactory.connect(signer).createBadgeSet(signer.address, uri);
+  await nmaa.wait();
+  const nmaaAddress = (await badgeSetFactory.badgeSets())[0];
+
+  console.log("SUCCESS: Northern Michigan Athetlic Club deployed to: ", nmaaAddress);
+  console.log("___________________________");
+
+  console.log("Deploying: Creating TC Dive...");
+  const tcDive = await badgeSetFactory.connect(signer).createBadgeSet(signer.address, uri);
+  await tcDive.wait();
+  const tcDiveAddress = (await badgeSetFactory.badgeSets())[1];
+
+  console.log("SUCCESS: TC Dive deployed to: ", tcDiveAddress);
+  console.log("___________________________");
+
+  console.log("Verifying KycRegistry...");
+  await hre.run("verify:verify", {
+    address: kycRegistry.address,
+    constructorArguments: [],
+  });
+  console.log("SUCCESS: KycRegistry verified");
+  console.log("___________________________");
+
+  console.log("Verifying BadgeSetFactory...");
+  await hre.run("verify:verify", {
+    address: badgeSetFactory.address,
+    constructorArguments: [kycRegistry.address],
+  });
+  console.log("SUCCESS: BadgeSetFactory verified");
+  console.log("___________________________");
+
+  console.log("Verifying Northern Michigan Athletic Club...");
+  await hre.run("verify:verify", {
+    address: nmaaAddress,
+    constructorArguments: [signer.address, kycRegistry.address, uri],
+  });
+  console.log("SUCCESS: Northern Michigan Athletic Club verified");
+  console.log("___________________________");
+
+  console.log("Verifying TCDive...");
+  await hre.run("verify:verify", {
+    address: tcDiveAddress,
+    constructorArguments: [signer.address, kycRegistry.address, uri],
+  });
+  console.log("SUCCESS: TC Dive verified");
+  console.log("___________________________");
+
+  console.log("DEPLOYMENT SUCCESSFUL");
 }
 
 main().catch((error) => {
