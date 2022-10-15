@@ -4,31 +4,36 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-  const polygonMumbaiKey = process.env.POLYGON_MUMBAI_KEY || "";
-  const provider = new ethers.providers.AlchemyProvider("maticmum", polygonMumbaiKey);
-  const signer = new ethers.Wallet(process.env.POLYGON_MUMBAI_PRIVATE_KEY ?? "", provider);
+  const polygonAPIKey = process.env.POLYGON_MAINNET_KEY || "";
+  const provider = new ethers.providers.AlchemyProvider("matic", polygonAPIKey);
+  const signer = new ethers.Wallet(process.env.POLYGON_PRIVATE_KEY ?? "", provider);
+
+  const gasConfig = {
+    maxFeePerGas: ethers.BigNumber.from("200000000000"),
+    maxPriorityFeePerGas: ethers.BigNumber.from("200000000000"),
+  };
 
   const uri = "https://soulbound-api-test.herokuapp.com/metadata/";
   const contractUri = "https://soulbound-api-test.herokuapp.com/metadata/";
 
-  console.log(`STARTING SOULBOUND DEPLOYMENT TO: POLYGON MUMBAI | DEPLOYER: ${signer.address}`);
+  console.log(`STARTING SOULBOUND DEPLOYMENT TO: POLYGON MAINNET | DEPLOYER: ${signer.address}`);
   console.log("___________________________");
 
   console.log("Deploying: KycRegistry...");
   const KycRegistry = await ethers.getContractFactory("KycRegistry");
-  const kycRegistry = await KycRegistry.connect(signer).deploy();
+  const kycRegistry = await KycRegistry.connect(signer).deploy(gasConfig);
   await kycRegistry.deployed();
   console.log("SUCCESS: KycRegistry deployed to: ", kycRegistry.address);
   console.log("___________________________");
 
   console.log("Deploying: BadgeSetFactory...");
   const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
-  const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy(kycRegistry.address)).deployed();
+  const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy(kycRegistry.address, gasConfig)).deployed();
   console.log("SUCCESS: BadgeSetFactory deployed to:", badgeSetFactory.address);
   console.log("___________________________");
 
   console.log("Deploying: Creating Northern Michigan Athletic Club...");
-  const nmaa = await badgeSetFactory.connect(signer).createBadgeSet(signer.address, uri);
+  const nmaa = await badgeSetFactory.connect(signer).createBadgeSet(signer.address, uri, gasConfig);
   await nmaa.wait();
   const nmaaAddress = (await badgeSetFactory.badgeSets())[0];
 
@@ -36,7 +41,7 @@ async function main() {
   console.log("___________________________");
 
   console.log("Deploying: Creating TC Dive...");
-  const tcDive = await badgeSetFactory.connect(signer).createBadgeSet(signer.address, uri);
+  const tcDive = await badgeSetFactory.connect(signer).createBadgeSet(signer.address, uri, gasConfig);
   await tcDive.wait();
   const tcDiveAddress = (await badgeSetFactory.badgeSets())[1];
 
