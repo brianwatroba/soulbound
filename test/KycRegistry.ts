@@ -60,6 +60,24 @@ describe("KycRegistry.sol", function () {
       await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
       expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(walletAddress);
     });
+    it("reverts if walletAddress is already linked", async () => {
+      const { kycRegistry, soulbound, user, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
+      expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+      await expect(kycRegistry.connect(soulbound).linkWallet(user.address, walletAddress)).to.be.revertedWithCustomError(
+        kycRegistry,
+        "WalletAlreadyLinked"
+      ); // second link
+    });
+    it("reverts if userAddress is already linked", async () => {
+      const { kycRegistry, soulbound, user, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
+      expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+      await expect(kycRegistry.connect(soulbound).linkWallet(userAddress, user.address)).to.be.revertedWithCustomError(
+        kycRegistry,
+        "WalletAlreadyLinked"
+      ); // second link
+    });
   });
   describe("transitionBadgesByContracts()", () => {
     it("transition all badges in a single call across two contracts", async () => {

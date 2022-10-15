@@ -75,7 +75,30 @@ describe("BadgeSet.sol", () => {
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
-
+    it("Mints to linked wallet if minting to userAddress post link", async () => {
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2, 5, 50, 300, 1000];
+      const expiries = arrayOfSingleNumber(ids.length, 0);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      const accounts = arrayOfSingleString(ids.length, walletAddress);
+      const tokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
+      const balances = await badgeSet.balanceOfBatch(accounts, tokenIds);
+      const expectedBalances = arrayOfSingleNumber(ids.length, 1);
+      expect(balances).to.deep.equal(expectedBalances);
+    });
+    it("Mints to linked wallet if minting to walletAddress post link", async () => {
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2, 5, 50, 300, 1000];
+      const expiries = arrayOfSingleNumber(ids.length, 0);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+      await badgeSet.connect(forbes).mintBatch(walletAddress, ids, expiries);
+      const accounts = arrayOfSingleString(ids.length, walletAddress);
+      const tokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, walletAddress)));
+      const balances = await badgeSet.balanceOfBatch(accounts, tokenIds);
+      const expectedBalances = arrayOfSingleNumber(ids.length, 1);
+      expect(balances).to.deep.equal(expectedBalances);
+    });
     it("Reverts: not owner", async () => {
       const { badgeSet, user, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
       await expect(badgeSet.connect(user).mint(userAddress, 1, invalidExpiry)).to.be.reverted;
