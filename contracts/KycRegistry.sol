@@ -8,7 +8,7 @@ import "../interfaces/IBadgeSet.sol";
 /// @title KycRegistry
 /// @author Brian watroba
 /// @dev Registry mapping of user read-only addresses to linked wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address.
-/// @custom:version 1.0.2
+/// @custom:version 1.0.3
 contract KycRegistry is IKycRegistry, Ownable {
     mapping(address => address) private _walletsToUsers;
     mapping(address => address) private _usersToWallets;

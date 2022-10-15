@@ -6,7 +6,7 @@ import "./BadgeSet.sol";
 /// @title BadgeSetFactory
 /// @author Brian watroba
 /// @dev Factory contract to create BadgeSet ERC-1155 non-transferable NFT contracts.
-/// @custom:version 1.0.2
+/// @custom:version 1.0.3
 contract BadgeSetFactory is Ownable {
   
   address public kycRegistry;
