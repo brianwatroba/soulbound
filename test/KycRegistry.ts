@@ -2,6 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
+import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, randomIntFromInterval } from "./fixtures/utils";
 
 describe("KycRegistry.sol", function () {
   describe("Deployment", function () {
@@ -54,8 +55,41 @@ describe("KycRegistry.sol", function () {
   });
   describe("linkWallet()", () => {
     it("should link wallet to kycRegistry", async () => {
-      // const { kycRegistry, user, soulbound, userKycDetails } = await loadFixture(fixtures.deploy);
-      // await kycRegistry.connect(soulbound).linkWallet(user.address, userKycDetails);
+      const { kycRegistry, soulbound, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
+      expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+      expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(walletAddress);
+    });
+  });
+  describe("transitionBadgesByContracts()", () => {
+    it("transition all badges in a single call across two contracts", async () => {
+      const { kycRegistry, soulbound, userAddress, walletAddress, forbes, padi, badgeSet, badgeSet2 } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2, 3, 20, 100, 350, 1000];
+      const expiries = arrayOfSingleNumber(ids.length, 0);
+      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
+      await badgeSet2.connect(padi).mintBatch(userAddress, ids, expiries);
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+
+      await kycRegistry.transitionBadgesByContracts(userAddress, walletAddress, [badgeSet.address, badgeSet2.address]);
+
+      const userAddressesArray = arrayOfSingleString(ids.length, userAddress);
+      const walletAddressesArray = arrayOfSingleString(ids.length, walletAddress);
+      const tokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
+
+      const balance0 = arrayOfSingleNumber(ids.length, 0);
+      const balance1 = arrayOfSingleNumber(ids.length, 1);
+
+      // Forbes
+      const userAddressBalancesForbes = await badgeSet.balanceOfBatch(userAddressesArray, tokenIds);
+      const walletAddressBalancesForbes = await badgeSet.balanceOfBatch(walletAddressesArray, tokenIds);
+      expect(userAddressBalancesForbes).to.deep.equal(balance0);
+      expect(walletAddressBalancesForbes).to.deep.equal(balance1);
+
+      // Padi
+      const userAddressBalancesPadi = await badgeSet2.balanceOfBatch(userAddressesArray, tokenIds);
+      const walletAddressBalancesPadi = await badgeSet2.balanceOfBatch(walletAddressesArray, tokenIds);
+      expect(userAddressBalancesPadi).to.deep.equal(balance0);
+      expect(walletAddressBalancesPadi).to.deep.equal(balance1);
     });
   });
 });

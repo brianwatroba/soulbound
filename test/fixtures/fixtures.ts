@@ -13,7 +13,7 @@ const userAddress = "0x64443F9CDBc6b3f12AD0c81083dde302d85Ef81E";
 const walletAddress = "0x20A3d0288B393dF8901BB6415C6Ac538F17B94fE";
 
 export const deploy = async () => {
-  const [soulbound, forbes, user] = await ethers.getSigners();
+  const [soulbound, forbes, padi, user] = await ethers.getSigners();
 
   const KycRegistry = await ethers.getContractFactory("KycRegistry");
   const kycRegistry = await (await KycRegistry.connect(soulbound).deploy()).deployed();
@@ -22,8 +22,10 @@ export const deploy = async () => {
   const badgeSetFactory = await (await BadgeSetFactory.connect(soulbound).deploy(kycRegistry.address)).deployed();
 
   await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, baseUri);
-  const [badgeSetAddress] = await badgeSetFactory.badgeSets();
+  await badgeSetFactory.connect(soulbound).createBadgeSet(padi.address, baseUri);
+  const [badgeSetAddress, badgeSetAddress2] = await badgeSetFactory.badgeSets();
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
+  const badgeSet2 = await ethers.getContractAt("BadgeSet", badgeSetAddress2);
 
   const blockTimestamp = (await provider.getBlock("latest")).timestamp;
   const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year ahead
@@ -32,9 +34,11 @@ export const deploy = async () => {
   return {
     badgeSetFactory,
     badgeSet,
+    badgeSet2,
     kycRegistry,
     soulbound,
     forbes,
+    padi,
     baseUri,
     user,
     userKycDetails,

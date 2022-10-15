@@ -52,14 +52,14 @@ contract KycRegistry is IKycRegistry, Ownable {
     }
 
     function transitionBadgesByContracts(
-        address kycAddress,
+        address userAddress,
         address walletAddress,
         address[] memory contracts
     ) public {
         for (uint256 i = 0; i < contracts.length; i++) {
             address contractAddress = contracts[i];
             IBadgeSet(contractAddress).transitionWallet(
-                kycAddress,
+                userAddress,
                 walletAddress
             );
         }
