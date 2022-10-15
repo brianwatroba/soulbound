@@ -7,7 +7,7 @@ interface IBadgeSet {
     error ParamsLengthMismatch();
     error InsufficientBalance();
     error TokenAlreadyOwned();
-    error InvalidAddress();
+    error WalletNotLinked();
     error TokenNonTransferable();
 
     event TransitionWallet(address indexed kycAddress, address indexed walletAddress);

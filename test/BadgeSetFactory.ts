@@ -26,16 +26,14 @@ describe("BadgeSetFactory.sol", function () {
     });
     it("reverts if not owner", async () => {
       const { badgeSetFactory, forbes, baseUri } = await loadFixture(fixtures.deploy);
-      await expect(
-        badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)
-      ).to.be.revertedWith(NotOwnerError);
+      await expect(badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)).to.be.revertedWith(NotOwnerError);
     });
   });
   describe("badgeSets()", () => {
     it("returns array of badgeSets", async () => {
       const { badgeSetFactory, badgeSet } = await loadFixture(fixtures.deploy);
       const badgeSets = await badgeSetFactory.badgeSets();
-      expect(badgeSets).to.have.lengthOf(1);
+      expect(badgeSets).to.have.lengthOf(2);
       expect(badgeSets[0]).to.equal(badgeSet.address);
       expect(badgeSets[0]).to.be.properAddress;
     });

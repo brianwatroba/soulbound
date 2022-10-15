@@ -13,9 +13,9 @@ import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
 import "hardhat/console.sol";
 
-// TODO: add address validation function on the type?
-// TODO: revert noops
 // TODO: guards against minting way too high of a token
+// TODO: don't redeploy bitmaps for every badge set
+// TODO: bitmaps function to check an entire mask
 
 /// @title BadgeSet
 /// @author Brian watroba
@@ -26,14 +26,13 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     using BitMaps for BitMaps.BitMap;
 
     address public kycRegistry;
+    string private _uri;
+    string private _contractURI;
+
     uint96 public tokenTypeCount;
-    mapping(address => mapping(uint256 => uint256)) private _ownershipBitmaps;
     mapping(address => BitMaps.BitMap) private _tokenBalances;
     mapping(uint256 => uint256) private _expiries; // badgeId to expiration timestamp
     
-    string private _uri;
-    string private _contractURI;
-    uint256 private constant BITMAP_SIZE = 256;
     address private constant ZERO_ADDRESS = address(0);
 
     constructor(address _owner, address _kycRegistry, string memory _baseUri) {
@@ -47,12 +46,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         return string.concat(_uri, Strings.toString(id));
     }
 
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
-    }
-    
     function setURI(string memory newuri) public onlyOwner {
         _uri = newuri;
+    }
+
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
     }
 
     function setContractURI(string memory newuri) public onlyOwner {
@@ -79,6 +78,18 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
             batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
         return batchBalances;
+    }
+
+    function _mint(address to, uint96 badgeType, uint256 expiryTimestamp) internal {
+        uint256 tokenId = encodeTokenId(badgeType, to);
+        if (balanceOf(to, tokenId) > 0) revert TokenAlreadyOwned();
+        BitMaps.BitMap storage balances = _tokenBalances[to];
+        BitMaps.set(balances, badgeType);
+        _expiries[tokenId] = expiryTimestamp;
+        if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
+        address operator = _msgSender();
+        emit TransferSingle(operator, ZERO_ADDRESS, to, tokenId, 1);
+        _doSafeTransferAcceptanceCheck(operator, ZERO_ADDRESS, to, tokenId, 1, "");
     }
 
     function mint(
@@ -142,28 +153,28 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint96[] memory badgeTypes
     ) external onlyOwner {
         address operator = _msgSender();
-        address validatedAccount = validateAddress(to);
+        address validatedAddress = validateAddress(to);
         uint[] memory amounts = new uint[](badgeTypes.length);
         uint[] memory tokenIds = new uint[](badgeTypes.length);
         for (uint256 i = 0; i < badgeTypes.length; i++) {
-            uint256 tokenId = revoke(validatedAccount, badgeTypes[i]);
-            amounts[i] = 1;
-            tokenIds[i] = tokenId;
+            uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
+            if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
+            BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
+            BitMaps.unset(balances, badgeTypes[i]);
+            delete _expiries[tokenId];
         }
-        emit TransferBatch(operator, validatedAccount, ZERO_ADDRESS, tokenIds, amounts);
+        emit TransferBatch(operator, validatedAddress, ZERO_ADDRESS, tokenIds, amounts);
     }
 
     function transitionWallet(address kycAddress, address walletAddress) external {
-        if (validateAddress(kycAddress) != walletAddress) revert InvalidAddress();
+        if (validateAddress(kycAddress) != walletAddress) revert WalletNotLinked();
         uint256 bitmapCount = tokenTypeCount / 256;
         for (uint256 i = 0; i <= bitmapCount; i++) {
-            // TODO: needs to get the full bitmap
-            // TODO can we do something clever with shifting instead of looking at each bit via math?
-            uint256 bitmap = _ownershipBitmaps[kycAddress][i];
+            uint256 bitmap = _tokenBalances[kycAddress]._data[i];
             if (bitmap != 0) {
                 transitionBitmap(bitmap, kycAddress, walletAddress);
-                _ownershipBitmaps[walletAddress][i] = bitmap;
-                delete _ownershipBitmaps[kycAddress][i];
+                _tokenBalances[walletAddress]._data[i] = bitmap;
+                delete _tokenBalances[kycAddress]._data[i];
             }
         }
         emit TransitionWallet(kycAddress, walletAddress);
@@ -173,7 +184,6 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         for(uint256 i = 0; i < 256; i++) {
             if (bitmap & (1 << i) > 0) {
                 emit TransferSingle(_msgSender(), kycAddress, walletAddress, encodeTokenId(uint96(i), kycAddress), 1);
-
             }
         } 
     }

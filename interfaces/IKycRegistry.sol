@@ -12,6 +12,6 @@ interface IKycRegistry {
 
   function hashKycToUserAddress(string memory firstName, string memory lastName, uint256 phoneNumber) external pure returns (address);
 
-  function transitionBadgesByContracts(address kycAddress, address walletAddress, address[] memory contracts) external;
+  function transitionBadgesByContracts(address userAddress, address walletAddress, address[] memory contracts) external;
   
 }
