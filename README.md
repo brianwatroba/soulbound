@@ -10,8 +10,6 @@ DAPP: https://www.placeholderwebsite.com
 
 _Alpha launching Winter 2022_
 
-## Background
-
 ## Why build this?
 
 What we do makes up who we are.
@@ -22,7 +20,7 @@ And if they do exist online, they're fragmented. Our career history is on Linked
 
 What if we were able to collect our experiences and accomplishments in a central place? What if the community involved in those experiences could issue them? And what if those accomplishments were totally trustworthy and provable?
 
-## Our solition
+## Our solution
 
 A protocol for communities to issue proof of completion/endorsement for anything. Imagine a world where organizations can issue and govern their own blue checkmarks.
 
