@@ -4,8 +4,6 @@ Non-tradeable ERC1155 Token standard.
 
 Designed to represent certifications, accomplishments, and proof of completion for anything--big or small.
 
-Giving organizations and communities the power of their own "blue checkmarks". On their terms.
-
 ## Access
 
 Landing page: https://www.placeholderwebsite.com
@@ -20,29 +18,27 @@ _Alpha launching Winter 2022_
 
 What we do makes up who we are.
 
-Where we grew up. That one open mic night we did. Volunteering at the food bank.
+The problem: Our accomplishments don't really "live anywhere" where we can prove them, show them, and share them.
 
-We're proud of what we've done (we should be!). And we like to express it. Twitter bios and bumper stickers work. But how can we help people show their experiences in a way that's more expressive, more verifiable, and more easily shareable?
+And if they do exist online, they're fragmented. Our career history is on LinkedIn. Our travel history is on Instagram. My PADI Scuba certification is a plastic card in my wallet. A few digital platforms have accrued the ultimate "power of endorsement" (blue checkmarks).
 
-The problem:
-
-Our accomplishments don't really "live anywhere" where we can prove them, show them, and share them.
-
-And if they do exist online, they're fragmented. Our career history is on LinkedIn. Our travel history is on Instagram. My PADI Scuba certification is a plastic card in my wallet.
-
-What if we were able to collect our experiences and accomplishments in a central place, and anyone or any community involved in those experiences could endorse/issue them? And what if those accomplishments were totally trustworthy and provable?
+What if we were able to collect our experiences and accomplishments in a central place? What if the community involved in those experiences could issue them? And what if those accomplishments were totally trustworthy and provable?
 
 #### OUR SOLUTION
 
-A platform for communities/organizations issue proof of completion for anything, and the power to define that "anything" how they see fit. Imagine a world where organizations can issue and govern their own blue checkmarks.
+A protocol for communities to issue proof of completion/endorsement for anything. Imagine a world where organizations can issue and govern their own blue checkmarks.
 
-Automatically convert donation/subscription events on a Streamer's channel to token and NFT equivalents, which the streamers can customize. Make them tradeable. Give streamers opportunities to use these rewards off of Twitch: in ecommerce, promotions, and events off of Twitch.
+What's included:
+
+- Token standard: open source ERC1155 Non-Tradeable token standard for communities to create, govern, mint, and manage the certifications that matter to them. (This repo).
+- Community dapp (web2): client app for community token management, optional custodial wallet service, and metadata storage. Not required, but a method for less web3 savvy communities to create and manage their tokens without having to worry about wallets and crypto complexity.
+- User dapp (web2): client app to view your Soulbound Tokens, prove ownership.
 
 ## Project North Stars
 
-- Streamers earn more with less effort
-- Viewers feel more connected and satisfied with their support
-- No fancy crypto stuff. Earning tokens should be as easy as donating on Twitch.
+- Communities can issue provable certifications and endorsements to use for anything
+- People have central control over their certifications and endorsements
+- No fancy crypto stuff. Make this easy, delightful, and useful.
 
 ## How it works
 
