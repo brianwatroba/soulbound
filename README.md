@@ -1,8 +1,6 @@
 # Soulbound 🪪
 
-Non-tradeable ERC1155 Token standard.
-
-Designed to represent certifications, accomplishments, and proof of completion for anything--big or small.
+Non-transferrable ERC1155 Token standard. Designed to represent certifications, accomplishments, and proof of completion for anything--big or small.
 
 ## Access
 
@@ -14,7 +12,7 @@ _Alpha launching Winter 2022_
 
 ## Background
 
-### WHY BUILD THIS?
+## Why build this?
 
 What we do makes up who we are.
 
@@ -24,7 +22,7 @@ And if they do exist online, they're fragmented. Our career history is on Linked
 
 What if we were able to collect our experiences and accomplishments in a central place? What if the community involved in those experiences could issue them? And what if those accomplishments were totally trustworthy and provable?
 
-### OUR SOLUTION
+## Our solition
 
 A protocol for communities to issue proof of completion/endorsement for anything. Imagine a world where organizations can issue and govern their own blue checkmarks.
 
