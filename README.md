@@ -14,7 +14,7 @@ _Alpha launching Winter 2022_
 
 ## Background
 
-#### WHY BUILD THIS?
+### WHY BUILD THIS?
 
 What we do makes up who we are.
 
@@ -24,7 +24,7 @@ And if they do exist online, they're fragmented. Our career history is on Linked
 
 What if we were able to collect our experiences and accomplishments in a central place? What if the community involved in those experiences could issue them? And what if those accomplishments were totally trustworthy and provable?
 
-#### OUR SOLUTION
+### OUR SOLUTION
 
 A protocol for communities to issue proof of completion/endorsement for anything. Imagine a world where organizations can issue and govern their own blue checkmarks.
 
@@ -42,18 +42,27 @@ What's included:
 
 ## How it works
 
-1. **Streamers customize and mint their Loot Set (on-chain):** Streamer is authenticated via Twitch Oauth and then can customize their set. Donation events are mapped to a token that streamers can customize name and logo for. Channel subscriptions are mapped to NFTs that streamers can customize name, image, and tenure (awarding after x months subbed). Standard Loot Sets include 1 token and 3 NFTs. Uses ERC1155 token standard to encompass all loot into a single contract. Streamers can decide to mint a portion of tokens for themselves at initial contract creation.
-2. **Server listens for and saves on-Twitch donation and sub events (centralized):** after minting their Loot Set, Streamers provide necessary Twitch API eventsub permissions so our server can begin listening for events and logging them. All donation and channel subscription events are saved to a centralized database and not minted on chain yet.
-3. **Viewers mint their rewards when they'd like:** viewers can log into Stream Loot (via Twitch Oauth) to view their current Stream Loot--both minted and un-minted. If a viewer chooses, they can mint any available Stream Loot by making a server request (which signs the transaction with a private key), and in turn call mint()/mintBatch() on the Stream Loot Polygon smart contract. The contract verifies the signature, and mints the Stream Loot if all conditions are met.
-4. **Viewers are free to trade and spend rewards:** viewers can interact with and swap their loot directly with the on-chain contracts. Stream Loot also provides a front end for easy contract interaction.
+- **Organization creates and deploys a BadgeSet (contract):** _to finish_
+- **Organization creates Badge Types:** _to finish_
+- **Organization mints badges to users via "lite wallets":** _to finish_
+- **Users view minted tokens:** _to finish_
+- **Users can link lite wallet to hot wallet:** _to finish_
+- **Badges can be used in a variety of applications:** _to finish_
+
+Technical callouts:
+
+- Lite wallets: _to finish_
+- Wallet linking and ID verification: _to finish_
+- Contract management/ownership: _to finish_
+- Using Soulbound web2 management apps: _to finish_
 
 ## Structure
 
-![Project structure](https://streamloot.s3.us-east-2.amazonaws.com/streamlootstructure.png)
+![Smart contract systems design](https://brianwatroba.s3.amazonaws.com/soulboundsc2.png)
 
 ## Contract addresses
 
-#### Polygon (Main Net)
+#### Polygon (Mainnet)
 
 - _StreamLootFactory.sol:_ TBD
 - _StreamLoot.sol:_ TBD
@@ -65,7 +74,7 @@ What's included:
 
 ## Local setup
 
-1. Clone repository: `git clone https://github.com/brianwatroba/stream-loot.git`
+1. Clone repository: `git clone https://github.com/brianwatroba/soulbound.git`
 2. Install base project dependencies: cd into root, run `npm install`
 3. Add local .env file to project root. Include below env variables (replace keys with your own):
 
@@ -78,10 +87,9 @@ POLYGON_PRIVATE_KEY=xxx
 
 ## Usage
 
-1. Front end (on localhost): finish this later
-2. Local testing: tests written in Chai/Mocha using Hardhat/Ethers.js. Run `npx hardhat test` for test suite.
-3. Deployment to Polygon Test (Mumbai): ensure your .env file includes your Rinkeby private key. Then run `npx hardhat run scripts/deploy.js --network polygon-mumbai`. Deploy script only deploys the ProjectFactory.sol contract.
-4. Deployment to other test nets: add your desired network to the `networks` object in `hardhat-config.js` using the following format:
+1. Local testing: tests written in Chai/Mocha using Hardhat/Ethers.js. Run `npx hardhat test` for test suite.
+2. Deployment to Polygon Test (Mumbai): ensure your .env file includes your Rinkeby private key. Then run `npx hardhat run scripts/deployMumbai.ts --network polygon-mumbai`. Deploy script only deploys the ProjectFactory.sol contract.
+3. Deployment to other test nets: add your desired network to the `networks` object in `hardhat-config.js` using the following format:
 
 ```javascript
 /hardhat.config.js
