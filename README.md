@@ -58,15 +58,19 @@ Technical callouts:
 
 ## Contract addresses
 
-#### Polygon (Mainnet)
+#### Mainnet (Polygon)
 
-- _StreamLootFactory.sol:_ TBD
-- _StreamLoot.sol:_ TBD
+- _BadgeSetFactory.sol:_ to be deployed
+- _WalletRegistry.sol:_ to be deployed
+- _BadgeSet.sol (Test1):_ to be deployed
+- _BadgeSet.sol (Test2):_ to be deployed
 
 #### Test (Polygon - Mumbai)
 
-- _StreamLootFactory.sol:_ TBD
-- _StreamLoot.sol:_ TBD
+- _BadgeSetFactory.sol:_ `0xe3dbFA4C842A16f99fA2F685B72937C759E3e2E6`
+- _WalletRegistry.sol:_ `0xfd8e336523b0f6F1f5DC343D9FB47c3c90C972E4`
+- _BadgeSet.sol (Test1):_ `0xD850DA80Fc37fDe3D2eb1d4A5d5319B22A4Be45e`
+- _BadgeSet.sol (Test2):_ `0x1eDc0DC5C5adb18EEA135BB8eA298B8E006fE975`
 
 ## Local setup
 
