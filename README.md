@@ -54,7 +54,7 @@ Technical callouts:
 
 ## Structure
 
-![Smart contract systems design](https://brianwatroba.s3.amazonaws.com/soulboundsc3.png)
+![Smart contract systems design](https://brianwatroba.s3.amazonaws.com/soulboundsc4.png)
 
 ## Contract addresses
 
