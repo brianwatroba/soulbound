@@ -60,10 +60,12 @@ Technical callouts:
 
 #### Mainnet (Polygon)
 
-- _BadgeSetFactory.sol:_ to be deployed
-- _WalletRegistry.sol:_ to be deployed
-- _BadgeSet.sol (Test1):_ to be deployed
-- _BadgeSet.sol (Test2):_ to be deployed
+- _BadgeSetFactory.sol:_ `0xdAb981A6655e5E3b85b46e0f2D741537C60E8259`
+- _WalletRegistry.sol:_ `0x60352Ff30f4698eA5FB0A2cf17D28Afe2CBeb775`
+- _BadgeSet.sol (Test1):_ `0x72E8B2FcAd08F2dc0568Ab1A6eBcf09eC49d7b88`
+- _BadgeSet.sol (Test2):_ `0xe686929B0Aad06AB8EF867506B72753392798687`
+
+_Note: Mainnet contracts are still under development (alpha)_
 
 #### Test (Polygon - Mumbai)
 
