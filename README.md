@@ -28,15 +28,23 @@ Imagine a world where organizations can issue and govern their own blue checkmar
 
 ## What's included
 
-- Token standard: open source ERC1155 Non-Tradeable token standard for communities to create, govern, mint, and manage the certifications that matter to them. (This repo).
-- Community dapp (web2): client app for community token management, optional custodial wallet service, and metadata storage. Not required, but a method for less web3 savvy communities to create and manage their tokens without having to worry about wallets and crypto complexity.
-- User dapp (web2): client app to view your Soulbound Tokens, prove ownership.
+### TOKEN STANDARD:
+
+Soulbound is an open source non-transferrable token standard based on ERC1155. Communities can use it to create, govern, mint, and manage the certifications that matter to them. (This repo).
+
+### DAPP FOR COMMUNITIES:
+
+Client app for community token management, optional custodial wallet service, and metadata storage. Not required, but a method for less web3 savvy communities to create and manage their tokens without having to worry about wallets and crypto complexity.
+
+### DAPP FOR USERS:
+
+client app for people to view their Soulbound Tokens, prove ownership.
 
 ## Project North Stars
 
-- Communities can issue provable certifications and endorsements to use for anything
-- People have central control over their certifications and endorsements
-- No fancy crypto stuff. Make this easy, delightful, and useful.
+1. Communities can issue provable certifications and endorsements to use for anything
+2. People have central control over their certifications and endorsements
+3. No fancy crypto stuff. Make this easy, delightful, and useful.
 
 ## How it works
 
