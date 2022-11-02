@@ -14,7 +14,7 @@ _Alpha launching Winter 2022_
 
 What we do makes up who we are.
 
-Our accomplishments don't really "live anywhere" where we can prove them, show them, and share them.
+Our accomplishments don't "live anywhere" where we can easily prove them, show them, and share them.
 
 If they do exist online, they're fragmented. Our career history is on LinkedIn. Our travel history is on Instagram. My PADI Scuba certification is a plastic card in my wallet.
 
@@ -24,19 +24,19 @@ What if we were able to collect our experiences in a central place? What if the 
 
 A protocol for communities to issue proof of completion/endorsement for _anything_.
 
-Imagine a world where organizations can issue and govern their own blue checkmarks.
+Imagine a world where organizations issue and govern their own blue checkmarks.
 
-## What's included
+## Products
 
-### TOKEN STANDARD:
+#### TOKEN STANDARD:
 
-Soulbound is an open source non-transferrable token standard based on ERC1155. Communities can use it to create, govern, mint, and manage the certifications that matter to them. (This repo).
+Soulbound is an open source non-transferrable token standard (ERC1155 compliant interface). Communities can use it to create, govern, mint, and manage the certifications that matter to them. (This repo).
 
-### DAPP FOR COMMUNITIES:
+#### DAPP FOR COMMUNITIES:
 
 Client app for community token management, optional custodial wallet service, and metadata storage. Not required, but a method for less web3 savvy communities to create and manage their tokens without having to worry about wallets and crypto complexity.
 
-### DAPP FOR USERS:
+#### DAPP FOR USERS:
 
 client app for people to view their Soulbound Tokens, prove ownership.
 
