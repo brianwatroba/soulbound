@@ -1,6 +1,6 @@
 # Soulbound 🪪
 
-Non-transferrable ERC1155 Token standard. Designed to represent certifications, accomplishments, and proof of completion for anything--big or small.
+Non-transferrable ERC1155 Token standard for accomplishments, certifications, and proof of completion.
 
 ## Access
 
@@ -10,21 +10,23 @@ DAPP: https://www.placeholderwebsite.com
 
 _Alpha launching Winter 2022_
 
-## Why build this?
+## The problem
 
 What we do makes up who we are.
 
-The problem: Our accomplishments don't really "live anywhere" where we can prove them, show them, and share them.
+Our accomplishments don't really "live anywhere" where we can prove them, show them, and share them.
 
-And if they do exist online, they're fragmented. Our career history is on LinkedIn. Our travel history is on Instagram. My PADI Scuba certification is a plastic card in my wallet. A few digital platforms have accrued the ultimate "power of endorsement" (blue checkmarks).
+If they do exist online, they're fragmented. Our career history is on LinkedIn. Our travel history is on Instagram. My PADI Scuba certification is a plastic card in my wallet.
 
-What if we were able to collect our experiences and accomplishments in a central place? What if the community involved in those experiences could issue them? And what if those accomplishments were totally trustworthy and provable?
+What if we were able to collect our experiences in a central place? What if the community involved in those accomplishments could issue them? What if they were totally provable and trustworthy?
 
 ## Our solution
 
-A protocol for communities to issue proof of completion/endorsement for anything. Imagine a world where organizations can issue and govern their own blue checkmarks.
+A protocol for communities to issue proof of completion/endorsement for _anything_.
 
-What's included:
+Imagine a world where organizations can issue and govern their own blue checkmarks.
+
+## What's included
 
 - Token standard: open source ERC1155 Non-Tradeable token standard for communities to create, govern, mint, and manage the certifications that matter to them. (This repo).
 - Community dapp (web2): client app for community token management, optional custodial wallet service, and metadata storage. Not required, but a method for less web3 savvy communities to create and manage their tokens without having to worry about wallets and crypto complexity.
