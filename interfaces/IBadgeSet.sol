@@ -33,7 +33,7 @@ interface IBadgeSet {
         address to,
         uint96[] memory badgeTypes,
         uint256[] memory expiryTimestamps
-    ) external;
+    ) external returns (uint256[] memory tokenIds);
 
     function revoke(
         address account,
@@ -43,12 +43,12 @@ interface IBadgeSet {
     function revokeBatch(
         address to,
         uint96[] memory badgeTypes
-    ) external;
+    ) external returns (uint256[] memory tokenIds);
 
     function transitionWallet(address kycAddress, address walletAddress) external;
 
     function encodeTokenId(uint96 _tokenType, address _address) external pure returns (uint256);
 
-    function decodeTokenId(uint256 data) external pure returns (uint96 _tokenType, address _address);
+    function decodeTokenId(uint256 tokenId) external pure returns (uint96 _tokenType, address _address);
 
 }

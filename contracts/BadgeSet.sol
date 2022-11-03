@@ -11,9 +11,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
-import "hardhat/console.sol";
 
-// TODO: rename badge to token
 // TODO: guards against minting way too high of a token
 // TODO: don't redeploy bitmaps for every badge set
 // TODO: bitmaps function to check an entire mask
@@ -27,14 +25,13 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     using BitMaps for BitMaps.BitMap;
 
     address public kycRegistry;
-    string private _uri;
     string public _contractURI;
-
     uint96 public maxTokenType;
+    string private _uri;
     mapping(address => BitMaps.BitMap) private _balances;
-    mapping(uint256 => uint256) private _expiries; // badgeId to expiration timestamp
-    
+    mapping(uint256 => uint256) private _expiries;
     address private constant ZERO_ADDRESS = address(0);
+    uint256 private constant BITMAP_SIZE = 256;
 
     constructor(address _owner, address _kycRegistry, string memory _baseUri) {
         kycRegistry = _kycRegistry;
@@ -60,144 +57,129 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     }
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
-        (uint96 _badgeType, address _address) = decodeTokenId(id);
-        address validatedAddress = getCorrectAccount(_address);
-        if (validatedAddress != account) return 0;
-        BitMaps.BitMap storage bitmap = _balances[validatedAddress];
+        (uint96 _badgeType, address _account) = decodeTokenId(id);
+        address user = getCorrectAccount(_account);
+        if (user != account) return 0;
+        BitMaps.BitMap storage bitmap = _balances[user];
         bool owned = BitMaps.get(bitmap, _badgeType);
         return owned ? 1 : 0;
     }
 
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
-        if (accounts.length != ids.length) revert ArrayParamsUnequalLength();
-        uint256[] memory batchBalances = new uint256[](accounts.length);
-        for (uint256 i = 0; i < accounts.length; ++i) {
+        uint256 count = accounts.length;
+        if (count != ids.length) revert ArrayParamsUnequalLength();
+        uint256[] memory batchBalances = new uint256[](count);
+        for (uint256 i = 0; i < count; ++i) {
             batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
         return batchBalances;
     }
 
-    function _mint(address to, uint96 tokenType, uint256 expiry) internal {
-            uint256 tokenId = encodeTokenId(tokenType, account);
-
-            bool expired = expiry > 0 && expiry <= block.timestamp
-            bool tokenAlreadyOwned = balanceOf(to, tokenId) > 0;
-            if (expired) revert ExpiryAlreadyPassed(expiry);
-            if (tokenAlreadyOwned) revert TokenAlreadyOwned(to, tokenType);
-          
-            BitMaps.BitMap storage balances = _balances[account];
-            BitMaps.set(balances, tokenType);
-            _expiries[tokenId] = expiry;  
-
-            if (maxTokenType < tokenType) maxTokenType = tokenType;
-    }
-
     function mint(
-        address account,
+        address to,
         uint96 tokenType,
         uint256 expiry
     ) external onlyOwner returns (uint256 tokenId) {
-        if (isExpired(expiry)) revert ExpiryAlreadyPassed(expiry);
-        address validatedAddress = getCorrectAccount(account);
-        tokenId = encodeTokenId(tokenType, validatedAddress);
-        if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-        BitMaps.BitMap storage balances = _balances[validatedAddress];
-        BitMaps.set(balances, tokenType);
-        _expiries[tokenId] = expiry;
-        if (maxTokenType < tokenType) maxTokenType = tokenType;
-        emit TransferSingle(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenId, 1);
-        _doSafeTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenId, 1, "");
+        address user = getCorrectAccount(to);
+        
+        tokenId = _mint(user, tokenType, expiry);
+
+        emit TransferSingle(_msgSender(), ZERO_ADDRESS, user, tokenId, 1);
+        _doSafeTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, user, tokenId, 1, "");
     }
 
     function mintBatch(
-        address to,
+        address account,
         uint96[] memory tokenTypes,
         uint256[] memory expiries
-    ) external onlyOwner {
+    ) external onlyOwner returns (uint256[] memory tokenIds) {
         if (tokenTypes.length != expiries.length) revert ArrayParamsUnequalLength();
+        address user = getCorrectAccount(account);
         uint256 mintCount = tokenTypes.length;
-        address account = getCorrectAccount(to);
-        uint[] memory tokenIds = new uint[](mintCount);
+        
+        tokenIds = new uint[](mintCount);
         uint[] memory amounts = new uint[](mintCount);
+
         for (uint256 i = 0; i < mintCount; i++) {
-            
-            uint96 tokenType = tokenTypes[i];
-            uint256 expiry = expiries[i];
-            uint256 tokenId = encodeTokenId(tokenType, account);
-
-            bool expired = expiry > 0 && expiry <= block.timestamp
-            bool tokenAlreadyOwned = balanceOf(to, tokenId) > 0;
-            if (expired) revert ExpiryAlreadyPassed(expiry);
-            if (tokenAlreadyOwned) revert TokenAlreadyOwned();
-          
-            BitMaps.BitMap storage balances = _balances[account];
-            BitMaps.set(balances, tokenType);
-            _expiries[tokenId] = expiry;  
-
-            if (maxTokenType < tokenType) maxTokenType = tokenType;
+            uint256 tokenId = _mint(user, tokenTypes[i], expiries[i]);
             tokenIds[i] = tokenId;
             amounts[i] = 1;
         }
-        emit TransferBatch(_msgSender(), ZERO_ADDRESS, account, tokenIds, amounts);
-        _doSafeBatchTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, account, tokenIds, amounts, "");
+
+        emit TransferBatch(_msgSender(), ZERO_ADDRESS, user, tokenIds, amounts);
+        _doSafeBatchTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, user, tokenIds, amounts, "");
+    }
+
+    function _mint(address user, uint96 tokenType, uint256 expiry) internal returns (uint256 tokenId) {
+        tokenId = encodeTokenId(tokenType, user);
+
+        bool isExpired = expiry > 0 && expiry <= block.timestamp;
+        bool ownsToken = balanceOf(user, tokenId) > 0;
+        if (isExpired) revert ExpiryAlreadyPassed(expiry);
+
+        if (ownsToken) revert TokenAlreadyOwned(user, tokenType);
+        
+        BitMaps.BitMap storage balances = _balances[user];
+        BitMaps.set(balances, tokenType);
+        _expiries[tokenId] = expiry;  
+
+        if (maxTokenType < tokenType) maxTokenType = tokenType;
     }
 
     function revoke(
         address account,
         uint96 badgeType
     ) public onlyOwner returns(uint256 tokenId) {
-        address validatedAddress = getCorrectAccount(account);
-        tokenId = encodeTokenId(badgeType, validatedAddress);
-        if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
-        BitMaps.BitMap storage balances = _balances[validatedAddress];
-        BitMaps.unset(balances, badgeType);
-        delete _expiries[tokenId];
-        emit TransferSingle(_msgSender(), validatedAddress, ZERO_ADDRESS, tokenId, 1);
+        address user = getCorrectAccount(account);
+        _revoke(user, badgeType);
+        emit TransferSingle(_msgSender(), user, ZERO_ADDRESS, tokenId, 1);
     }
 
     function revokeBatch(
-        address to,
-        uint96[] memory badgeTypes
-    ) external onlyOwner {
-        address operator = _msgSender();
-        address validatedAddress = getCorrectAccount(to);
-        uint[] memory amounts = new uint[](badgeTypes.length);
-        uint[] memory tokenIds = new uint[](badgeTypes.length);
-        for (uint256 i = 0; i < badgeTypes.length; i++) {
-            uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
-            if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
-            BitMaps.BitMap storage balances = _balances[validatedAddress];
-            BitMaps.unset(balances, badgeTypes[i]);
-            delete _expiries[tokenId];
+        address account,
+        uint96[] memory tokenTypes
+    ) external onlyOwner returns (uint[] memory tokenIds) {
+        address user = getCorrectAccount(account);
+        uint256 revokeCount = tokenTypes.length;
+        tokenIds = new uint[](revokeCount);
+        uint[] memory amounts = new uint[](revokeCount);
+        for (uint256 i = 0; i < revokeCount; i++) {
+            uint256 tokenId = _revoke(user, tokenTypes[i]);
+            tokenIds[i] = tokenId;
+            amounts[i] = 1;
         }
-        emit TransferBatch(operator, validatedAddress, ZERO_ADDRESS, tokenIds, amounts);
+        emit TransferBatch(_msgSender(), user, ZERO_ADDRESS, tokenIds, amounts);
     }
 
-    function transitionWallet(address kycAddress, address walletAddress) external {
-        if (getCorrectAccount(kycAddress) != walletAddress) revert WalletNotLinked();
-        uint256 bitmapCount = maxTokenType / 256;
+     function _revoke(address user, uint96 badgeType) internal returns (uint256 tokenId) {
+        tokenId = encodeTokenId(badgeType, user);
+        if (balanceOf(user, tokenId) == 0) revert InsufficientBalance();
+        BitMaps.BitMap storage balances = _balances[user];
+        BitMaps.unset(balances, badgeType);
+        delete _expiries[tokenId];
+    }
+
+    function transitionWallet(address from, address to) external {
+        if (getCorrectAccount(from) != to) revert WalletNotLinked();
+        uint256 bitmapCount = maxTokenType / BITMAP_SIZE;
         for (uint256 i = 0; i <= bitmapCount; i++) {
-            uint256 bitmap = _balances[kycAddress]._data[i];
+            uint256 bitmap = _balances[from]._data[i];
             if (bitmap != 0) {
-                transitionBitmap(bitmap, kycAddress, walletAddress);
-                _balances[walletAddress]._data[i] = bitmap;
-                delete _balances[kycAddress]._data[i];
+                transitionTokens(bitmap, from, to); // emit transfer events
+                _balances[to]._data[i] = bitmap; // transfer bitmap
+                delete _balances[from]._data[i]; // delete from's old bitmap
             }
         }
-        emit TransitionWallet(kycAddress, walletAddress);
+        emit TransitionWallet(from, to);
     }
 
-    function transitionBitmap(uint256 bitmap, address kycAddress, address walletAddress) private {
-        for(uint256 i = 0; i < 256; i++) {
+    function transitionTokens(uint256 bitmap, address from, address to) private {
+        for(uint256 i = 0; i < BITMAP_SIZE; i++) {
             if (bitmap & (1 << i) > 0) {
-                emit TransferSingle(_msgSender(), kycAddress, walletAddress, encodeTokenId(uint96(i), kycAddress), 1);
+                emit TransferSingle(_msgSender(), from, to, encodeTokenId(uint96(i), from), 1);
             }
         } 
     }
-
-    // function isExpired(uint256 expiry) internal view returns (bool) {
-    //     return expiry > 0 && expiry <= block.timestamp;
-    // }
 
     function getCorrectAccount(address _address) internal view returns (address) {
         return IKycRegistry(kycRegistry).getLinkedWallet(_address);
@@ -207,12 +189,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         return uint256(bytes32(abi.encodePacked(_tokenType, _address)));
     }
 
-    function decodeTokenId(uint256 data) public pure returns (uint96 _tokenType, address _address) {
-        _tokenType = uint96(data >> 160);
-        _address = address(uint160(uint256(((bytes32(data) << 96) >> 96))));
+    function decodeTokenId(uint256 tokenId) public pure returns (uint96 _tokenType, address _address) {
+        _tokenType = uint96(tokenId >> 160);
+        _address = address(uint160(uint256(((bytes32(tokenId) << 96) >> 96))));
     }
 
-    // NOOPs for non needed ERC1155 functions
+    /// @notice: NOOPs for non needed ERC1155 functions
 
     function setApprovalForAll(address operator, bool approved) external pure {
         revert SoulboundTokenNoSetApprovalForAll(operator, approved);
