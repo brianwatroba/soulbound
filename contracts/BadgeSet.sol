@@ -98,7 +98,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint256 mintCount = tokenTypes.length;
         
         tokenIds = new uint[](mintCount);
-        uint[] memory amounts = new uint[](mintCount);
+        uint[] memory amounts = new uint[](mintCount); // used in event
 
         for (uint256 i = 0; i < mintCount; i++) {
             uint256 tokenId = _mint(user, tokenTypes[i], expiries[i]);
@@ -116,7 +116,6 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         bool isExpired = expiry > 0 && expiry <= block.timestamp;
         bool ownsToken = balanceOf(user, tokenId) > 0;
         if (isExpired) revert ExpiryAlreadyPassed(expiry);
-
         if (ownsToken) revert TokenAlreadyOwned(user, tokenType);
         
         BitMaps.BitMap storage balances = _balances[user];
@@ -141,12 +140,15 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     ) external onlyOwner returns (uint[] memory tokenIds) {
         address user = getCorrectAccount(account);
         uint256 revokeCount = tokenTypes.length;
+
         tokenIds = new uint[](revokeCount);
-        uint[] memory amounts = new uint[](revokeCount);
+        uint[] memory amounts = new uint[](revokeCount); // used in event
+        
         for (uint256 i = 0; i < revokeCount; i++) {
             uint256 tokenId = _revoke(user, tokenTypes[i]);
             tokenIds[i] = tokenId;
             amounts[i] = 1;
+        
         }
         emit TransferBatch(_msgSender(), user, ZERO_ADDRESS, tokenIds, amounts);
     }
