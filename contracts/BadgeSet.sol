@@ -30,8 +30,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     string private _uri;
     string public _contractURI;
 
-    uint96 public tokenTypeCount;
-    mapping(address => BitMaps.BitMap) private _tokenBalances;
+    uint96 public maxTokenType;
+    mapping(address => BitMaps.BitMap) private _balances;
     mapping(uint256 => uint256) private _expiries; // badgeId to expiration timestamp
     
     address private constant ZERO_ADDRESS = address(0);
@@ -61,15 +61,15 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
         (uint96 _badgeType, address _address) = decodeTokenId(id);
-        address validatedAddress = validateAddress(_address);
+        address validatedAddress = getCorrectAccount(_address);
         if (validatedAddress != account) return 0;
-        BitMaps.BitMap storage bitmap = _tokenBalances[validatedAddress];
+        BitMaps.BitMap storage bitmap = _balances[validatedAddress];
         bool owned = BitMaps.get(bitmap, _badgeType);
         return owned ? 1 : 0;
     }
 
      function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory) {
-        if (accounts.length != ids.length) revert ParamsLengthMismatch();
+        if (accounts.length != ids.length) revert ArrayParamsUnequalLength();
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
             batchBalances[i] = balanceOf(accounts[i], ids[i]);
@@ -77,16 +77,19 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         return batchBalances;
     }
 
-    function _mint(address to, uint96 badgeType, uint256 expiryTimestamp) internal {
-        uint256 tokenId = encodeTokenId(badgeType, to);
-        if (balanceOf(to, tokenId) > 0) revert TokenAlreadyOwned();
-        
-        BitMaps.BitMap storage balances = _tokenBalances[to];
-        BitMaps.set(balances, badgeType);
-        _expiries[tokenId] = expiryTimestamp;
-        if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
-        emit TransferSingle(_msgSender(), ZERO_ADDRESS, to, tokenId, 1);
-        _doSafeTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, to, tokenId, 1, "");
+    function _mint(address to, uint96 tokenType, uint256 expiry) internal {
+            uint256 tokenId = encodeTokenId(tokenType, account);
+
+            bool expired = expiry > 0 && expiry <= block.timestamp
+            bool tokenAlreadyOwned = balanceOf(to, tokenId) > 0;
+            if (expired) revert ExpiryAlreadyPassed(expiry);
+            if (tokenAlreadyOwned) revert TokenAlreadyOwned(to, tokenType);
+          
+            BitMaps.BitMap storage balances = _balances[account];
+            BitMaps.set(balances, tokenType);
+            _expiries[tokenId] = expiry;  
+
+            if (maxTokenType < tokenType) maxTokenType = tokenType;
     }
 
     function mint(
@@ -94,14 +97,14 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint96 tokenType,
         uint256 expiry
     ) external onlyOwner returns (uint256 tokenId) {
-        if (isExpired(expiry)) revert ExpiryPassed();
-        address validatedAddress = validateAddress(account);
+        if (isExpired(expiry)) revert ExpiryAlreadyPassed(expiry);
+        address validatedAddress = getCorrectAccount(account);
         tokenId = encodeTokenId(tokenType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-        BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
+        BitMaps.BitMap storage balances = _balances[validatedAddress];
         BitMaps.set(balances, tokenType);
         _expiries[tokenId] = expiry;
-        if (tokenTypeCount < tokenType) tokenTypeCount = tokenType;
+        if (maxTokenType < tokenType) maxTokenType = tokenType;
         emit TransferSingle(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenId, 1);
         _doSafeTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenId, 1, "");
     }
@@ -111,33 +114,42 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint96[] memory tokenTypes,
         uint256[] memory expiries
     ) external onlyOwner {
-        if (tokenTypes.length != expiries.length) revert ParamsLengthMismatch();
-        address validatedAddress = validateAddress(to);
-        uint[] memory tokenIds = new uint[](tokenTypes.length);
-        uint[] memory amounts = new uint[](tokenTypes.length);
-        for (uint256 i = 0; i < tokenTypes.length; i++) {
-            if (isExpired(expiries[i])) revert ExpiryPassed();
-            uint256 tokenId = encodeTokenId(tokenTypes[i], validatedAddress);
-            if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
-            BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
-            BitMaps.set(balances, tokenTypes[i]);
-            _expiries[tokenId] = expiries[i];  
-            if (tokenTypeCount < tokenTypes[i]) tokenTypeCount = tokenTypes[i];
+        if (tokenTypes.length != expiries.length) revert ArrayParamsUnequalLength();
+        uint256 mintCount = tokenTypes.length;
+        address account = getCorrectAccount(to);
+        uint[] memory tokenIds = new uint[](mintCount);
+        uint[] memory amounts = new uint[](mintCount);
+        for (uint256 i = 0; i < mintCount; i++) {
+            
+            uint96 tokenType = tokenTypes[i];
+            uint256 expiry = expiries[i];
+            uint256 tokenId = encodeTokenId(tokenType, account);
+
+            bool expired = expiry > 0 && expiry <= block.timestamp
+            bool tokenAlreadyOwned = balanceOf(to, tokenId) > 0;
+            if (expired) revert ExpiryAlreadyPassed(expiry);
+            if (tokenAlreadyOwned) revert TokenAlreadyOwned();
+          
+            BitMaps.BitMap storage balances = _balances[account];
+            BitMaps.set(balances, tokenType);
+            _expiries[tokenId] = expiry;  
+
+            if (maxTokenType < tokenType) maxTokenType = tokenType;
             tokenIds[i] = tokenId;
             amounts[i] = 1;
         }
-        emit TransferBatch(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenIds, amounts);
-        _doSafeBatchTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenIds, amounts, "");
+        emit TransferBatch(_msgSender(), ZERO_ADDRESS, account, tokenIds, amounts);
+        _doSafeBatchTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, account, tokenIds, amounts, "");
     }
 
     function revoke(
         address account,
         uint96 badgeType
     ) public onlyOwner returns(uint256 tokenId) {
-        address validatedAddress = validateAddress(account);
+        address validatedAddress = getCorrectAccount(account);
         tokenId = encodeTokenId(badgeType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
-        BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
+        BitMaps.BitMap storage balances = _balances[validatedAddress];
         BitMaps.unset(balances, badgeType);
         delete _expiries[tokenId];
         emit TransferSingle(_msgSender(), validatedAddress, ZERO_ADDRESS, tokenId, 1);
@@ -148,13 +160,13 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint96[] memory badgeTypes
     ) external onlyOwner {
         address operator = _msgSender();
-        address validatedAddress = validateAddress(to);
+        address validatedAddress = getCorrectAccount(to);
         uint[] memory amounts = new uint[](badgeTypes.length);
         uint[] memory tokenIds = new uint[](badgeTypes.length);
         for (uint256 i = 0; i < badgeTypes.length; i++) {
             uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
             if (balanceOf(validatedAddress, tokenId) == 0) revert InsufficientBalance();
-            BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
+            BitMaps.BitMap storage balances = _balances[validatedAddress];
             BitMaps.unset(balances, badgeTypes[i]);
             delete _expiries[tokenId];
         }
@@ -162,14 +174,14 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     }
 
     function transitionWallet(address kycAddress, address walletAddress) external {
-        if (validateAddress(kycAddress) != walletAddress) revert WalletNotLinked();
-        uint256 bitmapCount = tokenTypeCount / 256;
+        if (getCorrectAccount(kycAddress) != walletAddress) revert WalletNotLinked();
+        uint256 bitmapCount = maxTokenType / 256;
         for (uint256 i = 0; i <= bitmapCount; i++) {
-            uint256 bitmap = _tokenBalances[kycAddress]._data[i];
+            uint256 bitmap = _balances[kycAddress]._data[i];
             if (bitmap != 0) {
                 transitionBitmap(bitmap, kycAddress, walletAddress);
-                _tokenBalances[walletAddress]._data[i] = bitmap;
-                delete _tokenBalances[kycAddress]._data[i];
+                _balances[walletAddress]._data[i] = bitmap;
+                delete _balances[kycAddress]._data[i];
             }
         }
         emit TransitionWallet(kycAddress, walletAddress);
@@ -183,11 +195,11 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         } 
     }
 
-    function isExpired(uint256 expiryTimestamp) internal view returns (bool) {
-        return expiryTimestamp > 0 && expiryTimestamp <= block.timestamp;
-    }
+    // function isExpired(uint256 expiry) internal view returns (bool) {
+    //     return expiry > 0 && expiry <= block.timestamp;
+    // }
 
-    function validateAddress(address _address) public view returns (address) {
+    function getCorrectAccount(address _address) internal view returns (address) {
         return IKycRegistry(kycRegistry).getLinkedWallet(_address);
     }
 

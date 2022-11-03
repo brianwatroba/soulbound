@@ -3,10 +3,10 @@ pragma solidity ^0.8.12;
 
 interface IBadgeSet {
 
-    error ExpiryPassed();
-    error ParamsLengthMismatch();
+    error ExpiryAlreadyPassed(uint256 expiry);
+    error ArrayParamsUnequalLength();
     error InsufficientBalance();
-    error TokenAlreadyOwned();
+    error TokenAlreadyOwned(address to, uint96 tokenType);
     error WalletNotLinked();
     error SoulboundTokenNoSetApprovalForAll(address operator, bool approved);
     error SoulboundTokenNoIsApprovedForAll(address account, address operator);
@@ -46,8 +46,6 @@ interface IBadgeSet {
     ) external;
 
     function transitionWallet(address kycAddress, address walletAddress) external;
-
-    function validateAddress(address _address) external view returns (address);
 
     function encodeTokenId(uint96 _tokenType, address _address) external pure returns (uint256);
 
