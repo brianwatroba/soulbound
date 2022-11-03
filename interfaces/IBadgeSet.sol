@@ -16,8 +16,6 @@ interface IBadgeSet {
     error ERC1155ReceiverRejectedTokens();
 
     event TransitionWallet(address indexed kycAddress, address indexed walletAddress);
-
-    function contractURI() external view returns (string memory);
     
     function setURI(string memory newuri) external;
 

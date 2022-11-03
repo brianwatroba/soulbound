@@ -20,7 +20,7 @@ import "hardhat/console.sol";
 
 /// @title BadgeSet
 /// @author Brian watroba
-/// @dev Modified ERC-1155 contract allowing for Soulbound (non-transferrable), semi-fungible NFT. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
+/// @dev Non-transferrable ERC1155 Token standard for accomplishments, certifications, and proof of completion. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
 /// @custom:version 1.0.3
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
@@ -28,7 +28,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     address public kycRegistry;
     string private _uri;
-    string private _contractURI;
+    string public _contractURI;
 
     uint96 public tokenTypeCount;
     mapping(address => BitMaps.BitMap) private _tokenBalances;
@@ -49,10 +49,6 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function setURI(string memory newuri) public onlyOwner {
         _uri = newuri;
-    }
-
-    function contractURI() public view returns (string memory) {
-        return _contractURI;
     }
 
     function setContractURI(string memory newuri) public onlyOwner {
@@ -89,52 +85,49 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         BitMaps.set(balances, badgeType);
         _expiries[tokenId] = expiryTimestamp;
         if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
-        address operator = _msgSender();
-        emit TransferSingle(operator, ZERO_ADDRESS, to, tokenId, 1);
-        _doSafeTransferAcceptanceCheck(operator, ZERO_ADDRESS, to, tokenId, 1, "");
+        emit TransferSingle(_msgSender(), ZERO_ADDRESS, to, tokenId, 1);
+        _doSafeTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, to, tokenId, 1, "");
     }
 
     function mint(
         address account,
-        uint96 badgeType,
-        uint256 expiryTimestamp
+        uint96 tokenType,
+        uint256 expiry
     ) external onlyOwner returns (uint256 tokenId) {
-        if (isExpired(expiryTimestamp)) revert ExpiryPassed();
+        if (isExpired(expiry)) revert ExpiryPassed();
         address validatedAddress = validateAddress(account);
-        tokenId = encodeTokenId(badgeType, validatedAddress);
+        tokenId = encodeTokenId(tokenType, validatedAddress);
         if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
         BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
-        BitMaps.set(balances, badgeType);
-        _expiries[tokenId] = expiryTimestamp;
-        if (tokenTypeCount < badgeType) tokenTypeCount = badgeType;
-        address operator = _msgSender();
-        emit TransferSingle(operator, ZERO_ADDRESS, validatedAddress, tokenId, 1);
-        _doSafeTransferAcceptanceCheck(operator, ZERO_ADDRESS, validatedAddress, tokenId, 1, "");
+        BitMaps.set(balances, tokenType);
+        _expiries[tokenId] = expiry;
+        if (tokenTypeCount < tokenType) tokenTypeCount = tokenType;
+        emit TransferSingle(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenId, 1);
+        _doSafeTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenId, 1, "");
     }
 
     function mintBatch(
         address to,
-        uint96[] memory badgeTypes,
-        uint256[] memory expiryTimestamps
+        uint96[] memory tokenTypes,
+        uint256[] memory expiries
     ) external onlyOwner {
-        if (badgeTypes.length != expiryTimestamps.length) revert ParamsLengthMismatch();
+        if (tokenTypes.length != expiries.length) revert ParamsLengthMismatch();
         address validatedAddress = validateAddress(to);
-        uint[] memory tokenIds = new uint[](badgeTypes.length);
-        uint[] memory amounts = new uint[](badgeTypes.length);
-        for (uint256 i = 0; i < badgeTypes.length; i++) {
-            if (isExpired(expiryTimestamps[i])) revert ExpiryPassed();
-            uint256 tokenId = encodeTokenId(badgeTypes[i], validatedAddress);
+        uint[] memory tokenIds = new uint[](tokenTypes.length);
+        uint[] memory amounts = new uint[](tokenTypes.length);
+        for (uint256 i = 0; i < tokenTypes.length; i++) {
+            if (isExpired(expiries[i])) revert ExpiryPassed();
+            uint256 tokenId = encodeTokenId(tokenTypes[i], validatedAddress);
             if (balanceOf(validatedAddress, tokenId) > 0) revert TokenAlreadyOwned();
             BitMaps.BitMap storage balances = _tokenBalances[validatedAddress];
-            BitMaps.set(balances, badgeTypes[i]);
-            _expiries[tokenId] = expiryTimestamps[i];  
-            if (tokenTypeCount < badgeTypes[i]) tokenTypeCount = badgeTypes[i];
+            BitMaps.set(balances, tokenTypes[i]);
+            _expiries[tokenId] = expiries[i];  
+            if (tokenTypeCount < tokenTypes[i]) tokenTypeCount = tokenTypes[i];
             tokenIds[i] = tokenId;
             amounts[i] = 1;
         }
-        address operator = _msgSender();
-        emit TransferBatch(operator, ZERO_ADDRESS, validatedAddress, tokenIds, amounts);
-        _doSafeBatchTransferAcceptanceCheck(operator, ZERO_ADDRESS, validatedAddress, tokenIds, amounts, "");
+        emit TransferBatch(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenIds, amounts);
+        _doSafeBatchTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, validatedAddress, tokenIds, amounts, "");
     }
 
     function revoke(
