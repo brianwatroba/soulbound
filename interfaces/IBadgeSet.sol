@@ -9,6 +9,8 @@ interface IBadgeSet {
     error TokenAlreadyOwned();
     error WalletNotLinked();
     error TokenNonTransferable();
+    error ERC1155ReceiverNotImplemented();
+    error ERC1155ReceiverRejectedTokens();
 
     event TransitionWallet(address indexed kycAddress, address indexed walletAddress);
 

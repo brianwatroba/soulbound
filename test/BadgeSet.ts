@@ -113,6 +113,11 @@ describe("BadgeSet.sol", () => {
       await badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
       await expect(badgeSet.connect(forbes).mint(userAddress, tokenType, 0)).to.be.reverted;
     });
+    it.only("Reverts: receiver is a smart contract", async () => {
+      const { badgeSet, kycRegistry, forbes, userAddress } = await loadFixture(fixtures.deploy);
+      const tokenType = randomIntFromInterval(1, 9999);
+      await expect(badgeSet.connect(forbes).mint(kycRegistry.address, tokenType, 0)).to.be.reverted;
+    });
   });
 
   describe("mintBatch()", () => {

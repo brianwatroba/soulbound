@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
+import "hardhat/console.sol";
 
 // TODO: guards against minting way too high of a token
 // TODO: don't redeploy bitmaps for every badge set
@@ -245,12 +246,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         if (to.code.length > 0) { // check if contract
             try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
-                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                    revert ERC1155ReceiverRejectedTokens();
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+                revert ERC1155ReceiverNotImplemented();
             }
         }
     }
@@ -275,12 +276,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
                 bytes4 response
             ) {
                 if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
-                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                    revert ERC1155ReceiverRejectedTokens();
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+                revert ERC1155ReceiverNotImplemented();
             }
         }
     }

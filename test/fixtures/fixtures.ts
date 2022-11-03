@@ -27,9 +27,13 @@ export const deploy = async () => {
   const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
   const badgeSet2 = await ethers.getContractAt("BadgeSet", badgeSetAddress2);
 
-  const blockTimestamp = (await provider.getBlock("latest")).timestamp;
-  const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year ahead
-  const invalidExpiry = blockTimestamp - 60 * 60 * 24 * 365; // 1 year ago
+  // TODO: replace this when I have internet again
+  // const blockTimestamp = (await provider.getBlock("latest")).timestamp;
+  // const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year ahead
+  // const invalidExpiry = blockTimestamp - 60 * 60 * 24 * 365; // 1 year ago
+
+  const validExpiry = 166750483800; // 1 year ahead
+  const invalidExpiry = 50; // 1 year ago
 
   return {
     badgeSetFactory,
@@ -44,7 +48,6 @@ export const deploy = async () => {
     userKycDetails,
     userAddress,
     walletAddress,
-    blockTimestamp,
     validExpiry,
     invalidExpiry,
   };
