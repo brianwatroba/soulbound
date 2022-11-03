@@ -113,10 +113,13 @@ describe("BadgeSet.sol", () => {
       await badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
       await expect(badgeSet.connect(forbes).mint(userAddress, tokenType, 0)).to.be.reverted;
     });
-    it.only("Reverts: receiver is a smart contract", async () => {
-      const { badgeSet, kycRegistry, forbes, userAddress } = await loadFixture(fixtures.deploy);
+    it("Reverts: ERC1155Receiver not implemented", async () => {
+      const { badgeSet, kycRegistry, forbes } = await loadFixture(fixtures.deploy);
       const tokenType = randomIntFromInterval(1, 9999);
-      await expect(badgeSet.connect(forbes).mint(kycRegistry.address, tokenType, 0)).to.be.reverted;
+      await expect(badgeSet.connect(forbes).mint(kycRegistry.address, tokenType, 0)).to.be.revertedWithCustomError(
+        badgeSet,
+        "ERC1155ReceiverNotImplemented"
+      );
     });
   });
 
@@ -155,6 +158,15 @@ describe("BadgeSet.sol", () => {
       const expiries = [validExpiry, validExpiry];
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
       await expect(badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries)).to.be.reverted;
+    });
+    it("Reverts: ERC1155Receiver not implemented", async () => {
+      const { badgeSet, kycRegistry, forbes, validExpiry } = await loadFixture(fixtures.deploy);
+      const ids = [1, 2];
+      const expiries = [validExpiry, validExpiry];
+      await expect(badgeSet.connect(forbes).mintBatch(kycRegistry.address, ids, expiries)).to.be.revertedWithCustomError(
+        badgeSet,
+        "ERC1155ReceiverNotImplemented"
+      );
     });
   });
 
@@ -279,13 +291,16 @@ describe("BadgeSet.sol", () => {
   describe("ERC1155 No Ops - Expected Revert", () => {
     it("setApprovalForAll()", async () => {
       const { badgeSet, user } = await loadFixture(fixtures.deploy);
-      await expect(badgeSet.setApprovalForAll(user.address, true)).to.be.revertedWithCustomError(badgeSet, "TokenNonTransferable");
+      await expect(badgeSet.setApprovalForAll(user.address, true)).to.be.revertedWithCustomError(
+        badgeSet,
+        "SoulboundTokenNoSetApprovalForAll"
+      );
     });
     it("isApprovedForAll()", async () => {
       const { badgeSet, soulbound, user } = await loadFixture(fixtures.deploy);
       await expect(badgeSet.isApprovedForAll(soulbound.address, user.address)).to.be.revertedWithCustomError(
         badgeSet,
-        "TokenNonTransferable"
+        "SoulboundTokenNoIsApprovedForAll"
       );
     });
     it("safeTransferFrom()", async () => {
@@ -295,7 +310,10 @@ describe("BadgeSet.sol", () => {
       const id = 1;
       const amount = 1;
       const data = ethers.utils.arrayify("0x00");
-      await expect(badgeSet.safeTransferFrom(from, to, id, amount, data)).to.be.revertedWithCustomError(badgeSet, "TokenNonTransferable");
+      await expect(badgeSet.safeTransferFrom(from, to, id, amount, data)).to.be.revertedWithCustomError(
+        badgeSet,
+        "SoulboundTokenNoSafeTransferFrom"
+      );
     });
     it("safeBatchTransferFrom()", async () => {
       const { badgeSet, soulbound, user } = await loadFixture(fixtures.deploy);
@@ -306,7 +324,7 @@ describe("BadgeSet.sol", () => {
       const data = ethers.utils.arrayify("0x00");
       await expect(badgeSet.safeBatchTransferFrom(from, to, ids, amounts, data)).to.be.revertedWithCustomError(
         badgeSet,
-        "TokenNonTransferable"
+        "SoulboundTokenNoSafeBatchTransferFrom"
       );
     });
   });

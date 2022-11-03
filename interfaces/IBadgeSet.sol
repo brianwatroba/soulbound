@@ -8,7 +8,10 @@ interface IBadgeSet {
     error InsufficientBalance();
     error TokenAlreadyOwned();
     error WalletNotLinked();
-    error TokenNonTransferable();
+    error SoulboundTokenNoSetApprovalForAll(address operator, bool approved);
+    error SoulboundTokenNoIsApprovedForAll(address account, address operator);
+    error SoulboundTokenNoSafeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes data);
+    error SoulboundTokenNoSafeBatchTransferFrom(address from, address to, uint256[] ids, uint256[] amounts, bytes data);
     error ERC1155ReceiverNotImplemented();
     error ERC1155ReceiverRejectedTokens();
 

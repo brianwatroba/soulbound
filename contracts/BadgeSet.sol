@@ -13,6 +13,7 @@ import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
 import "hardhat/console.sol";
 
+// TODO: rename badge to token
 // TODO: guards against minting way too high of a token
 // TODO: don't redeploy bitmaps for every badge set
 // TODO: bitmaps function to check an entire mask
@@ -83,6 +84,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     function _mint(address to, uint96 badgeType, uint256 expiryTimestamp) internal {
         uint256 tokenId = encodeTokenId(badgeType, to);
         if (balanceOf(to, tokenId) > 0) revert TokenAlreadyOwned();
+        
         BitMaps.BitMap storage balances = _tokenBalances[to];
         BitMaps.set(balances, badgeType);
         _expiries[tokenId] = expiryTimestamp;
@@ -207,12 +209,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     // NOOPs for non needed ERC1155 functions
 
-    function setApprovalForAll(address operator, bool approved) external {
-        revert TokenNonTransferable();
+    function setApprovalForAll(address operator, bool approved) external pure {
+        revert SoulboundTokenNoSetApprovalForAll(operator, approved);
     }
  
-    function isApprovedForAll(address account, address operator) external view returns (bool) {
-        revert TokenNonTransferable();
+    function isApprovedForAll(address account, address operator) external pure returns (bool) {
+        revert SoulboundTokenNoIsApprovedForAll(account, operator);
     }
 
     function safeTransferFrom(
@@ -221,8 +223,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint256 id,
         uint256 amount,
         bytes calldata data
-    ) external {
-        revert TokenNonTransferable();
+    ) external pure {
+        revert SoulboundTokenNoSafeTransferFrom(from, to, id, amount, data);
     }
 
     function safeBatchTransferFrom(
@@ -231,8 +233,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint256[] calldata ids,
         uint256[] calldata amounts,
         bytes calldata data
-    ) external {
-        revert TokenNonTransferable();
+    ) external pure {
+        revert SoulboundTokenNoSafeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     function _doSafeTransferAcceptanceCheck(

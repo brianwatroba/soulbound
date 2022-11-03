@@ -8,10 +8,10 @@ const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.12",
     settings: {
-      optimizer: { enabled: false, runs: 200 },
+      optimizer: { enabled: true, runs: 200 },
     },
   },
-  gasReporter: { enabled: false },
+  gasReporter: { enabled: true },
   networks: {
     hardhat: {
       accounts: {
