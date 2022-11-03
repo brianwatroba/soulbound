@@ -227,7 +227,7 @@ describe("BadgeSet.sol", () => {
     });
   });
 
-  describe("transitionWallet()", () => {
+  describe("moveUserTokensToWallet()", () => {
     it("transitions wallet", async () => {
       const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
       const ids = [1, 2, 3, 20, 100, 350, 1000];
@@ -235,7 +235,7 @@ describe("BadgeSet.sol", () => {
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
       await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
       // it passes because once we link them, we look up balance at end, and it returns
-      await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
+      await badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress);
       const userAccounts = ids.map(() => userAddress);
       const userTokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
       const walletAccounts = ids.map(() => walletAddress);
@@ -251,7 +251,7 @@ describe("BadgeSet.sol", () => {
       const expiries = arrayOfSingleNumber(ids.length, 0);
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
       await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-      const transitionWalletCall = await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
+      const transitionWalletCall = await badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress);
       const { events } = await transitionWalletCall.wait();
       expect(events).to.not.be.undefined;
       expect(events).to.have.length(ids.length + 1);
@@ -262,7 +262,7 @@ describe("BadgeSet.sol", () => {
       const expiries = arrayOfSingleNumber(ids.length, 0);
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
       await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-      const transitionWalletCall = await badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress);
+      const transitionWalletCall = await badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress);
       const { events } = await transitionWalletCall.wait();
       expect(events).to.not.be.undefined;
       const transferEvents = events?.filter((e) => e.event === "TransferSingle");
@@ -282,7 +282,7 @@ describe("BadgeSet.sol", () => {
       const ids = [1, 2, 3, 20, 100, 350, 1000];
       const expiries = arrayOfSingleNumber(ids.length, 0);
       await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
-      await expect(badgeSet.connect(forbes).transitionWallet(userAddress, walletAddress)).to.be.revertedWithCustomError(
+      await expect(badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress)).to.be.revertedWithCustomError(
         badgeSet,
         "WalletNotLinked"
       );

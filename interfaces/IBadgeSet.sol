@@ -45,10 +45,10 @@ interface IBadgeSet {
         uint96[] memory badgeTypes
     ) external returns (uint256[] memory tokenIds);
 
-    function transitionWallet(address kycAddress, address walletAddress) external;
+    function moveUserTokensToWallet(address kycAddress, address walletAddress) external;
 
-    function encodeTokenId(uint96 _tokenType, address _address) external pure returns (uint256);
+    function encodeTokenId(uint96 tokenType, address account) external pure returns (uint256 tokenId);
 
-    function decodeTokenId(uint256 tokenId) external pure returns (uint96 _tokenType, address _address);
+    function decodeTokenId(uint256 tokenId) external pure returns (uint96 tokenType, address account);
 
 }

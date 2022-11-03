@@ -7,18 +7,19 @@ import "../interfaces/IBadgeSet.sol";
 
 /// @title KycRegistry
 /// @author Brian watroba
-/// @dev Registry mapping of user read-only addresses to linked wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address.
+/// @dev Registry mapping of user read-only user lite wallet addresses to linked hot wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address.
 /// @custom:version 1.0.3
 contract KycRegistry is IKycRegistry, Ownable {
     mapping(address => address) private _walletsToUsers;
     mapping(address => address) private _usersToWallets;
+    address private constant ZERO_ADDRESS = address(0);
 
     function linkWallet(address userAddress, address walletAddress)
         external
         onlyOwner
     {
-        bool walletLinked = _walletsToUsers[userAddress] != address(0);
-        bool userLinked = _usersToWallets[walletAddress] != address(0);
+        bool walletLinked = _walletsToUsers[userAddress] != ZERO_ADDRESS;
+        bool userLinked = _usersToWallets[walletAddress] != ZERO_ADDRESS;
         if (walletLinked || userLinked) revert WalletAlreadyLinked();
         _walletsToUsers[userAddress] = walletAddress;
         _usersToWallets[walletAddress] = userAddress;
@@ -30,7 +31,7 @@ contract KycRegistry is IKycRegistry, Ownable {
         returns (address)
     {
         address linkedWallet = _walletsToUsers[userAddress];
-        return linkedWallet == address(0) ? userAddress : linkedWallet;
+        return linkedWallet == ZERO_ADDRESS ? userAddress : linkedWallet;
     }
 
     function hashKycToUserAddress(
@@ -56,7 +57,7 @@ contract KycRegistry is IKycRegistry, Ownable {
     ) public {
         for (uint256 i = 0; i < contracts.length; i++) {
             address contractAddress = contracts[i];
-            IBadgeSet(contractAddress).transitionWallet(
+            IBadgeSet(contractAddress).moveUserTokensToWallet(
                 userAddress,
                 walletAddress
             );

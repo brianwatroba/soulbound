@@ -14,19 +14,23 @@ import "./BitMaps.sol";
 
 // TODO: guards against minting way too high of a token
 // TODO: don't redeploy bitmaps for every badge set
-// TODO: bitmaps function to check an entire mask
 
-/// @title BadgeSet
-/// @author Brian watroba
-/// @dev Non-transferrable ERC1155 Token standard for accomplishments, certifications, and proof of completion. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
-/// @custom:version 1.0.3
+/**
+* @title BadgeSet
+* @author Brian watroba
+* @dev Non-transferrable ERC1155 Token standard for accomplishments, certifications, 
+* and proof of completion. Allows minting to a read-only, hashed user address as a 
+* "lite wallet". Users can also * * prove their identiy and claim their NFTs by linking
+* their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
+* @custom:version 1.0.3
+*/
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
 
     using BitMaps for BitMaps.BitMap;
 
     address public kycRegistry;
-    string public _contractURI;
-    uint96 public maxTokenType;
+    string public contractURI;
+    uint256 public maxTokenType;
     string private _uri;
     mapping(address => BitMaps.BitMap) private _balances;
     mapping(uint256 => uint256) private _expiries;
@@ -35,10 +39,11 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     constructor(address _owner, address _kycRegistry, string memory _baseUri) {
         kycRegistry = _kycRegistry;
-        setURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/"));
-        setContractURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/"));
+        setURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/")); // base + address(this) + /
+        setContractURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/")); // base + address(this) + /
         transferOwnership(_owner);
     } 
+
 
     function uri(uint256 id) public view returns (string memory) {
         return string.concat(_uri, Strings.toString(id));
@@ -49,7 +54,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     }
 
     function setContractURI(string memory newuri) public onlyOwner {
-        _contractURI = newuri;
+        contractURI = newuri;
     }
     
     function expiryOf(uint256 tokenId) public view returns (uint256) {
@@ -58,7 +63,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
         (uint96 _badgeType, address _account) = decodeTokenId(id);
-        address user = getCorrectAccount(_account);
+        address user = getUser(_account);
         if (user != account) return 0;
         BitMaps.BitMap storage bitmap = _balances[user];
         bool owned = BitMaps.get(bitmap, _badgeType);
@@ -80,7 +85,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint96 tokenType,
         uint256 expiry
     ) external onlyOwner returns (uint256 tokenId) {
-        address user = getCorrectAccount(to);
+        address user = getUser(to);
         
         tokenId = _mint(user, tokenType, expiry);
 
@@ -94,7 +99,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint256[] memory expiries
     ) external onlyOwner returns (uint256[] memory tokenIds) {
         if (tokenTypes.length != expiries.length) revert ArrayParamsUnequalLength();
-        address user = getCorrectAccount(account);
+        address user = getUser(account);
         uint256 mintCount = tokenTypes.length;
         
         tokenIds = new uint[](mintCount);
@@ -129,7 +134,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         address account,
         uint96 badgeType
     ) public onlyOwner returns(uint256 tokenId) {
-        address user = getCorrectAccount(account);
+        address user = getUser(account);
         _revoke(user, badgeType);
         emit TransferSingle(_msgSender(), user, ZERO_ADDRESS, tokenId, 1);
     }
@@ -138,7 +143,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         address account,
         uint96[] memory tokenTypes
     ) external onlyOwner returns (uint[] memory tokenIds) {
-        address user = getCorrectAccount(account);
+        address user = getUser(account);
         uint256 revokeCount = tokenTypes.length;
 
         tokenIds = new uint[](revokeCount);
@@ -161,43 +166,46 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         delete _expiries[tokenId];
     }
 
-    function transitionWallet(address from, address to) external {
-        if (getCorrectAccount(from) != to) revert WalletNotLinked();
+    function moveUserTokensToWallet(address from, address to) external {
+        if (getUser(from) != to) revert WalletNotLinked();
         uint256 bitmapCount = maxTokenType / BITMAP_SIZE;
         for (uint256 i = 0; i <= bitmapCount; i++) {
             uint256 bitmap = _balances[from]._data[i];
             if (bitmap != 0) {
-                transitionTokens(bitmap, from, to); // emit transfer events
-                _balances[to]._data[i] = bitmap; // transfer bitmap
-                delete _balances[from]._data[i]; // delete from's old bitmap
+                emitTransferEvents(bitmap, from, to);
+                _balances[to]._data[i] = bitmap; // copy over ownership bitmap
+                delete _balances[from]._data[i]; // delete old ownership bitmap
             }
         }
         emit TransitionWallet(from, to);
     }
 
-    function transitionTokens(uint256 bitmap, address from, address to) private {
+    function emitTransferEvents(uint256 bitmap, address from, address to) private {
         for(uint256 i = 0; i < BITMAP_SIZE; i++) {
-            if (bitmap & (1 << i) > 0) {
+            if (bitmap & (1 << i) > 0) { // a token type is owned
                 emit TransferSingle(_msgSender(), from, to, encodeTokenId(uint96(i), from), 1);
             }
         } 
     }
 
-    function getCorrectAccount(address _address) internal view returns (address) {
-        return IKycRegistry(kycRegistry).getLinkedWallet(_address);
+    function getUser(address account) internal view returns (address) {
+        return IKycRegistry(kycRegistry).getLinkedWallet(account);
     }
 
-    function encodeTokenId(uint96 _tokenType, address _address) public pure returns (uint256){
-        return uint256(bytes32(abi.encodePacked(_tokenType, _address)));
+    function encodeTokenId(uint96 tokenType, address account) public pure returns (uint256 tokenId){
+        tokenId = uint256(bytes32(abi.encodePacked(tokenType, account)));
     }
 
-    function decodeTokenId(uint256 tokenId) public pure returns (uint96 _tokenType, address _address) {
-        _tokenType = uint96(tokenId >> 160);
-        _address = address(uint160(uint256(((bytes32(tokenId) << 96) >> 96))));
+    function decodeTokenId(uint256 tokenId) public pure returns (uint96 tokenType, address account) {
+        tokenType = uint96(tokenId >> 160);
+        account = address(uint160(uint256(((bytes32(tokenId) << 96) >> 96))));
     }
 
-    /// @notice: NOOPs for non needed ERC1155 functions
-
+    /**
+     * No-Ops for ERC1155 transfer and approval functions. BadgeSet tokens are Soulbound
+     * and cannot be transferred.
+     */
+    
     function setApprovalForAll(address operator, bool approved) external pure {
         revert SoulboundTokenNoSetApprovalForAll(operator, approved);
     }
@@ -247,13 +255,6 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         }
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override(ERC165, IERC165) returns (bool) {
-        return
-            interfaceId == type(IERC1155).interfaceId ||
-            interfaceId == type(IERC1155MetadataURI).interfaceId ||
-            super.supportsInterface(interfaceId);
-    }
-
     function _doSafeBatchTransferAcceptanceCheck(
         address operator,
         address from,
@@ -275,5 +276,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
                 revert ERC1155ReceiverNotImplemented();
             }
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }
