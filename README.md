@@ -54,6 +54,8 @@ Imagine a world where organizations issue and govern their own blue checkmarks.
 
 - **Serialized `tokenIds`:** traditionally, ERC1155 tokenIds are sequential/static (uint256). Soulbound tokens, however, derive tokenIds by serializing a user's address and the tokenType (uint96). Because each user can only have one of each tokenType, this allows for unique ids for each user/tokenType combination, and in turn the ability to blend both tokenType and user level metadata.
 
+- **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each token type, and ownership state must be transferrable on-chain to a real wallet (if a user links) as cheaply as possible. Individual key/value mappings are not a good fit for these use cases.
+
 - **Contract management/ownership:** Soulbound smart contracts are designed so that any community can deploy and manage their own contracts within the Soulbound ecosystem on their own and with their own wallets. However, we will also provide a number of custodial services and user-friendly front ends to remove complexity and friction for commnunities.
 
 ## Structure

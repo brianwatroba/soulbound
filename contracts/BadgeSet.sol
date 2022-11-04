@@ -12,6 +12,8 @@ import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
 
+// TODO: add tests for all events
+// TODO: full natspec
 // TODO: guards against minting way too high of a token
 // TODO: don't redeploy bitmaps for every badge set
 
