@@ -1,4 +1,3 @@
-import { Provider } from "@ethersproject/abstract-provider";
 import hre, { ethers } from "hardhat";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -9,7 +8,6 @@ async function main() {
   const signer = new ethers.Wallet(process.env.POLYGON_MUMBAI_PRIVATE_KEY ?? "", provider);
 
   const uri = "https://soulbound-api-test.herokuapp.com/metadata/";
-  const contractUri = "https://soulbound-api-test.herokuapp.com/metadata/";
 
   console.log(`STARTING SOULBOUND DEPLOYMENT TO: POLYGON MUMBAI | DEPLOYER: ${signer.address}`);
   console.log("___________________________");

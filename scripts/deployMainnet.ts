@@ -1,4 +1,3 @@
-import { Provider } from "@ethersproject/abstract-provider";
 import hre, { ethers } from "hardhat";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -14,7 +13,6 @@ async function main() {
   };
 
   const uri = "https://soulbound-api-test.herokuapp.com/metadata/";
-  const contractUri = "https://soulbound-api-test.herokuapp.com/metadata/";
 
   console.log(`STARTING SOULBOUND DEPLOYMENT TO: POLYGON MAINNET | DEPLOYER: ${signer.address}`);
   console.log("___________________________");

@@ -5,10 +5,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 
-/// @title KycRegistry
-/// @author Brian watroba
-/// @dev Registry mapping of user read-only user lite wallet addresses to linked hot wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address.
-/// @custom:version 1.0.3
+/**
+ * @title KycRegistry
+ * @author Brian watroba
+ * @dev Registry mapping of user read-only user lite wallet addresses to linked hot wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address
+ * @custom:version 1.0.3
+*/
 contract KycRegistry is IKycRegistry, Ownable {
     mapping(address => address) private _walletsToUsers;
     mapping(address => address) private _usersToWallets;
@@ -20,7 +22,8 @@ contract KycRegistry is IKycRegistry, Ownable {
     {
         bool walletLinked = _walletsToUsers[userAddress] != ZERO_ADDRESS;
         bool userLinked = _usersToWallets[walletAddress] != ZERO_ADDRESS;
-        if (walletLinked || userLinked) revert WalletAlreadyLinked();
+        if (walletLinked) revert WalletAlreadyLinked(walletAddress);
+        if (userLinked) revert WalletAlreadyLinked(userAddress);
         _walletsToUsers[userAddress] = walletAddress;
         _usersToWallets[walletAddress] = userAddress;
     }
@@ -41,8 +44,8 @@ contract KycRegistry is IKycRegistry, Ownable {
     ) external pure returns (address) {
         bytes memory firstNameBytes = bytes(firstName);
         bytes memory lastNameBytes = bytes(lastName);
-        if (firstNameBytes.length > 31 || lastNameBytes.length > 31)
-            revert StringTooLong();
+        if (firstNameBytes.length > 31) revert StringTooLong(firstName);
+        if (lastNameBytes.length > 31) revert StringTooLong(lastName);
         bytes32 userHash = keccak256(
             abi.encodePacked(bytes32(firstNameBytes), bytes32(lastNameBytes), phoneNumber)
         );

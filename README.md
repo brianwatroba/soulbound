@@ -54,7 +54,7 @@ Imagine a world where organizations issue and govern their own blue checkmarks.
 
 - **Serialized `tokenIds`:** traditionally, ERC1155 tokenIds are sequential/static (uint256). Soulbound tokens, however, derive tokenIds by serializing a user's address and the tokenType (uint96). Because each user can only have one of each tokenType, this allows for unique ids for each user/tokenType combination, and in turn the ability to blend both tokenType and user level metadata.
 
-- **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each token type, and ownership state must be transferrable on-chain to a real wallet (if a user links) as cheaply as possible. Individual key/value mappings are not a good fit for these use cases.
+- **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each token type, and ownership state must be transferrable on-chain to a real wallet (if a user links) as cheaply as possible. Copying over bitmaps is easy (1 uint256 to store 256 tokenType owernship flags)! Individual key/value mappings are not a good fit for these use cases.
 
 - **Contract management/ownership:** Soulbound smart contracts are designed so that any community can deploy and manage their own contracts within the Soulbound ecosystem on their own and with their own wallets. However, we will also provide a number of custodial services and user-friendly front ends to remove complexity and friction for commnunities.
 
@@ -89,15 +89,25 @@ _Note: Mainnet contracts are still under development (alpha)_
 ```bash
 /.env
 
-ALCHEMY_API_KEY=XXX
+# Wallet private keys for deployment
 POLYGON_PRIVATE_KEY=xxx
+POLYGON_MUMBAI_PRIVATE_KEY=xxx
+
+# Alchemy api URL (with your api key at end)
+POLYGON_MAINNET_URL=https://polygon-mainnet.g.alchemy.com/v2/xxx
+POLYGON_MUMBAI_URL=https://polygon-mumbai.g.alchemy.com/v2/xxx
+POLYGON_MAINNET_KEY=xxx
+POLYGON_MUMBAI_KEY=xxx
+
+# Etherscan keys for contract verification (specific to chain)
+ETHERSCAN_API_KEY=xxx
 ```
 
 ## Usage
 
 1. Local testing: tests written in Chai/Mocha using Hardhat/Ethers.js. Run `npx hardhat test` for test suite.
-2. Deployment to Polygon Test (Mumbai): ensure your .env file includes your Rinkeby private key. Then run `npx hardhat run scripts/deployMumbai.ts --network polygon-mumbai`. Deploy script only deploys the ProjectFactory.sol contract.
-3. Deployment to other test nets: add your desired network to the `networks` object in `hardhat-config.js` using the following format:
+2. Deployment to Polygon Test (Mumbai): ensure your .env file includes your Polygon Mumbai private key, as well as your etherscan key (for contract verification). Then run `npx hardhat run scripts/deployMumbai.ts --network polygon-mumbai`. Deploy script deploys BadgeSetFactory, two test BadgetSet contracts, WalletRegistry, and verifies all of them.
+3. Deployment to other networks: add your desired network to the `networks` object in `hardhat-config.js` using the following format:
 
 ```javascript
 /hardhat.config.js
@@ -107,6 +117,8 @@ polygon: {
       accounts: [`${process.env.POLYGON_TEST_PRIVATE_KEY}`],
     },
 ```
+
+And copy/edit one of the existing deploy scripts to work with your network of choice.
 
 ## Contributing
 
