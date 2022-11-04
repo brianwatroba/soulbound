@@ -132,7 +132,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         uint96 badgeType
     ) public onlyOwner returns(uint256 tokenId) {
         address user = getUser(account);
-        _revoke(user, badgeType);
+        tokenId = _revoke(user, badgeType);
         emit TransferSingle(_msgSender(), user, ZERO_ADDRESS, tokenId, 1);
     }
 
