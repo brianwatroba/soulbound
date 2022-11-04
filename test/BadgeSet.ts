@@ -5,6 +5,8 @@ import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
 import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, randomIntFromInterval } from "./fixtures/utils";
 
+// TODO: don't call mintBatch in mint tests
+
 describe("BadgeSet.sol", () => {
   describe("Deployment", () => {
     it("Deploys", async () => {

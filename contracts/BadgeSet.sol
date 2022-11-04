@@ -20,7 +20,7 @@ import "./BitMaps.sol";
 /**
 * @title BadgeSet
 * @author Brian watroba
-* @dev Non-transferrable ERC1155 Token standard for accomplishments certifications, and proof of completion. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also * * prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
+* @dev Non-transferrable ERC1155 Token standard for accomplishments certifications, and proof of completion.
 * @custom:version 1.0.3
 */
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {

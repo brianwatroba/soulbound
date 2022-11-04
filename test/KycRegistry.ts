@@ -2,7 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
-import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, randomIntFromInterval } from "./fixtures/utils";
+import { arrayOfSingleNumber, arrayOfSingleString } from "./fixtures/utils";
 
 describe("KycRegistry.sol", function () {
   describe("Deployment", function () {
