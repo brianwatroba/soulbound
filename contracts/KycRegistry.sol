@@ -50,7 +50,7 @@ contract KycRegistry is IKycRegistry, Ownable {
         return userAddress;
     }
 
-    function transitionBadgesByContracts(
+    function transitionTokensByContracts(
         address userAddress,
         address walletAddress,
         address[] memory contracts

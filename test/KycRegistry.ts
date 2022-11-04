@@ -79,7 +79,7 @@ describe("KycRegistry.sol", function () {
       ); // second link
     });
   });
-  describe("transitionBadgesByContracts()", () => {
+  describe("transitionTokensByContracts()", () => {
     it("transition all badges in a single call across two contracts", async () => {
       const { kycRegistry, soulbound, userAddress, walletAddress, forbes, padi, badgeSet, badgeSet2 } = await loadFixture(fixtures.deploy);
       const ids = [1, 2, 3, 20, 100, 350, 1000];
@@ -88,7 +88,7 @@ describe("KycRegistry.sol", function () {
       await badgeSet2.connect(padi).mintBatch(userAddress, ids, expiries);
       await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
 
-      await kycRegistry.transitionBadgesByContracts(userAddress, walletAddress, [badgeSet.address, badgeSet2.address]);
+      await kycRegistry.transitionTokensByContracts(userAddress, walletAddress, [badgeSet.address, badgeSet2.address]);
 
       const userAddressesArray = arrayOfSingleString(ids.length, userAddress);
       const walletAddressesArray = arrayOfSingleString(ids.length, walletAddress);

@@ -18,10 +18,7 @@ import "./BitMaps.sol";
 /**
 * @title BadgeSet
 * @author Brian watroba
-* @dev Non-transferrable ERC1155 Token standard for accomplishments, certifications, 
-* and proof of completion. Allows minting to a read-only, hashed user address as a 
-* "lite wallet". Users can also * * prove their identiy and claim their NFTs by linking
-* their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
+* @dev Non-transferrable ERC1155 Token standard for accomplishments certifications, and proof of completion. Allows minting to a read-only, hashed user address as a "lite wallet". Users can also * * prove their identiy and claim their NFTs by linking their wallet to their hashed user address. Deployed from the BadgeSetFactory contract.
 * @custom:version 1.0.3
 */
 contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155MetadataURI {
@@ -201,39 +198,6 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         account = address(uint160(uint256(((bytes32(tokenId) << 96) >> 96))));
     }
 
-    /**
-     * No-Ops for ERC1155 transfer and approval functions. BadgeSet tokens are Soulbound
-     * and cannot be transferred.
-     */
-    
-    function setApprovalForAll(address operator, bool approved) external pure {
-        revert SoulboundTokenNoSetApprovalForAll(operator, approved);
-    }
- 
-    function isApprovedForAll(address account, address operator) external pure returns (bool) {
-        revert SoulboundTokenNoIsApprovedForAll(account, operator);
-    }
-
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes calldata data
-    ) external pure {
-        revert SoulboundTokenNoSafeTransferFrom(from, to, id, amount, data);
-    }
-
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
-    ) external pure {
-        revert SoulboundTokenNoSafeBatchTransferFrom(from, to, ids, amounts, data);
-    }
-
     function _doSafeTransferAcceptanceCheck(
         address operator,
         address from,
@@ -284,4 +248,37 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
             interfaceId == type(IERC1155MetadataURI).interfaceId ||
             super.supportsInterface(interfaceId);
     }
+
+    /**
+     * No-Ops for ERC1155 transfer and approval functions. BadgeSet tokens are Soulbound and cannot be transferred.
+     */
+    
+    function setApprovalForAll(address operator, bool approved) external pure {
+        revert SoulboundTokenNoSetApprovalForAll(operator, approved);
+    }
+ 
+    function isApprovedForAll(address account, address operator) external pure returns (bool) {
+        revert SoulboundTokenNoIsApprovedForAll(account, operator);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) external pure {
+        revert SoulboundTokenNoSafeTransferFrom(from, to, id, amount, data);
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external pure {
+        revert SoulboundTokenNoSafeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+
 }
