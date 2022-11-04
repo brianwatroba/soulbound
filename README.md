@@ -2,7 +2,7 @@
 
 Non-transferrable ERC1155 Token standard for accomplishments, certifications, and proof of completion.
 
-Enabling a world where communities can issue and govern their own blue checkmarks.
+Enabling communities to issue and govern their own blue checkmarks.
 
 ## Access
 
@@ -29,8 +29,8 @@ Imagine a world where organizations issue and govern their own blue checkmarks.
 
 ## Use cases and examples
 
-- New York Road Runners (Marathon/Race Org): issues race badges as Soulbound tokens to participants. They rich metadata for race placement, timing, age group, and charity involvement.
-- Padi Scuba Diving Organization: represents various diving certifications (Open Water Diver, Underwater Hunter, Master Diver, etc.) via Soulbound tokens with expiration date stored on chain. Tokens are proveable and recognizeable at any international dive shop.
+- **New York Road Runners (Marathon/Race Org):** issues race badges as Soulbound tokens to participants. They rich metadata for race placement, timing, age group, and charity involvement.
+- **Padi Scuba Diving Organization:** represents various diving certifications (Open Water Diver, Underwater Hunter, Master Diver, etc.) via Soulbound tokens with expiration date stored on chain. Tokens are proveable and recognizeable at any international dive shop.
 
 ## How it works
 
@@ -46,9 +46,11 @@ Imagine a world where organizations issue and govern their own blue checkmarks.
 
 6. **Badges can be used in a variety of applications:** communities and users can use Soulbound tokens for a variety of use cases. For instance: sharing and proving accomplishments online and through various platforms, token gating to services and events, replacement for ID or loyalty cards, and many more.
 
-Technical callouts:
+## Technical callouts:
 
 - **Lite wallets:** orgs can mint to any address, but they have the option to mint to a user's "lite wallet". A lite wallet is an address representing the hashed combination of a user's first name, last name, and phone number. Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the lite wallet. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to.
+
+- **WalletRegistry**: lite wallet to real wallet mapping is maintained in the separate WalletRegistry contract. This contract is the only centrally owned contract by the Soulbound protocol, as full KYC verification must be done centrally for cases where users want to link a wallet. We are exploring decentralized KYC options to make this feature decentralized as well, but for the interim the registry is managed by the Soulbound organization.
 
 - **Serialized `tokenIds`:** traditionally, ERC1155 tokenIds are sequential/static (uint256). Soulbound tokens, however, derive tokenIds by serializing a user's address and the tokenType (uint96). Because each user can only have one of each tokenType, this allows for unique ids for each user/tokenType combination, and in turn the ability to blend both tokenType and user level metadata.
 
