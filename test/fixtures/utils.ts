@@ -18,3 +18,7 @@ export const arrayOfSingleNumber = (length: number, number: number) => {
 export const arrayOfSingleString = (length: number, string: string) => {
   return Array.from({ length }, () => string);
 };
+
+export const arrayOfNums = (max: number) => {
+  return [...Array(max).keys()];
+};

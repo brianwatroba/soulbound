@@ -5,6 +5,7 @@ interface IBadgeSet {
 
     error IncorrectExpiry(address user, uint96 tokenType, uint256 expiry);
     error IncorrectBalance(address user, uint96 tokenType, uint256 balance);
+    error NewTokenTypeNotIncremental(uint96 tokenType, uint256 maxTokenType);
     error ArrayParamsUnequalLength();
     error WalletNotLinked(address walletAddress);
     error SoulboundTokenNoSetApprovalForAll(address operator, bool approved);

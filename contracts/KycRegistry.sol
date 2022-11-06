@@ -44,8 +44,8 @@ contract KycRegistry is IKycRegistry, Ownable {
     ) external pure returns (address) {
         bytes memory firstNameBytes = bytes(firstName);
         bytes memory lastNameBytes = bytes(lastName);
-        if (firstNameBytes.length > 31) revert StringTooLong(firstName);
-        if (lastNameBytes.length > 31) revert StringTooLong(lastName);
+        if (firstNameBytes.length > 31) revert StringLongerThan31Bytes(firstName);
+        if (lastNameBytes.length > 31) revert StringLongerThan31Bytes(lastName);
         bytes32 userHash = keccak256(
             abi.encodePacked(bytes32(firstNameBytes), bytes32(lastNameBytes), phoneNumber)
         );

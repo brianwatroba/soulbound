@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import * as fixtures from "./fixtures/fixtures";
-import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, randomIntFromInterval } from "./fixtures/utils";
+import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, arrayOfNums } from "./fixtures/utils";
 
 // TODO: don't call mintBatch in mint tests
 
@@ -54,52 +54,73 @@ describe("BadgeSet.sol", () => {
 
   describe("mint()", () => {
     it("Mints without expiry", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      const tokenType = 1;
+      const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
+      const tokenType = 0;
 
-      badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
+      badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
       const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
       expect(balance).to.equal(1);
     });
-    it("Mints without expiry above tokenType 256", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      const tokenType = randomIntFromInterval(257, 100000);
-      badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
-      const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
+    it("Sets new maxTokenType if tokenType is incremental", async () => {
+      const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
+      const tokenType = 1;
+
+      badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
+      const maxTokenType = await badgeSet.maxTokenType();
+
+      expect(maxTokenType).to.equal(tokenType);
+    });
+    it("Mints without expiry above tokenType 256 (additional bitmaps)", async () => {
+      const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
+      const maxTokenType = 258;
+
+      // mint tokens sequentially up to max
+      for (let tokenType = 0; tokenType <= maxTokenType; tokenType++) {
+        await badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
+      }
+      const tokenId = await badgeSet.encodeTokenId(maxTokenType, userAddress);
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
+
       expect(balance).to.equal(1);
     });
     it("Mints with expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
-      await badgeSet.connect(forbes).mint(userAddress, 1, validExpiry);
-      const tokenId = await badgeSet.encodeTokenId(1, userAddress);
+      const tokenType = 0;
+
+      await badgeSet.connect(forbes).mint(userAddress, tokenType, validExpiry);
+      const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
       const balance = await badgeSet.balanceOf(userAddress, tokenId);
+      const expiry = await badgeSet.expiryOf(tokenId);
+
       expect(balance).to.equal(1);
+      expect(expiry).to.equal(validExpiry); // expiry is stored
     });
     it("Mints to linked wallet if minting to userAddress post link", async () => {
-      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
-      const ids = [1, 2, 5, 50, 300, 1000];
-      const expiries = arrayOfSingleNumber(ids.length, 0);
-      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
-      const accounts = arrayOfSingleString(ids.length, walletAddress);
-      const tokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
-      const balances = await badgeSet.balanceOfBatch(accounts, tokenIds);
-      const expectedBalances = arrayOfSingleNumber(ids.length, 1);
-      expect(balances).to.deep.equal(expectedBalances);
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+      const tokenType = 0;
+
+      await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress); // mint to userAddress
+      await badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
+      const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
+      const userAddressBalance = await badgeSet.balanceOf(userAddress, tokenId);
+      const walletAddressBalance = await badgeSet.balanceOf(walletAddress, tokenId);
+
+      expect(userAddressBalance).to.equal(0);
+      expect(walletAddressBalance).to.equal(1);
     });
     it("Mints to linked wallet if minting to walletAddress post link", async () => {
-      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
-      const ids = [1, 2, 5, 50, 300, 1000];
-      const expiries = arrayOfSingleNumber(ids.length, 0);
+      const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+      const tokenType = 0;
+
       await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-      await badgeSet.connect(forbes).mintBatch(walletAddress, ids, expiries);
-      const accounts = arrayOfSingleString(ids.length, walletAddress);
-      const tokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, walletAddress)));
-      const balances = await badgeSet.balanceOfBatch(accounts, tokenIds);
-      const expectedBalances = arrayOfSingleNumber(ids.length, 1);
-      expect(balances).to.deep.equal(expectedBalances);
+      await badgeSet.connect(forbes).mint(walletAddress, tokenType, noExpiry); // mint to walletAddress
+      const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
+      const userAddressBalance = await badgeSet.balanceOf(userAddress, tokenId);
+      const walletAddressBalance = await badgeSet.balanceOf(walletAddress, tokenId);
+
+      expect(userAddressBalance).to.equal(0);
+      expect(walletAddressBalance).to.equal(1);
     });
     it("Reverts: not owner", async () => {
       const { badgeSet, user, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
@@ -107,18 +128,38 @@ describe("BadgeSet.sol", () => {
     });
     it("Reverts: invalid expiry", async () => {
       const { badgeSet, forbes, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
-      await expect(badgeSet.connect(forbes).mint(userAddress, 1, invalidExpiry)).to.be.reverted;
+      const tokenType = 0;
+
+      await expect(badgeSet.connect(forbes).mint(userAddress, tokenType, invalidExpiry)).to.be.revertedWithCustomError(
+        badgeSet,
+        "IncorrectExpiry"
+      );
     });
     it("Reverts: token type already owned", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      const tokenType = randomIntFromInterval(1, 9999);
-      await badgeSet.connect(forbes).mint(userAddress, tokenType, 0);
-      await expect(badgeSet.connect(forbes).mint(userAddress, tokenType, 0)).to.be.reverted;
+      const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
+      const tokenType = 0;
+
+      await badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
+
+      await expect(badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry)).to.be.revertedWithCustomError(
+        badgeSet,
+        "IncorrectBalance"
+      );
+    });
+    it("Reverts: new tokenType not incremental", async () => {
+      const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
+      const nonIncrementalTokenType = 50;
+
+      await expect(badgeSet.connect(forbes).mint(userAddress, nonIncrementalTokenType, noExpiry)).to.be.revertedWithCustomError(
+        badgeSet,
+        "NewTokenTypeNotIncremental"
+      );
     });
     it("Reverts: ERC1155Receiver not implemented", async () => {
-      const { badgeSet, kycRegistry, forbes } = await loadFixture(fixtures.deploy);
-      const tokenType = randomIntFromInterval(1, 9999);
-      await expect(badgeSet.connect(forbes).mint(kycRegistry.address, tokenType, 0)).to.be.revertedWithCustomError(
+      const { badgeSet, kycRegistry, forbes, noExpiry } = await loadFixture(fixtures.deploy);
+      const tokenType = 0;
+
+      await expect(badgeSet.connect(forbes).mint(kycRegistry.address, tokenType, noExpiry)).to.be.revertedWithCustomError(
         badgeSet,
         "ERC1155ReceiverNotImplemented"
       );
@@ -126,26 +167,49 @@ describe("BadgeSet.sol", () => {
   });
 
   describe("mintBatch()", () => {
-    it("Mints without expiry", async () => {
-      const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
-      const ids = [1, 2, 5, 50, 300, 1000];
-      const expiries = arrayOfSingleNumber(ids.length, 0);
-      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
-      const accounts = arrayOfSingleString(ids.length, userAddress);
-      const tokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
+    it.only("Mints without expiry", async () => {
+      const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
+
+      const mintCount = 10; // 0-9
+      const badgeTypes = arrayOfNums(mintCount);
+      const expiries = arrayOfSingleNumber(mintCount, noExpiry);
+      await badgeSet.connect(forbes).mintBatch(userAddress, badgeTypes, expiries);
+
+      const accounts = arrayOfSingleString(mintCount, userAddress);
+      const tokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, userAddress)));
       const balances = await badgeSet.balanceOfBatch(accounts, tokenIds);
-      const expectedBalances = arrayOfSingleNumber(ids.length, 1);
+      const expectedBalances = arrayOfSingleNumber(mintCount, 1);
+
       expect(balances).to.deep.equal(expectedBalances);
     });
     it("Mints with expiry", async () => {
       const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
-      const ids = [1, 2, 5, 50, 300, 1000];
-      const expiries = arrayOfSingleNumber(ids.length, validExpiry);
-      await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
-      const accounts = arrayOfSingleString(ids.length, userAddress);
-      const tokenIds = await Promise.all(ids.map((id) => badgeSet.encodeTokenId(id, userAddress)));
+
+      const mintCount = 10; // 0-9
+      const badgeTypes = arrayOfNums(mintCount);
+      const expiries = arrayOfSingleNumber(mintCount, validExpiry); // valid expiry
+      await badgeSet.connect(forbes).mintBatch(userAddress, badgeTypes, expiries);
+
+      const accounts = arrayOfSingleString(mintCount, userAddress);
+      const tokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, userAddress)));
       const balances = await badgeSet.balanceOfBatch(accounts, tokenIds);
-      const expectedBalances = arrayOfSingleNumber(ids.length, 1);
+      const expectedBalances = arrayOfSingleNumber(mintCount, 1);
+
+      expect(balances).to.deep.equal(expectedBalances);
+    });
+    it("Mints without expiry above tokenType 256 (additional bitmaps)", async () => {
+      const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
+
+      const mintCount = 300; // 0-299
+      const badgeTypes = arrayOfNums(mintCount);
+      const expiries = arrayOfSingleNumber(mintCount, noExpiry); // valid expiry
+      await badgeSet.connect(forbes).mintBatch(userAddress, badgeTypes, expiries);
+
+      const accounts = arrayOfSingleString(mintCount, userAddress);
+      const tokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, userAddress)));
+      const balances = await badgeSet.balanceOfBatch(accounts, tokenIds);
+      const expectedBalances = arrayOfSingleNumber(mintCount, 1);
+
       expect(balances).to.deep.equal(expectedBalances);
     });
     it("Reverts: invalid expiry", async () => {

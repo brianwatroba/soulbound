@@ -12,6 +12,7 @@ import "../interfaces/IKycRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
 
+// TODO: mintBatch to save single bitmap
 // TODO: add tests for all events
 // TODO: full natspec
 // TODO: guards against minting way too high of a token
@@ -28,8 +29,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     using BitMaps for BitMaps.BitMap;
 
     address public kycRegistry;
+    uint96 public maxTokenType;
     string public contractURI;
-    uint256 public maxTokenType;
     string private _uri;
     mapping(address => BitMaps.BitMap) private _balances;
     mapping(uint256 => uint256) private _expiries;
@@ -42,7 +43,6 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         setContractURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/")); // base + address(this) + /
         transferOwnership(_owner);
     } 
-
 
     function uri(uint256 id) public view returns (string memory) {
         return string.concat(_uri, Strings.toString(id));
@@ -126,7 +126,9 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         BitMaps.set(balances, tokenType);
         _expiries[tokenId] = expiry;  
 
-        if (maxTokenType < tokenType) maxTokenType = tokenType;
+        uint96 nextPossibleNewTokenType = uint96(maxTokenType) + 1; // ensure new tokenTypes are one greater, pack bitmaps sequentially
+        if (tokenType > nextPossibleNewTokenType) revert NewTokenTypeNotIncremental(tokenType, maxTokenType);
+        if (tokenType == nextPossibleNewTokenType) maxTokenType = tokenType;
     }
 
     function revoke(
@@ -145,15 +147,15 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         address user = getUser(account);
         uint256 revokeCount = tokenTypes.length;
 
-        tokenIds = new uint[](revokeCount);
+        tokenIds = new uint[](revokeCount); // used in event, return value
         uint[] memory amounts = new uint[](revokeCount); // used in event
         
         for (uint256 i = 0; i < revokeCount; i++) {
             uint256 tokenId = _revoke(user, tokenTypes[i]);
             tokenIds[i] = tokenId;
             amounts[i] = 1;
-        
         }
+
         emit TransferBatch(_msgSender(), user, ZERO_ADDRESS, tokenIds, amounts);
     }
 

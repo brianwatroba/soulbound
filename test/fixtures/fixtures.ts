@@ -32,6 +32,7 @@ export const deploy = async () => {
   // const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year ahead
   // const invalidExpiry = blockTimestamp - 60 * 60 * 24 * 365; // 1 year ago
 
+  const noExpiry = 0;
   const validExpiry = 166750483800; // 1 year ahead
   const invalidExpiry = 50; // 1 year ago
 
@@ -48,6 +49,7 @@ export const deploy = async () => {
     userKycDetails,
     userAddress,
     walletAddress,
+    noExpiry,
     validExpiry,
     invalidExpiry,
   };

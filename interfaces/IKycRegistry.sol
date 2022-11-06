@@ -5,7 +5,7 @@ interface IKycRegistry {
 
   error UserAlreadyLinked(address userAddress);
   error WalletAlreadyLinked(address walletAddress);
-  error StringTooLong(string str);
+  error StringLongerThan31Bytes(string str);
 
   function linkWallet(address userAddress, address walletAddress) external;
 
