@@ -61,11 +61,11 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     }
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
-        (uint96 _badgeType, address _account) = decodeTokenId(id);
+        (uint96 _tokenType, address _account) = decodeTokenId(id);
         address user = getUser(_account);
         if (user != account) return 0;
         BitMaps.BitMap storage bitmap = _balances[user];
-        bool owned = BitMaps.get(bitmap, _badgeType);
+        bool owned = BitMaps.get(bitmap, _tokenType);
         return owned ? 1 : 0;
     }
 
@@ -118,9 +118,9 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         tokenId = encodeTokenId(tokenType, user);
 
         bool isExpired = expiry > 0 && expiry <= block.timestamp;
-        bool ownsToken = balanceOf(user, tokenId) > 0;
-        if (isExpired) revert ExpiryAlreadyPassed(expiry);
-        if (ownsToken) revert TokenAlreadyOwned(user, tokenType);
+        uint256 priorBalance = balanceOf(user, tokenId);
+        if (isExpired) revert IncorrectExpiry(user, tokenType, expiry);
+        if (priorBalance > 0) revert IncorrectBalance(user, tokenType, priorBalance); // token already owned
         
         BitMaps.BitMap storage balances = _balances[user];
         BitMaps.set(balances, tokenType);
@@ -131,10 +131,10 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function revoke(
         address account,
-        uint96 badgeType
+        uint96 tokenType
     ) public onlyOwner returns(uint256 tokenId) {
         address user = getUser(account);
-        tokenId = _revoke(user, badgeType);
+        tokenId = _revoke(user, tokenType);
         emit TransferSingle(_msgSender(), user, ZERO_ADDRESS, tokenId, 1);
     }
 
@@ -157,16 +157,19 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         emit TransferBatch(_msgSender(), user, ZERO_ADDRESS, tokenIds, amounts);
     }
 
-     function _revoke(address user, uint96 badgeType) internal returns (uint256 tokenId) {
-        tokenId = encodeTokenId(badgeType, user);
-        if (balanceOf(user, tokenId) == 0) revert InsufficientBalance();
+     function _revoke(address user, uint96 tokenType) internal returns (uint256 tokenId) {
+        tokenId = encodeTokenId(tokenType, user);
+        
+        uint256 priorBalance = balanceOf(user, tokenId);
+        if (priorBalance == 0) revert IncorrectBalance(user, tokenType, priorBalance); // token not owned
+        
         BitMaps.BitMap storage balances = _balances[user];
-        BitMaps.unset(balances, badgeType);
+        BitMaps.unset(balances, tokenType);
         delete _expiries[tokenId];
     }
 
     function moveUserTokensToWallet(address from, address to) external {
-        if (getUser(from) != to) revert WalletNotLinked();
+        if (getUser(from) != to) revert WalletNotLinked(to);
         uint256 bitmapCount = maxTokenType / BITMAP_SIZE;
         for (uint256 i = 0; i <= bitmapCount; i++) {
             uint256 bitmap = _balances[from]._data[i];
@@ -181,7 +184,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function emitTransferEvents(uint256 bitmap, address from, address to) private {
         for(uint256 i = 0; i < BITMAP_SIZE; i++) {
-            if (bitmap & (1 << i) > 0) { // a token type is owned
+            if (bitmap & (1 << i) > 0) { // token type is owned
                 emit TransferSingle(_msgSender(), from, to, encodeTokenId(uint96(i), from), 1);
             }
         } 

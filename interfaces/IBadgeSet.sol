@@ -3,11 +3,10 @@ pragma solidity ^0.8.12;
 
 interface IBadgeSet {
 
-    error ExpiryAlreadyPassed(uint256 expiry);
+    error IncorrectExpiry(address user, uint96 tokenType, uint256 expiry);
+    error IncorrectBalance(address user, uint96 tokenType, uint256 balance);
     error ArrayParamsUnequalLength();
-    error InsufficientBalance();
-    error TokenAlreadyOwned(address to, uint96 tokenType);
-    error WalletNotLinked();
+    error WalletNotLinked(address walletAddress);
     error SoulboundTokenNoSetApprovalForAll(address operator, bool approved);
     error SoulboundTokenNoIsApprovedForAll(address account, address operator);
     error SoulboundTokenNoSafeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes data);
