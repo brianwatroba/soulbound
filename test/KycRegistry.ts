@@ -39,7 +39,7 @@ describe("KycRegistry.sol", function () {
       const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
       await expect(kycRegistry.hashKycToUserAddress(firstName, lastName, phoneNumberBN)).to.be.revertedWithCustomError(
         kycRegistry,
-        "StringTooLong"
+        "StringLongerThan31Bytes"
       );
     });
     it("should revert for lastName longer than 32", async () => {
@@ -49,7 +49,7 @@ describe("KycRegistry.sol", function () {
       const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
       await expect(kycRegistry.hashKycToUserAddress(firstName, lastName, phoneNumberBN)).to.be.revertedWithCustomError(
         kycRegistry,
-        "StringTooLong"
+        "StringLongerThan31Bytesk;l'"
       );
     });
   });

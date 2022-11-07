@@ -36,6 +36,8 @@ export const deploy = async () => {
   const validExpiry = 166750483800; // 1 year ahead
   const invalidExpiry = 50; // 1 year ago
 
+  const NotOwnerError = "Ownable: caller is not the owner";
+
   return {
     badgeSetFactory,
     badgeSet,
@@ -52,6 +54,7 @@ export const deploy = async () => {
     noExpiry,
     validExpiry,
     invalidExpiry,
+    NotOwnerError,
   };
 };
 
