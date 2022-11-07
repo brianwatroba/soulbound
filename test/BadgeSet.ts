@@ -365,7 +365,7 @@ describe("BadgeSet.sol", () => {
   });
 
   describe("moveUserTokensToWallet()", () => {
-    it.only("transitions wallet", async () => {
+    it("transitions wallet", async () => {
       const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
 
       const tokenCount = 10; // 0-9
@@ -386,7 +386,7 @@ describe("BadgeSet.sol", () => {
       expect(await badgeSet.balanceOfBatch(walletAccounts, walletTokenIds)).to.deep.equal(result1);
       expect(await badgeSet.balanceOfBatch(userAccounts, userTokenIds)).to.deep.equal(result0);
     });
-    it.only("transitions wallet for > 256 tokenType (multiple bitmaps)", async () => {
+    it("transitions wallet for > 256 tokenType (multiple bitmaps)", async () => {
       const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
 
       const tokenCount = 258; // 0-257
@@ -407,7 +407,7 @@ describe("BadgeSet.sol", () => {
       expect(await badgeSet.balanceOfBatch(walletAccounts, walletTokenIds)).to.deep.equal(result1);
       expect(await badgeSet.balanceOfBatch(userAccounts, userTokenIds)).to.deep.equal(result0);
     });
-    it.only("emits correct number of events", async () => {
+    it("emits correct number of events", async () => {
       const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
       const tokenCount = 10; // 0-9
 
@@ -421,7 +421,7 @@ describe("BadgeSet.sol", () => {
       expect(events).to.not.be.undefined;
       expect(events).to.have.length(tokenCount + 1); // transition events + single transitionWallet() event
     });
-    it.only("TransferSingle events are correct", async () => {
+    it("TransferSingle events are correct", async () => {
       const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
       const tokenCount = 10; // 0-9
 
