@@ -7,35 +7,41 @@ const NotOwnerError = "Ownable: caller is not the owner";
 
 describe("BadgeSetFactory.sol", function () {
   describe("Deployment", function () {
-    it("Deploys successfully", async () => {
-      const { badgeSetFactory } = await loadFixture(fixtures.deploy);
-      expect(badgeSetFactory.address).to.be.properAddress;
-    });
-    it("Sets deployer as owner", async () => {
-      const { badgeSetFactory, soulbound } = await loadFixture(fixtures.deploy);
-      expect(await badgeSetFactory.owner()).to.equal(soulbound.address);
+    describe("Use cases:", () => {
+      it("Deploys successfully", async () => {
+        const { badgeSetFactory } = await loadFixture(fixtures.deploy);
+        expect(badgeSetFactory.address).to.be.properAddress;
+      });
+      it("Sets deployer as owner", async () => {
+        const { badgeSetFactory, soulbound } = await loadFixture(fixtures.deploy);
+        expect(await badgeSetFactory.owner()).to.equal(soulbound.address);
+      });
     });
   });
   describe("createBadgeSet", () => {
-    it("deploys a badgeSet", async () => {
-      const { badgeSetFactory, soulbound, forbes, baseUri } = await loadFixture(fixtures.deploy);
-      await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, baseUri);
-      const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
-      const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
-      expect(badgeSet.address).to.be.properAddress;
-    });
-    it("reverts if not owner", async () => {
-      const { badgeSetFactory, forbes, baseUri } = await loadFixture(fixtures.deploy);
-      await expect(badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)).to.be.revertedWith(NotOwnerError);
+    describe("Use cases:", () => {
+      it("deploys a badgeSet", async () => {
+        const { badgeSetFactory, soulbound, forbes, baseUri } = await loadFixture(fixtures.deploy);
+        await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, baseUri);
+        const badgeSetAddress = (await badgeSetFactory.badgeSets())[0];
+        const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
+        expect(badgeSet.address).to.be.properAddress;
+      });
+      it("reverts if not owner", async () => {
+        const { badgeSetFactory, forbes, baseUri } = await loadFixture(fixtures.deploy);
+        await expect(badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)).to.be.revertedWith(NotOwnerError);
+      });
     });
   });
   describe("badgeSets()", () => {
-    it("returns array of badgeSets", async () => {
-      const { badgeSetFactory, badgeSet } = await loadFixture(fixtures.deploy);
-      const badgeSets = await badgeSetFactory.badgeSets();
-      expect(badgeSets).to.have.lengthOf(2);
-      expect(badgeSets[0]).to.equal(badgeSet.address);
-      expect(badgeSets[0]).to.be.properAddress;
+    describe("Use cases", () => {
+      it("returns array of badgeSets", async () => {
+        const { badgeSetFactory, badgeSet } = await loadFixture(fixtures.deploy);
+        const badgeSets = await badgeSetFactory.badgeSets();
+        expect(badgeSets).to.have.lengthOf(2);
+        expect(badgeSets[0]).to.equal(badgeSet.address);
+        expect(badgeSets[0]).to.be.properAddress;
+      });
     });
   });
 });

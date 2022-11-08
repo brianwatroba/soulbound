@@ -6,6 +6,11 @@ export const encodeTokenIdJs = (tokenType: BigNumber, address: string) => {
   return packed;
 };
 
+export const decodeTokenIdJs = (tokenType: BigNumber, address: string) => {
+  const packed = ethers.utils.solidityPack(["uint96", "address"], [tokenType, address]);
+  return packed;
+};
+
 export const randomIntFromInterval = (min: number, max: number) => {
   // min and max included
   return Math.floor(Math.random() * (max - min + 1) + min);
