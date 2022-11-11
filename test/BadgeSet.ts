@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import * as fixtures from "./fixtures/fixtures";
-import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, arrayOfNums, decodeTokenIdJs } from "./fixtures/utils";
+import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, arrayOfNums } from "./fixtures/utils";
 
 // TODO: don't call mintBatch in mint tests
 
@@ -30,7 +30,6 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-
   describe("uri", () => {
     describe("Use cases:", () => {
       it("Returns URI for tokenId", async () => {
@@ -41,7 +40,6 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-
   describe("setURI", () => {
     describe("Use cases:", () => {
       it("Sets new URI", async () => {
@@ -57,14 +55,13 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-
   describe("mint()", () => {
     describe("Use cases:", () => {
       it("Mints without expiry", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
-        badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
+        await badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
         const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
         const balance = await badgeSet.balanceOf(userAddress, tokenId);
         expect(balance).to.equal(1);
@@ -129,6 +126,28 @@ describe("BadgeSet.sol", () => {
         expect(userAddressBalance).to.equal(0);
         expect(walletAddressBalance).to.equal(1);
       });
+      it.only("Emits a TransferSingle event", async () => {
+        const { badgeSet, forbes, userAddress, noExpiry, zeroAddress } = await loadFixture(fixtures.deploy);
+        const tokenType = 0;
+
+        const mintCall = await badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
+        const { events } = await mintCall.wait();
+        const transferSingleEvents = events?.filter((e) => e.event === "TransferSingle");
+
+        expect(transferSingleEvents).to.not.be.undefined;
+        expect(transferSingleEvents).to.have.length(1);
+        transferSingleEvents?.forEach((event) => {
+          if (event.args) {
+            const { operator, from, to, value } = event.args;
+            expect(operator).to.equal(forbes.address);
+            expect(from).to.equal(zeroAddress);
+            expect(to).to.equal(userAddress);
+            expect(value).to.equal(1);
+          } else {
+            expect(true).to.equal(false);
+          }
+        });
+      });
     });
     describe("Failure cases:", () => {
       it("Reverts: not owner", async () => {
@@ -175,7 +194,6 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-
   describe("mintBatch()", () => {
     describe("Use cases:", () => {
       it("Mints without expiry", async () => {
@@ -223,6 +241,58 @@ describe("BadgeSet.sol", () => {
 
         expect(balances).to.deep.equal(expectedBalances);
       });
+      it.skip("emits TransferBatch event", async () => {
+        const { badgeSet, forbes, userAddress, walletAddress, noExpiry, zeroAddress } = await loadFixture(fixtures.deploy);
+        const tokenCount = 10; // 0-9
+
+        const tokenTypes = arrayOfNums(tokenCount);
+        const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
+
+        const mintBatchCall = await badgeSet.connect(forbes).mintBatch(userAddress, tokenTypes, expiries);
+
+        const tokenIds = await Promise.all(tokenTypes.map((tokenType) => badgeSet.encodeTokenId(tokenType, userAddress)));
+        const callValues = arrayOfSingleNumber(10, 1);
+        const { events } = await mintBatchCall.wait();
+
+        const transferEvents = events?.filter((e) => e.event === "TransferBatch");
+        expect(transferEvents).to.not.be.undefined;
+        expect(events).to.not.be.undefined;
+        transferEvents?.forEach((event) => {
+          const operator = event.args?.operator;
+          const from = event.args?.from;
+          const ids = event.args?.ids;
+          const to = event.args?.to;
+          const returnValues = event.args?.values;
+          expect(operator).to.equal(forbes.address);
+          expect(from).to.equal(zeroAddress);
+          expect(to).to.equal(userAddress);
+          expect(ids).to.deep.equal(tokenIds);
+          expect(returnValues).to.deep.equal(callValues);
+        });
+      });
+      it("TransferSingle events are correct", async () => {
+        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const tokenCount = 10; // 0-9
+
+        const tokenTypes = arrayOfNums(tokenCount);
+        const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
+        const mintBatchCall = await badgeSet.connect(forbes).mintBatch(userAddress, tokenTypes, expiries);
+        const { events } = await mintBatchCall.wait();
+
+        const transferEvents = events?.filter((e) => e.event === "TransferSingle");
+
+        expect(events).to.not.be.undefined;
+        transferEvents?.forEach((event) => {
+          const operator = event.args?.operator;
+          const from = event.args?.from;
+          const to = event.args?.to;
+          const value = event.args?.value;
+          expect(operator).to.equal(forbes.address);
+          expect(from).to.equal(userAddress);
+          expect(to).to.equal(walletAddress);
+          expect(value).to.equal(1);
+        });
+      });
     });
     describe("Failure cases:", () => {
       it("Reverts: invalid expiry", async () => {
@@ -249,7 +319,6 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-
   describe("revoke()", () => {
     describe("Use cases:", () => {
       it("Revokes without expiry", async () => {
@@ -300,6 +369,28 @@ describe("BadgeSet.sol", () => {
 
         expect(await badgeSet.expiryOf(tokenId)).to.equal(0);
       });
+      it("Emits a TransferSingle event", async () => {
+        const { badgeSet, forbes, userAddress, noExpiry, zeroAddress } = await loadFixture(fixtures.deploy);
+        const tokenType = 0;
+
+        await badgeSet.connect(forbes).mint(userAddress, tokenType, noExpiry);
+        const revokeCall = await badgeSet.connect(forbes).revoke(userAddress, tokenType);
+        const { events } = await revokeCall.wait();
+        const transferSingleEvents = events?.filter((e) => e.event === "TransferSingle");
+
+        expect(transferSingleEvents).to.not.be.undefined;
+        expect(transferSingleEvents).to.have.length(1);
+        transferSingleEvents?.forEach((event) => {
+          const operator = event.args?.operator;
+          const from = event.args?.from;
+          const to = event.args?.to;
+          const value = event.args?.value;
+          expect(operator).to.equal(forbes.address);
+          expect(from).to.equal(userAddress);
+          expect(to).to.equal(zeroAddress); // burning to zero address
+          expect(value).to.equal(1);
+        });
+      });
     });
     describe("Failure cases:", () => {
       it("Reverts: not contract owner", async () => {
@@ -316,7 +407,6 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-
   describe("revokeBatch()", () => {
     describe("Use cases:", () => {
       it("Revokes tokens", async () => {
@@ -375,7 +465,6 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-
   describe("encodeTokenId()", () => {
     describe("Use cases:", () => {
       it("Encodes a tokenType and address together", async () => {

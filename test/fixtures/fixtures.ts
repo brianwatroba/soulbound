@@ -35,6 +35,7 @@ export const deploy = async () => {
   const noExpiry = 0;
   const validExpiry = 166750483800; // 1 year ahead
   const invalidExpiry = 50; // 1 year ago
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
 
   const NotOwnerError = "Ownable: caller is not the owner";
 
@@ -51,6 +52,7 @@ export const deploy = async () => {
     userKycDetails,
     userAddress,
     walletAddress,
+    zeroAddress,
     noExpiry,
     validExpiry,
     invalidExpiry,
