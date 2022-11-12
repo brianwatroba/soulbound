@@ -4,22 +4,22 @@ import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
 import { arrayOfSingleNumber, arrayOfSingleString, arrayOfNums } from "./fixtures/utils";
 
-describe("KycRegistry.sol", function () {
-  describe("Deployment", function () {
-    describe("Use cases:", () => {
-      it("Deploys successfully", async () => {
+describe("*| KycRegistry.sol |*", function () {
+  describe("Deployment:", function () {
+    describe("success", () => {
+      it("Deploys", async () => {
         const { kycRegistry } = await loadFixture(fixtures.deploy);
         expect(kycRegistry.address).to.be.properAddress;
       });
-      it("Sets correct owner", async () => {
+      it("Sets owner", async () => {
         const { kycRegistry, soulbound } = await loadFixture(fixtures.deploy);
         expect(await kycRegistry.owner()).to.equal(soulbound.address);
       });
     });
   });
-  describe("kycToUserAddress()", () => {
-    describe("Use cases:", () => {
-      it("should convert KYC to the correct userAddress", async () => {
+  describe("kycToUserAddress():", () => {
+    describe("success", () => {
+      it("hashes KYC to the correct userAddress", async () => {
         const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
         const { firstName, lastName, phoneNumber } = userKycDetails;
         const firstNameBytes = ethers.utils.formatBytes32String(firstName);
@@ -35,7 +35,9 @@ describe("KycRegistry.sol", function () {
         expect(hashAsAddress).to.be.properAddress;
         expect(userAddress).to.equal(hashAsAddress);
       });
-      it("should revert for firstName longer than 32", async () => {
+    });
+    describe("failure", () => {
+      it("firstName longer than 32", async () => {
         const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
         const { lastName, phoneNumber } = userKycDetails;
         const firstName = "This is a string that is longer than 32 characters";
@@ -45,9 +47,7 @@ describe("KycRegistry.sol", function () {
           "StringLongerThan31Bytes"
         );
       });
-    });
-    describe("Failure cases:", () => {
-      it("should revert for lastName longer than 32", async () => {
+      it("lastName longer than 32", async () => {
         const { kycRegistry, userKycDetails } = await loadFixture(fixtures.deploy);
         const { firstName, phoneNumber } = userKycDetails;
         const lastName = "This is a string that is longer than 32 characters";
@@ -59,17 +59,17 @@ describe("KycRegistry.sol", function () {
       });
     });
   });
-  describe("linkWallet()", () => {
-    describe("Use cases:", () => {
-      it("should link wallet to kycRegistry", async () => {
+  describe("linkWallet():", () => {
+    describe("success", () => {
+      it("links wallet to kycAddress", async () => {
         const { kycRegistry, soulbound, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
         expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
         await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
         expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(walletAddress);
       });
     });
-    describe("Failure cases", () => {
-      it("reverts if walletAddress is already linked", async () => {
+    describe("failure", () => {
+      it("walletAddress is already linked", async () => {
         const { kycRegistry, soulbound, user, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
         expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
         await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
@@ -78,7 +78,7 @@ describe("KycRegistry.sol", function () {
           "WalletAlreadyLinked"
         ); // second link
       });
-      it("reverts if userAddress is already linked", async () => {
+      it("userAddress is already linked", async () => {
         const { kycRegistry, soulbound, user, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
         expect(await kycRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
         await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
@@ -89,9 +89,9 @@ describe("KycRegistry.sol", function () {
       });
     });
   });
-  describe("transitionTokensByContracts()", () => {
-    describe("Use cases:", () => {
-      it("transition all badges in a single call across two contracts", async () => {
+  describe("transitionTokensByContracts():", () => {
+    describe("success", () => {
+      it("transitions all badges in a single call across two contracts", async () => {
         const { badgeSet, badgeSet2, kycRegistry, soulbound, forbes, padi, userAddress, walletAddress, noExpiry } = await loadFixture(
           fixtures.deploy
         );

@@ -5,11 +5,9 @@ import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
 import { arrayOfSingleNumber, arrayOfSingleString, encodeTokenIdJs, arrayOfNums } from "./fixtures/utils";
 
-// TODO: don't call mintBatch in mint tests
-
-describe("BadgeSet.sol", () => {
-  describe("Deployment", () => {
-    describe("Use cases:", () => {
+describe("*| BadgeSet.sol |*", () => {
+  describe("Deployment:", () => {
+    describe("success", () => {
       it("Deploys", async () => {
         const { badgeSet } = await loadFixture(fixtures.deploy);
         expect(badgeSet.address).to.be.properAddress;
@@ -30,8 +28,8 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("uri", () => {
-    describe("Use cases:", () => {
+  describe("uri():", () => {
+    describe("success", () => {
       it("Returns URI for tokenId", async () => {
         const { badgeSet, baseUri } = await loadFixture(fixtures.deploy);
         const tokenId = "1702821156235119098028961288950624277471988302368";
@@ -40,24 +38,26 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("setURI", () => {
-    describe("Use cases:", () => {
+  describe("setURI():", () => {
+    describe("success", () => {
       it("Sets new URI", async () => {
         const newUri = "https://example.com/";
         const { badgeSet, forbes } = await loadFixture(fixtures.deploy);
         await badgeSet.connect(forbes).setURI(newUri);
         expect(await badgeSet.uri(1)).to.equal(newUri + "1");
       });
-      it("Reverts: not owner", async () => {
+    });
+    describe("failure", () => {
+      it("Not owner", async () => {
         const newUri = "https://example.com/";
         const { badgeSet, user } = await loadFixture(fixtures.deploy);
         await expect(badgeSet.connect(user).setURI(newUri)).to.be.reverted;
       });
     });
   });
-  describe("mint()", () => {
-    describe("Use cases:", () => {
-      it("Mints without expiry", async () => {
+  describe("mint():", () => {
+    describe("success", () => {
+      it("Without expiry", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -65,6 +65,18 @@ describe("BadgeSet.sol", () => {
         const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
         const balance = await badgeSet.balanceOf(userAddress, tokenId);
         expect(balance).to.equal(1);
+      });
+      it("With expiry", async () => {
+        const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
+        const tokenType = 0;
+
+        await badgeSet.connect(forbes).mint(userAddress, tokenType, validExpiry);
+        const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
+        const balance = await badgeSet.balanceOf(userAddress, tokenId);
+        const expiry = await badgeSet.expiryOf(tokenId);
+
+        expect(balance).to.equal(1);
+        expect(expiry).to.equal(validExpiry); // expiry is stored
       });
       it("Sets new maxTokenType if tokenType is incremental", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
@@ -75,7 +87,7 @@ describe("BadgeSet.sol", () => {
 
         expect(maxTokenType).to.equal(tokenType);
       });
-      it("Mints without expiry above tokenType 256 (additional bitmaps)", async () => {
+      it("Without expiry above tokenType 256 (additional bitmaps)", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const maxTokenType = 258;
 
@@ -88,19 +100,7 @@ describe("BadgeSet.sol", () => {
 
         expect(balance).to.equal(1);
       });
-      it("Mints with expiry", async () => {
-        const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
-        const tokenType = 0;
-
-        await badgeSet.connect(forbes).mint(userAddress, tokenType, validExpiry);
-        const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
-        const balance = await badgeSet.balanceOf(userAddress, tokenId);
-        const expiry = await badgeSet.expiryOf(tokenId);
-
-        expect(balance).to.equal(1);
-        expect(expiry).to.equal(validExpiry); // expiry is stored
-      });
-      it("Mints to linked wallet if minting to userAddress post link", async () => {
+      it("To linked wallet if minting to userAddress post link", async () => {
         const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -113,7 +113,7 @@ describe("BadgeSet.sol", () => {
         expect(userAddressBalance).to.equal(0);
         expect(walletAddressBalance).to.equal(1);
       });
-      it("Mints to linked wallet if minting to walletAddress post link", async () => {
+      it("To linked wallet if minting to walletAddress post link", async () => {
         const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -126,7 +126,7 @@ describe("BadgeSet.sol", () => {
         expect(userAddressBalance).to.equal(0);
         expect(walletAddressBalance).to.equal(1);
       });
-      it.only("Emits a TransferSingle event", async () => {
+      it("Emits a TransferSingle event", async () => {
         const { badgeSet, forbes, userAddress, noExpiry, zeroAddress } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -149,12 +149,12 @@ describe("BadgeSet.sol", () => {
         });
       });
     });
-    describe("Failure cases:", () => {
-      it("Reverts: not owner", async () => {
+    describe("failure", () => {
+      it("Not owner", async () => {
         const { badgeSet, user, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
         await expect(badgeSet.connect(user).mint(userAddress, 1, invalidExpiry)).to.be.reverted;
       });
-      it("Reverts: invalid expiry", async () => {
+      it("Invalid expiry", async () => {
         const { badgeSet, forbes, userAddress, invalidExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -163,7 +163,7 @@ describe("BadgeSet.sol", () => {
           "IncorrectExpiry"
         );
       });
-      it("Reverts: token type already owned", async () => {
+      it("tokenType already owned", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -174,7 +174,7 @@ describe("BadgeSet.sol", () => {
           "IncorrectBalance"
         );
       });
-      it("Reverts: new tokenType not incremental", async () => {
+      it("New tokenType not incremental", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const nonIncrementalTokenType = 50;
 
@@ -183,7 +183,7 @@ describe("BadgeSet.sol", () => {
           "NewTokenTypeNotIncremental"
         );
       });
-      it("Reverts: ERC1155Receiver not implemented", async () => {
+      it("ERC1155Receiver not implemented", async () => {
         const { badgeSet, kycRegistry, forbes, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -194,8 +194,8 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("mintBatch()", () => {
-    describe("Use cases:", () => {
+  describe("mintBatch():", () => {
+    describe("success", () => {
       it("Mints without expiry", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
 
@@ -294,21 +294,21 @@ describe("BadgeSet.sol", () => {
         });
       });
     });
-    describe("Failure cases:", () => {
-      it("Reverts: invalid expiry", async () => {
+    describe("failure", () => {
+      it("Invalid expiry", async () => {
         const { badgeSet, forbes, userAddress, invalidExpiry, validExpiry } = await loadFixture(fixtures.deploy);
         const ids = [1, 2];
         const expiries = [invalidExpiry, validExpiry];
         await expect(badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries)).to.be.reverted;
       });
-      it("Reverts if token already owned", async () => {
+      it("Token already owned", async () => {
         const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
         const ids = [1, 2];
         const expiries = [validExpiry, validExpiry];
         await badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries);
         await expect(badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries)).to.be.reverted;
       });
-      it("Reverts: ERC1155Receiver not implemented", async () => {
+      it("ERC1155Receiver not implemented", async () => {
         const { badgeSet, kycRegistry, forbes, validExpiry } = await loadFixture(fixtures.deploy);
         const ids = [1, 2];
         const expiries = [validExpiry, validExpiry];
@@ -319,9 +319,9 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("revoke()", () => {
-    describe("Use cases:", () => {
-      it("Revokes without expiry", async () => {
+  describe("revoke():", () => {
+    describe("success", () => {
+      it("Without expiry", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -331,7 +331,7 @@ describe("BadgeSet.sol", () => {
 
         expect(await badgeSet.balanceOf(userAddress, tokenId)).to.equal(0);
       });
-      it("Revokes with expiry", async () => {
+      it("With expiry", async () => {
         const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -341,7 +341,7 @@ describe("BadgeSet.sol", () => {
 
         expect(await badgeSet.balanceOf(userAddress, tokenId)).to.equal(0);
       });
-      it("Revokes above tokenType 256 (additional bitmaps)", async () => {
+      it("Above tokenType 256 (additional bitmaps)", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const maxTokenType = 258;
 
@@ -392,14 +392,14 @@ describe("BadgeSet.sol", () => {
         });
       });
     });
-    describe("Failure cases:", () => {
-      it("Reverts: not contract owner", async () => {
+    describe("failure", () => {
+      it("Not contract owner", async () => {
         const { badgeSet, user, userAddress, NotOwnerError } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
         await expect(badgeSet.connect(user).revoke(userAddress, tokenType)).to.be.revertedWith(NotOwnerError);
       });
-      it("Reverts: token not owned", async () => {
+      it("Token not owned", async () => {
         const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
         const tokenType = 0;
 
@@ -407,9 +407,9 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("revokeBatch()", () => {
-    describe("Use cases:", () => {
-      it("Revokes tokens", async () => {
+  describe("revokeBatch():", () => {
+    describe("success", () => {
+      it("Revokes without expiry", async () => {
         const { badgeSet, forbes, userAddress, noExpiry } = await loadFixture(fixtures.deploy);
 
         const revokeCount = 10; // 0-9
@@ -426,8 +426,6 @@ describe("BadgeSet.sol", () => {
 
         expect(balances).to.deep.equal(expectedBalances);
       });
-    });
-    describe("Failure cases:", () => {
       it("Deletes tokens' expiries", async () => {
         const { badgeSet, forbes, userAddress, validExpiry } = await loadFixture(fixtures.deploy);
 
@@ -446,14 +444,16 @@ describe("BadgeSet.sol", () => {
         expect(expiriesBefore).to.deep.equal(expiries);
         expect(expiriesAfter).to.deep.equal(arrayOfZeros);
       });
-      it("Reverts: not owner", async () => {
+    });
+    describe("failure", () => {
+      it("Not owner", async () => {
         const { badgeSet, user, userAddress, NotOwnerError } = await loadFixture(fixtures.deploy);
         const revokeCount = 10; // 0-9
         const badgeTypes = arrayOfNums(revokeCount);
 
         await expect(badgeSet.connect(user).revokeBatch(userAddress, badgeTypes)).to.be.revertedWith(NotOwnerError);
       });
-      it("Reverts: token not owned", async () => {
+      it("Token not owned", async () => {
         const { badgeSet, forbes, userAddress } = await loadFixture(fixtures.deploy);
         const revokeCount = 10; // 0-9
         const badgeTypes = arrayOfNums(revokeCount);
@@ -465,9 +465,9 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("encodeTokenId()", () => {
-    describe("Use cases:", () => {
-      it("Encodes a tokenType and address together", async () => {
+  describe("encodeTokenId():", () => {
+    describe("success", () => {
+      it("Encodes tokenType/address", async () => {
         const { badgeSet, userAddress } = await loadFixture(fixtures.deploy);
         const tokenType = ethers.BigNumber.from(0);
         const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
@@ -476,9 +476,9 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("decodeTokenId()", () => {
-    describe("Use cases:", () => {
-      it("Decodes a tokenId into a tokenType and user address", async () => {
+  describe("decodeTokenId():", () => {
+    describe("success", () => {
+      it("Decodes tokenId into a tokenType/address", async () => {
         const { badgeSet, userAddress } = await loadFixture(fixtures.deploy);
         const tokenType = ethers.BigNumber.from(0);
         const tokenId = await badgeSet.encodeTokenId(tokenType, userAddress);
@@ -488,8 +488,8 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("moveUserTokensToWallet()", () => {
-    describe("Use cases:", () => {
+  describe("moveUserTokensToWallet():", () => {
+    describe("success", () => {
       it("transitions wallet", async () => {
         const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
 
@@ -572,8 +572,8 @@ describe("BadgeSet.sol", () => {
         });
       });
     });
-    describe("Failure cases:", () => {
-      it("reverts if wallet not linked", async () => {
+    describe("failure", () => {
+      it("Wallet not linked", async () => {
         const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
@@ -587,8 +587,8 @@ describe("BadgeSet.sol", () => {
       });
     });
   });
-  describe("ERC1155 No Ops - Expected Revert", () => {
-    describe("Failure cases:", () => {
+  describe("ERC1155 No Ops - Expected Revert:", () => {
+    describe("failure", () => {
       it("setApprovalForAll()", async () => {
         const { badgeSet, user } = await loadFixture(fixtures.deploy);
         await expect(badgeSet.setApprovalForAll(user.address, true)).to.be.revertedWithCustomError(

@@ -3,23 +3,21 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import * as fixtures from "./fixtures/fixtures";
 
-const NotOwnerError = "Ownable: caller is not the owner";
-
-describe("BadgeSetFactory.sol", function () {
-  describe("Deployment", function () {
-    describe("Use cases:", () => {
-      it("Deploys successfully", async () => {
+describe("*| BadgeSetFactory.sol |*", function () {
+  describe("Deployment:", function () {
+    describe("success", () => {
+      it("deploys", async () => {
         const { badgeSetFactory } = await loadFixture(fixtures.deploy);
         expect(badgeSetFactory.address).to.be.properAddress;
       });
-      it("Sets deployer as owner", async () => {
+      it("sets deployer as owner", async () => {
         const { badgeSetFactory, soulbound } = await loadFixture(fixtures.deploy);
         expect(await badgeSetFactory.owner()).to.equal(soulbound.address);
       });
     });
   });
-  describe("createBadgeSet", () => {
-    describe("Use cases:", () => {
+  describe("createBadgeSet():", () => {
+    describe("success", () => {
       it("deploys a badgeSet", async () => {
         const { badgeSetFactory, soulbound, forbes, baseUri } = await loadFixture(fixtures.deploy);
         await badgeSetFactory.connect(soulbound).createBadgeSet(forbes.address, baseUri);
@@ -27,14 +25,16 @@ describe("BadgeSetFactory.sol", function () {
         const badgeSet = await ethers.getContractAt("BadgeSet", badgeSetAddress);
         expect(badgeSet.address).to.be.properAddress;
       });
-      it("reverts if not owner", async () => {
-        const { badgeSetFactory, forbes, baseUri } = await loadFixture(fixtures.deploy);
+    });
+    describe("failure", () => {
+      it("not owner", async () => {
+        const { badgeSetFactory, forbes, baseUri, NotOwnerError } = await loadFixture(fixtures.deploy);
         await expect(badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)).to.be.revertedWith(NotOwnerError);
       });
     });
   });
-  describe("badgeSets()", () => {
-    describe("Use cases", () => {
+  describe("badgeSets():", () => {
+    describe("success", () => {
       it("returns array of badgeSets", async () => {
         const { badgeSetFactory, badgeSet } = await loadFixture(fixtures.deploy);
         const badgeSets = await badgeSetFactory.badgeSets();
