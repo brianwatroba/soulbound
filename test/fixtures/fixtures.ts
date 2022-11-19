@@ -9,8 +9,29 @@ const userKycDetails = {
   phoneNumber: 8105555555,
 };
 
+const expiries = {
+  none: 0,
+  valid: 166750483800,
+  invalid: 50,
+};
+
+const addresses = {
+  user: "0x64443F9CDBc6b3f12AD0c81083dde302d85Ef81E",
+  wallet: "0x20A3d0288B393dF8901BB6415C6Ac538F17B94fE",
+  zero: "0x0000000000000000000000000000000000000000",
+};
+
+const errors = {
+  notOwner: "Ownable: caller is not the owner",
+};
+
 const userAddress = "0x64443F9CDBc6b3f12AD0c81083dde302d85Ef81E";
 const walletAddress = "0x20A3d0288B393dF8901BB6415C6Ac538F17B94fE";
+const noExpiry = 0;
+const validExpiry = 166750483800; // 1 year ahead
+const invalidExpiry = 50; // 1 year ago
+const zeroAddress = "0x0000000000000000000000000000000000000000";
+const NotOwnerError = "Ownable: caller is not the owner";
 
 export const deploy = async () => {
   const [soulbound, forbes, padi, user] = await ethers.getSigners();
@@ -32,13 +53,6 @@ export const deploy = async () => {
   // const validExpiry = blockTimestamp + 60 * 60 * 24 * 365; // 1 year ahead
   // const invalidExpiry = blockTimestamp - 60 * 60 * 24 * 365; // 1 year ago
 
-  const noExpiry = 0;
-  const validExpiry = 166750483800; // 1 year ahead
-  const invalidExpiry = 50; // 1 year ago
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
-
-  const NotOwnerError = "Ownable: caller is not the owner";
-
   return {
     badgeSetFactory,
     badgeSet,
@@ -57,6 +71,7 @@ export const deploy = async () => {
     validExpiry,
     invalidExpiry,
     NotOwnerError,
+    errors,
   };
 };
 

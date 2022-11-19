@@ -28,8 +28,8 @@ describe("*| BadgeSetFactory.sol |*", function () {
     });
     describe("failure", () => {
       it("not owner", async () => {
-        const { badgeSetFactory, forbes, baseUri, NotOwnerError } = await loadFixture(fixtures.deploy);
-        await expect(badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)).to.be.revertedWith(NotOwnerError);
+        const { badgeSetFactory, forbes, baseUri, errors } = await loadFixture(fixtures.deploy);
+        await expect(badgeSetFactory.connect(forbes).createBadgeSet(forbes.address, baseUri)).to.be.revertedWith(errors.notOwner);
       });
     });
   });

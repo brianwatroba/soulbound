@@ -15,9 +15,9 @@ _Alpha launching Winter 2022_
 
 What we do makes up who we are.
 
-But our accomplishments don't "live anywhere" where we can easily prove them, show them, and share them.
+But our accomplishments don't "live anywhere" where we can easily prove and share them.
 
-If they do exist online, they're fragmented. Our career history is on LinkedIn. Our travel history is on Instagram. My scuba diving certification is a plastic card in my wallet.
+If they do exist online, they're fragmented. Career history on LinkedIn. Travel history on Instagram. My scuba diving certification is a plastic card in my wallet.
 
 What if we could collect our experiences in a central place? What if the community that shared in those accomplishments could issue them? What if they were provable and trustworthy?
 
@@ -25,7 +25,7 @@ What if we could collect our experiences in a central place? What if the communi
 
 A protocol for communities to issue proof of completion/endorsement for _anything_.
 
-Imagine a world where organizations issue and govern their own blue checkmarks.
+Imagine: a world where organizations can issue and govern their own blue checkmarks.
 
 ## Use cases and examples
 
