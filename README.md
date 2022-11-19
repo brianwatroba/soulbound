@@ -34,17 +34,29 @@ Imagine: a world where organizations can issue and govern their own blue checkma
 
 ## How it works
 
-1. **Organization creates and deploys a BadgeSet (contract):** org customizes their BadgeSet (contract-level) metadata and deploys. Can deploy and manage via their own wallets, or use Soulbound's DAPP front end and wallet custody.
+### 1. **Organization creates and deploys a BadgeSet (contract)**
 
-2. **Organization creates Badge Types:** badge types are like blueprints for individual minted tokens. For example: PADI may create a high level "Open Water Diver" certification badge, which has a base set of metadata, but that token type can be minted to any number of people. And each individual can have token-level metadata, such as expiration, location of certification, etc. Badge types are fully customizeable.
+Org customizes their BadgeSet (contract-level) metadata and deploys. Can deploy and manage via their own wallets, or use Soulbound's DAPP front end and wallet custody.
 
-3. **Organization mints badges to users via "lite wallets":** orgs can mint to any address, but they have the option to mint to a user's "lite wallet". A lite wallet is an address representing the hashed combination of a user's first name, last name, and phone number. Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the lite wallet. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to.
+### 2. **Organization creates Badge Types**
 
-4. **Users view minted tokens:** users can view all Soulbound tokens minted to their lite wallet or hot wallet via smart contract view functions, or via our user DAPP. Openness and free discovery of tokens is important. In many cases, lite wallets will be enough for people to demonstrate ownership of Soulbound tokens, especially when people sufficiently trust a user has a particular name and phone number. That is up to the community and its people. This will give rise to all sorts of lightweight authentication and proof of completion, without the need for on-chain signatures.
+Badge types are like blueprints for individual minted tokens. For example: PADI may create a high level "Open Water Diver" certification badge, which has a base set of metadata, but that token type can be minted to any number of people. And each individual can have token-level metadata, such as expiration, location of certification, etc. Badge types are fully customizeable.
 
-5. **Users can link lite wallet to hot wallet:** a lite wallet can be associated with a real wallet if a user ever wants to. Once linked, a user can use a real wallet to sign transactions proving ownership of Soulbound tokens, which can be very useful accross a variety of applications. For instance: showing Soulbound tokens on Instagram Collectibles, adding them to an Open Sea account, etc. These use cases will gain even more utility over time as more applications are built with token gating and proof of ownership. In order to link a lite wallet to a real wallet, a user must verify their identity to ensure Soulbound tokens are not attributed to the wrong person. To start, this verification process will be centralized, but we will explore ways to decentralize it in the future. Once verified, a lite wallet to real wallet mapping is added to the WalletRegistry smart contract, all BadgeSets will update balances to the real wallet, and any future mints to a lite wallet will be automatically forwarded to the real wallet.
+### 3. **Organization mints badges to users via "lite wallets":**
 
-6. **Badges can be used in a variety of applications:** communities and users can use Soulbound tokens for a variety of use cases. For instance: sharing and proving accomplishments online and through various platforms, token gating to services and events, replacement for ID or loyalty cards, and many more.
+Orgs can mint to any address, but they have the option to mint to a user's "lite wallet". A lite wallet is an address representing the hashed combination of a user's first name, last name, and phone number. Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the lite wallet. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to.
+
+### 4. **Users view minted tokens**
+
+Users can view all Soulbound tokens minted to their lite wallet or hot wallet via smart contract view functions, or via our user DAPP. Openness and free discovery of tokens is important. In many cases, lite wallets will be enough for people to demonstrate ownership of Soulbound tokens, especially when people sufficiently trust a user has a particular name and phone number. That is up to the community and its people. This will give rise to all sorts of lightweight authentication and proof of completion, without the need for on-chain signatures.
+
+### 5. **Users can link lite wallet to hot wallet**
+
+A lite wallet can be associated with a real wallet if a user ever wants to. Once linked, a user can use a real wallet to sign transactions proving ownership of Soulbound tokens, which can be very useful accross a variety of applications. For instance: showing Soulbound tokens on Instagram Collectibles, adding them to an Open Sea account, etc. These use cases will gain even more utility over time as more applications are built with token gating and proof of ownership. In order to link a lite wallet to a real wallet, a user must verify their identity to ensure Soulbound tokens are not attributed to the wrong person. To start, this verification process will be centralized, but we will explore ways to decentralize it in the future. Once verified, a lite wallet to real wallet mapping is added to the WalletRegistry smart contract, all BadgeSets will update balances to the real wallet, and any future mints to a lite wallet will be automatically forwarded to the real wallet.
+
+### 6. **Badges can be used in a variety of applications**
+
+Communities and users can use Soulbound tokens for a variety of use cases. For instance: sharing and proving accomplishments online and through various platforms, token gating to services and events, replacement for ID or loyalty cards, and many more.
 
 ## Technical callouts:
 
