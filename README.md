@@ -25,7 +25,7 @@ What if we could collect our experiences in a central place? What if the communi
 
 A protocol where:
 
-- Communities can issue proof of completion/endorsement for _anything_ (via non-transferable tokens), creating their own "blue checkmarks"
+- Communities can issue proof of completion/endorsement for _anything_ (via non-transferable tokens)
 - Users can collect, share, and prove their endorsements without necessarily managing a wallet
 - Other services and platforms can easily build on top of and integrate Soulbound tokens
 
@@ -76,31 +76,31 @@ For instance: sharing and proving accomplishments online and through various pla
 
 - **Tokens are `ERC1155` compliant:** Soulbound tokens use the ERC1155 token interface, and are fully ERC1155 compliant. This means Soulbound tokens will show up on OpenSea or any protocol that supports the ERC1155 standard.
 
-- **Non-transferable:** Soulbound tokens _cannot be transferred_ once they are minted. All ERC1155 standard transfer and approval functions (`transfer()`, `transferFrom()`, `setApprovalForAll()`) are overridden to revert. However, the issuing organization can `revoke` Soulbound tokens, effectively burning them for a given user. An organization can `revoke` and `mint` new tokens as many times as they'd like.
+- **Tokens are non-transferable:** Soulbound tokens _cannot be transferred_ once they are minted. All ERC1155 standard transfer and approval functions (`transfer()`, `transferFrom()`, `setApprovalForAll()`) are overridden to revert. However, the issuing organization can `revoke` Soulbound tokens, effectively burning them for a given user. An organization can `revoke` and `mint` new tokens as many times as they'd like.
 
 - **Token `expiry` stored on chain:** Soulbound token contracts store a specific token's expiration timestamp directly on chain (if provided at mint). This is queryable via the contract's `expiryOf()` function, and can be included in a token's metadata.
 
-- **Metadata is fully customizable, can be hosted anywhere:** organizations can decide how they'd like to structure token metadata and where they'd like to host it. Soulbound will provide a centralized, out of the box metadata creation and storage solution if orgs decide to use it.
+- **Metadata is customizable, can be hosted anywhere:** organizations can decide how they'd like to structure token metadata and where they'd like to host it. Soulbound will provide a centralized, out of the box metadata creation and storage solution if orgs decide to use it.
 
 - **Lite wallets:** orgs can mint to any address, but they have the option to mint to a user's "lite wallet". A lite wallet is a read-only ETH address representing the hashed combination of a user's first name, last name, and phone number. Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the lite wallet. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to.
 
-- **WalletRegistry**: lite wallet to real wallet mapping is maintained in the separate `WalletRegistry` contract. This contract is the only centrally owned contract by the Soulbound protocol, as full KYC verification must be done centrally for cases where users want to link a wallet. We are exploring other KYC options to make this feature fully decentralized as well, but for the interim the registry is managed by the Soulbound organization. We're getting there!
+- **`WalletRegistry` stores lite wallet mapping**: lite wallet to real wallet mapping is maintained in the separate `WalletRegistry` contract. This contract is the only centrally owned contract by the Soulbound protocol, as full KYC verification must be done centrally for cases where users want to link a wallet. We are exploring other KYC options to make this feature fully decentralized as well, but for the interim the registry is managed by the Soulbound organization. We're getting there!
 
-- **Serialized `tokenIds`:** traditionally, ERC1155 tokenIds are sequential/static (`uint256`). Soulbound tokens, however, derive tokenIds by serializing a user's address (`address`) and the tokenType (`uint96`). Because each user can only have one of each `tokenType`, this allows for unique ids for each user/tokenType combination, and in turn the ability to blend both `tokenType` and user level metadata.
+- **`tokenIds` are serialized:** traditionally, ERC1155 tokenIds are sequential/static (`uint256`). Soulbound tokens, however, derive tokenIds by serializing a user's address (`address`) and the tokenType (`uint96`). Because each user can only have one of each `tokenType`, this allows for unique ids for each user/tokenType combination, and in turn the ability to blend both `tokenType` and user level metadata.
 
 - **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each token type, and ownership state must be transitioned on-chain to a real wallet (if a user links) as gas-efficiently as possible. Copying over bitmaps is easy (1 uint256 to store 256 tokenType ownership flags)! Individual key/value mappings are not a good fit for these use cases.
 
-- **Contract management/ownership:** Soulbound smart contracts are designed so that any community can deploy and manage their own contracts within the Soulbound ecosystem on their own and with their own wallets. However, we will also provide a number of custodial services and user-friendly front ends to remove complexity and friction for communities (if they so choose).
+- **Orgs decide contract management/ownership:** Soulbound smart contracts are designed so that any community can deploy and manage their own contracts within the Soulbound ecosystem on their own and with their own wallets. However, we will also provide a number of custodial services and user-friendly front ends to remove complexity and friction for communities (if they so choose).
 
-- **Deployed to Polygon:** Soulbound smart contracts will be deployed to Polygon (to start). Polygon is a good fit for transaction costs, existing partnerships with other services (Instagram, etc), and EVM compatibility.
+- **Built on Polygon:** Soulbound smart contracts will be deployed to Polygon (to start). Polygon is a good fit for transaction costs, existing partnerships with other services (Instagram, etc), and EVM compatibility.
 
 ## Product timeline and roadmap
 
-1. Smart contracts version 1.0 finished, deployed to testnet (done)
-2. Contracts audited and deployed to mainnet (January 2023)
-3. Product alpha: 5 initial orgs, tokens managed and minted manually with white-glove service, gather feedback (January 2023)
-4. Org and user front ends finished, allowing for self service signup, minting, limited wallet custody, and token management (March 2023)
-5. Open beta: 25 orgs (April 2023)
+1. Smart contracts version 1.0 finished, deployed to testnet (_done_)
+2. Contracts audited and deployed to mainnet (_January 2023_)
+3. Product alpha: 5 initial orgs, tokens managed and minted manually with white-glove service, gather feedback (_January 2023_)
+4. Org and user front ends finished, allowing for self service signup, minting, limited wallet custody, and token management (_March 2023_)
+5. Open beta: 25 orgs (_April 2023_)
 
 ## Risks and unsolved challenges:
 
