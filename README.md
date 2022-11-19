@@ -6,8 +6,8 @@ Enabling communities to issue and govern their own blue checkmarks.
 
 ## Access
 
-Landing page: https://www.placeholderwebsite.com
-DAPP: https://www.placeholderwebsite.com
+- Landing: https://www.placeholderwebsite.com
+- App client: TBD
 
 _Alpha launching Winter 2022_
 
@@ -29,7 +29,7 @@ Imagine: a world where organizations can issue and govern their own blue checkma
 
 ## Use cases and examples
 
-- **New York Road Runners (Marathon/Race Org):** issues race badges as Soulbound tokens to participants. They rich metadata for race placement, timing, age group, and charity involvement.
+- **New York Road Runners (Marathon/Race Org):** issues race badges as Soulbound tokens to participants. Includes rich metadata for race placement, timing, age group, and charity involvement.
 - **Padi Scuba Diving Organization:** represents various diving certifications (Open Water Diver, Underwater Hunter, Master Diver, etc.) via Soulbound tokens with expiration date stored on chain. Tokens are proveable and recognizeable at any international dive shop.
 
 ## How it works
