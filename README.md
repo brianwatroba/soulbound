@@ -42,37 +42,37 @@ Org customizes their `BadgeSet` (contract-level) metadata and deploys it. Can ma
 
 ### 2. **Organization creates `badgeTypes`**
 
-`badgeTypes` are like token blueprints. For example: PADI may create a high level "Open Water Diver" certification badge, which has a base set of metadata, but that `badgeType` can be minted to any number of people. Each individual's badge can have token-level metadata, such as expiration, location of certification, etc. `badgeTypes` are fully customizable.
+`badgeTypes` are like token blueprints. For example: PADI may create a high level "Open Water Diver" certification badge, which has a base set of metadata, but that badgeType can be minted to any number of people. Each individual's badge can have token-level metadata, such as expiration, location of certification, etc. badgeTypes are fully customizable.
 
-### 3. **Organization mints badges to users via `lite wallets`:**
+### 3. **Organization mints badges to users via `liteWallet`s:**
 
-Orgs can mint tokens to any address. However, they have the special ability to mint to a user's `lite wallet`.
+Orgs can mint tokens to any address. However, they have the special ability to mint to a user's liteWallet.
 
-A `lite wallet` is an address representing the hashed combination of a user's first name, last name, and phone number.
+A liteWallet is an address representing the hashed combination of a user's first name, last name, and phone number.
 
-Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the `lite wallet`. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to (but not required).
+Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the liteWallet. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to (but not required).
 
 ### 4. **Users view their badges**
 
-Users can view all Soulbound tokens minted to their `lite wallet` or real wallet via smart contract view functions, or via our DAPP client (WIP).
+Users can view all Soulbound tokens minted to their liteWallet or real wallet via smart contract view functions, or via our DAPP client (WIP).
 
-Openness and free discovery of tokens is important. In many cases, `lite wallets` will be enough for people to demonstrate token ownership, especially when there is already sufficient social trust (someone believes your name and phone number). This will give rise to all sorts of lightweight authentication and proof of completion, without the need for on-chain signatures.
+Openness and free discovery of tokens is important. In many cases, liteWallets will be enough for people to demonstrate token ownership, especially when there is already sufficient social trust (someone believes your name and phone number). This will give rise to all sorts of lightweight authentication and proof of completion, without the need for on-chain signatures.
 
-With that said, users can still link their `lite wallets` to a real wallet to provide signing functionality and prove they own their tokens.
+With that said, users can still link their liteWallets to a real wallet to provide signing functionality and prove they own their tokens.
 
-### 5. **Users can link `lite wallet` to real wallet**
+### 5. **Users can link their `liteWallet` to a real wallet**
 
-A `lite wallet` can be associated with a real wallet if a user decides to link them. Once linked, a user can use their linked real wallet to sign transactions proving ownership of Soulbound tokens.
+A liteWallet can be associated with a real wallet if a user decides to link them. Once linked, a user can use their linked real wallet to sign transactions proving ownership of Soulbound tokens.
 
 This can be very useful across a variety of applications. For example: showing Soulbound tokens on Instagram Collectibles, adding them to an OpenSea account, etc. These use cases will gain even more utility over time as more applications are built with token gating and proof of ownership.
 
-In order to link a lite wallet to a real wallet, a user must verify their identity to ensure Soulbound tokens are not attributed to the wrong person. To start, this verification process will be centralized, but we will explore ways to decentralize it in the future.
+In order to link a liteWallet to a real wallet, a user must verify their identity to ensure Soulbound tokens are not attributed to the wrong person. To start, this verification process will be centralized, but we will explore ways to decentralize it in the future.
 
 Once wallets are linked:
 
-1. A `lite wallet` to real wallet mapping is added to the `WalletRegistry` smart contract for reference
-2. All `BadgeSets` will update their balances to point to the real wallet
-3. any future mints to a lite wallet will automatically be forwarded to the real wallet.
+1. A liteWallet to real wallet mapping is added to the WalletRegistry smart contract for reference
+2. All BadgeSets will update their balances to point to the real wallet
+3. Any future mints to a liteWallet will automatically be forwarded to the real wallet.
 
 Wallets can also be unlinked and re-linked.
 
@@ -92,13 +92,13 @@ For instance: sharing and proving accomplishments online and through various pla
 
 - **Metadata is customizable, can be hosted anywhere:** organizations can decide how they'd like to structure token metadata and where they'd like to host it. Soulbound will provide a centralized, out of the box metadata creation and storage solution if orgs decide to use it.
 
-- **`Lite wallets`:** orgs can mint to any address, but they have the option to mint to a user's `lite wallet`. A lite wallet is a read-only ETH address representing the hashed combination of a user's first name, last name, and phone number. Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the `lite wallet`. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to.
+- **`liteWallet`s:** orgs can mint to any address, but they have the option to mint to a user's liteWallet. A liteWallet is a read-only ETH address representing the hashed combination of a user's first name, last name, and phone number. Because tokens are non-transferable and issued to real people, it does not matter if a user (or anyone) has the private key to the liteWallet. Instead, it acts as an escrow account that users can prove is theirs (via KYC) if they ever choose to.
 
-- **`WalletRegistry` stores lite wallet mapping**: lite wallet to real wallet mapping is maintained in the separate `WalletRegistry` contract. This contract is the only centrally owned contract by the Soulbound protocol, as full KYC verification must be done centrally for cases where users want to link a wallet. We are exploring other KYC options to make this feature fully decentralized, but for the interim the registry is managed by the Soulbound organization. We're getting there!
+- **`WalletRegistry` stores liteWallet mapping**: liteWallet to real wallet mapping is maintained in the separate WalletRegistry.sol contract. This contract is the only centrally owned contract by the Soulbound protocol, as full KYC verification must be done centrally for cases where users want to link a wallet. We are exploring other KYC options to make this feature fully decentralized, but for the interim the registry is managed by the Soulbound organization. We're getting there!
 
-- **`tokenIds` are serialized:** traditionally, ERC1155 tokenIds are sequential/static (`uint256`). Soulbound tokens, however, derive tokenIds by serializing a user's address (`address`) and the `badgeType` (`uint96`). Because each user can only have one of each `badgeType`, this allows for unique ids for each user/`badgeType` combination, and in turn the ability to blend both `badgeType` and user level metadata.
+- **`tokenIds` are serialized:** traditionally, ERC1155 tokenIds are sequential/static (`uint256`). Soulbound tokens, however, derive tokenIds by serializing a user's address (`address`) and the badgeType (`uint96`). Because each user can only have one of each badgeType, this allows for unique ids for each user/badgeType combination, and in turn the ability to blend both badgeType and user level metadata.
 
-- **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each `badgeType`, and ownership state must be transitioned on-chain to a real wallet (if a user links) as gas-efficiently as possible. Copying over bitmaps is easy (a single `uint256` to store 256 badgeType ownership flags)! Individual key/value mappings are not a good fit for these use cases.
+- **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each badgeType, and ownership state must be transitioned on-chain to a real wallet (if a user links) as gas-efficiently as possible. Copying over bitmaps is easy (a single `uint256` to store 256 badgeType ownership flags)! Individual key/value mappings are not a good fit for these use cases.
 
 - **Orgs decide contract management/ownership:** Soulbound smart contracts are designed so that any community can deploy and manage their own contracts within the Soulbound ecosystem on their own and with their own wallets. However, we will also provide a number of custodial services and user-friendly front end clients to remove complexity and friction for communities (if they so choose).
 
@@ -114,7 +114,7 @@ For instance: sharing and proving accomplishments online and through various pla
 
 ## Risks and unsolved challenges:
 
-- **Centralization of verifying wallet ownership during transition:** if a user decides to link a real wallet to their `lite wallet`, we must be sure that the user is who they say they are (and deserves the already minted badges in the lite wallet). In the future, we'll be exploring decentralized and community-based ID verification to do this, but for the initial launch we will be verifying each wallet link manually. Not ideal, but decentralization is important and we'll get there.
+- **Centralization of verifying wallet ownership during transition:** if a user decides to link a real wallet to their liteWallet, we must be sure that the user is who they say they are (and deserves the already minted badges in the liteWallet). In the future, we'll be exploring decentralized and community-based ID verification to do this, but for the initial launch we will be verifying each wallet link manually. Not ideal, but decentralization is important and we'll get there.
 
 - **Token data is public:** a tradeoff with non-transferable tokens is that they exist on-chain, and so their data is public. If a user wishes to keep some accomplishments/verifications private, that isn't currently supported. This is an important protocol design consideration to minimize discrimination and maximize user privacy. This is a high priority, and we want to build towards a solution.
 
