@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.12;
 
-interface IKycRegistry { 
+interface IWalletRegistry { 
 
   error UserAlreadyLinked(address userAddress);
   error WalletAlreadyLinked(address walletAddress);
@@ -11,8 +11,8 @@ interface IKycRegistry {
 
   function getLinkedWallet(address userAddress) external view returns (address);
 
-  function hashKycToUserAddress(string memory firstName, string memory lastName, uint256 phoneNumber) external pure returns (address);
+  function getLiteWalletAddress(string memory firstName, string memory lastName, uint256 phoneNumber) external pure returns (address);
 
-  function transitionTokensByContracts(address userAddress, address walletAddress, address[] memory contracts) external;
+  function transitionBadgesByContracts(address userAddress, address walletAddress, address[] memory contracts) external;
   
 }

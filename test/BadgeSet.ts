@@ -18,9 +18,9 @@ describe("*| BadgeSet.sol |*", () => {
         const expectedUri = `${baseUri}${badgeSet.address.toLowerCase()}/${tokenId}`;
         expect(await badgeSet.uri(tokenId)).to.equal(expectedUri);
       });
-      it("Sets kycRegistry address", async () => {
-        const { badgeSet, kycRegistry } = await loadFixture(fixtures.deploy);
-        expect(kycRegistry.address).to.equal(await badgeSet.kycRegistry());
+      it("Sets walletRegistry address", async () => {
+        const { badgeSet, walletRegistry } = await loadFixture(fixtures.deploy);
+        expect(walletRegistry.address).to.equal(await badgeSet.walletRegistry());
       });
       it("Transfers ownership", async () => {
         const { badgeSet, forbes } = await loadFixture(fixtures.deploy);
@@ -101,10 +101,10 @@ describe("*| BadgeSet.sol |*", () => {
         expect(balance).to.equal(1);
       });
       it("To linked wallet if minting to userAddress post link", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const badgeType = 0;
 
-        await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress); // mint to userAddress
+        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress); // mint to userAddress
         await badgeSet.connect(forbes).mint(userAddress, badgeType, noExpiry);
         const tokenId = await badgeSet.encodeTokenId(badgeType, userAddress);
         const userAddressBalance = await badgeSet.balanceOf(userAddress, tokenId);
@@ -114,10 +114,10 @@ describe("*| BadgeSet.sol |*", () => {
         expect(walletAddressBalance).to.equal(1);
       });
       it("To linked wallet if minting to walletAddress post link", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const badgeType = 0;
 
-        await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
         await badgeSet.connect(forbes).mint(walletAddress, badgeType, noExpiry); // mint to walletAddress
         const tokenId = await badgeSet.encodeTokenId(badgeType, userAddress);
         const userAddressBalance = await badgeSet.balanceOf(userAddress, tokenId);
@@ -184,10 +184,10 @@ describe("*| BadgeSet.sol |*", () => {
         );
       });
       it("ERC1155Receiver not implemented", async () => {
-        const { badgeSet, kycRegistry, forbes, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, forbes, noExpiry } = await loadFixture(fixtures.deploy);
         const badgeType = 0;
 
-        await expect(badgeSet.connect(forbes).mint(kycRegistry.address, badgeType, noExpiry)).to.be.revertedWithCustomError(
+        await expect(badgeSet.connect(forbes).mint(walletRegistry.address, badgeType, noExpiry)).to.be.revertedWithCustomError(
           badgeSet,
           "ERC1155ReceiverNotImplemented"
         );
@@ -271,7 +271,7 @@ describe("*| BadgeSet.sol |*", () => {
         });
       });
       it("TransferSingle events are correct", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
         const tokenTypes = arrayOfNums(tokenCount);
@@ -309,10 +309,10 @@ describe("*| BadgeSet.sol |*", () => {
         await expect(badgeSet.connect(forbes).mintBatch(userAddress, ids, expiries)).to.be.reverted;
       });
       it("ERC1155Receiver not implemented", async () => {
-        const { badgeSet, kycRegistry, forbes, validExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, forbes, validExpiry } = await loadFixture(fixtures.deploy);
         const ids = [1, 2];
         const expiries = [validExpiry, validExpiry];
-        await expect(badgeSet.connect(forbes).mintBatch(kycRegistry.address, ids, expiries)).to.be.revertedWithCustomError(
+        await expect(badgeSet.connect(forbes).mintBatch(walletRegistry.address, ids, expiries)).to.be.revertedWithCustomError(
           badgeSet,
           "ERC1155ReceiverNotImplemented"
         );
@@ -491,7 +491,7 @@ describe("*| BadgeSet.sol |*", () => {
   describe("moveUserTokensToWallet():", () => {
     describe("success", () => {
       it("transitions wallet", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
 
         const tokenCount = 10; // 0-9
         const tokenTypes = arrayOfNums(tokenCount);
@@ -503,7 +503,7 @@ describe("*| BadgeSet.sol |*", () => {
         const walletAccounts = arrayOfSingleString(tokenCount, walletAddress);
         const walletTokenIds = await Promise.all(tokenTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, walletAddress)));
 
-        await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
         await badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress);
 
         const result0 = arrayOfSingleNumber(tokenCount, 0);
@@ -512,7 +512,7 @@ describe("*| BadgeSet.sol |*", () => {
         expect(await badgeSet.balanceOfBatch(userAccounts, userTokenIds)).to.deep.equal(result0);
       });
       it("transitions wallet for > 256 badgeType (multiple bitmaps)", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
 
         const tokenCount = 258; // 0-257
         const tokenTypes = arrayOfNums(tokenCount);
@@ -524,7 +524,7 @@ describe("*| BadgeSet.sol |*", () => {
         const walletAccounts = arrayOfSingleString(tokenCount, walletAddress);
         const walletTokenIds = await Promise.all(tokenTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, walletAddress)));
 
-        await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
         await badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress);
 
         const result0 = arrayOfSingleNumber(tokenCount, 0);
@@ -533,13 +533,13 @@ describe("*| BadgeSet.sol |*", () => {
         expect(await badgeSet.balanceOfBatch(userAccounts, userTokenIds)).to.deep.equal(result0);
       });
       it("emits correct number of events", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
         const tokenTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
         await badgeSet.connect(forbes).mintBatch(userAddress, tokenTypes, expiries);
-        await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
         const transitionWalletCall = await badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress);
         const { events } = await transitionWalletCall.wait();
 
@@ -547,13 +547,13 @@ describe("*| BadgeSet.sol |*", () => {
         expect(events).to.have.length(tokenCount + 1); // transition events + single transitionWallet() event
       });
       it("TransferSingle events are correct", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
         const tokenTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
         await badgeSet.connect(forbes).mintBatch(userAddress, tokenTypes, expiries);
-        await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
         const transitionWalletCall = await badgeSet.connect(forbes).moveUserTokensToWallet(userAddress, walletAddress);
 
         const { events } = await transitionWalletCall.wait();
@@ -574,7 +574,7 @@ describe("*| BadgeSet.sol |*", () => {
     });
     describe("failure", () => {
       it("Wallet not linked", async () => {
-        const { badgeSet, kycRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
+        const { badgeSet, walletRegistry, soulbound, forbes, userAddress, walletAddress, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
         const tokenTypes = arrayOfNums(tokenCount);

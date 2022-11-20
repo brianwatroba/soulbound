@@ -2,16 +2,16 @@
 pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IKycRegistry.sol";
+import "../interfaces/IWalletRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 
 /**
- * @title KycRegistry
+ * @title WalletRegistry
  * @author Brian watroba
  * @dev Registry mapping of user read-only user lite wallet addresses to linked hot wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address
  * @custom:version 1.0.3
 */
-contract KycRegistry is IKycRegistry, Ownable {
+contract WalletRegistry is IWalletRegistry, Ownable {
     mapping(address => address) private _walletsToUsers;
     mapping(address => address) private _usersToWallets;
     address private constant ZERO_ADDRESS = address(0);
@@ -37,7 +37,7 @@ contract KycRegistry is IKycRegistry, Ownable {
         return linkedWallet == ZERO_ADDRESS ? userAddress : linkedWallet;
     }
 
-    function hashKycToUserAddress(
+    function getLiteWalletAddress(
         string memory firstName,
         string memory lastName,
         uint256 phoneNumber
@@ -53,7 +53,7 @@ contract KycRegistry is IKycRegistry, Ownable {
         return userAddress;
     }
 
-    function transitionTokensByContracts(
+    function transitionBadgesByContracts(
         address userAddress,
         address walletAddress,
         address[] memory contracts

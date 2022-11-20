@@ -11,15 +11,15 @@ import "./BadgeSet.sol";
 */
 contract BadgeSetFactory is Ownable {
   
-  address public kycRegistry;
+  address public walletRegistry;
   address[] private _badgeSets;
 
-  constructor(address _kycRegistry) {
-    kycRegistry = _kycRegistry;
+  constructor(address _walletRegistry) {
+    walletRegistry = _walletRegistry;
   }
 
   function createBadgeSet(address owner, string memory baseUri) external onlyOwner {
-    address newBadgeSet = address(new BadgeSet(owner, kycRegistry, baseUri));
+    address newBadgeSet = address(new BadgeSet(owner, walletRegistry, baseUri));
     _badgeSets.push(newBadgeSet);
   }
 

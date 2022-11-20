@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "../interfaces/IKycRegistry.sol";
+import "../interfaces/IWalletRegistry.sol";
 import "../interfaces/IBadgeSet.sol";
 import "./BitMaps.sol";
 
@@ -22,7 +22,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     using BitMaps for BitMaps.BitMap;
 
-    address public kycRegistry;
+    address public walletRegistry;
     uint96 public maxBadgeType;
     string public contractURI;
     string private _uri;
@@ -31,8 +31,8 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     address private constant ZERO_ADDRESS = address(0);
     uint256 private constant BITMAP_SIZE = 256;
 
-    constructor(address _owner, address _kycRegistry, string memory _baseUri) {
-        kycRegistry = _kycRegistry;
+    constructor(address _owner, address _walletRegistry, string memory _baseUri) {
+        walletRegistry = _walletRegistry;
         setURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/")); // base + address(this) + /
         setContractURI(string.concat(_baseUri, Strings.toHexString(uint160(address(this)), 20), "/")); // base + address(this) + /
         transferOwnership(_owner);
@@ -187,7 +187,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     }
 
     function getUser(address account) internal view returns (address) {
-        return IKycRegistry(kycRegistry).getLinkedWallet(account);
+        return IWalletRegistry(walletRegistry).getLinkedWallet(account);
     }
 
     function encodeTokenId(uint96 badgeType, address account) public pure returns (uint256 tokenId){
