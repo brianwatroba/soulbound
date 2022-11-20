@@ -2,7 +2,7 @@
 
 Non-transferrable ERC1155 token standard for accomplishments, certifications, and proof of completion.
 
-Letting communities issue and govern their own "blue checkmarks".
+Empowering communities to govern their own "blue checkmarks".
 
 ## Access
 
@@ -19,20 +19,15 @@ But our accomplishments don't "live anywhere" central. And it's hard to prove an
 
 If they do exist online, they're scattered. Career history on LinkedIn. Travel history on Instagram. My scuba diving certification is a plastic card in my wallet.
 
-What if:
-
-- We could collect our experiences in a central place
-- The community that shared in those accomplishments could issue them
-- They were provable and trustworthy
-- Other apps and services could easily integrate them
+What if we could collect our experiences in a central place? What if the community that shared in those accomplishments could issue them? What if they were provable and trustworthy? What if other apps and services could easily integrate them?
 
 ## Our solution
 
 A protocol where:
 
-- Communities can issue proof of completion/endorsement for _anything_ (via non-transferable tokens)
+- Communities can issue proof of completion/endorsement for _anything_
 - Users can collect, share, and prove their endorsements without necessarily managing a wallet
-- Other services and platforms can easily build on top of and integrate Soulbound tokens
+- Other services and platforms can easily integrate, display, and build on top of these endorsements
 
 ## Use cases and examples
 
@@ -47,7 +42,7 @@ Org customizes their `BadgeSet` (contract-level) metadata and deploys it. Can ma
 
 ### 2. **Organization creates `badgeTypes`**
 
-`badgeTypes` are like token blueprints. For example: PADI may create a high level "Open Water Diver" certification badge, which has a base set of metadata, but that `tokenType` can be minted to any number of people. Each individual's badge can have token-level metadata, such as expiration, location of certification, etc. `badgeTypes` are fully customizable.
+`badgeTypes` are like token blueprints. For example: PADI may create a high level "Open Water Diver" certification badge, which has a base set of metadata, but that `badgeType` can be minted to any number of people. Each individual's badge can have token-level metadata, such as expiration, location of certification, etc. `badgeTypes` are fully customizable.
 
 ### 3. **Organization mints badges to users via `lite wallets`:**
 
@@ -101,9 +96,9 @@ For instance: sharing and proving accomplishments online and through various pla
 
 - **`WalletRegistry` stores lite wallet mapping**: lite wallet to real wallet mapping is maintained in the separate `WalletRegistry` contract. This contract is the only centrally owned contract by the Soulbound protocol, as full KYC verification must be done centrally for cases where users want to link a wallet. We are exploring other KYC options to make this feature fully decentralized, but for the interim the registry is managed by the Soulbound organization. We're getting there!
 
-- **`tokenIds` are serialized:** traditionally, ERC1155 tokenIds are sequential/static (`uint256`). Soulbound tokens, however, derive tokenIds by serializing a user's address (`address`) and the `tokenType` (`uint96`). Because each user can only have one of each `tokenType`, this allows for unique ids for each user/`tokenType` combination, and in turn the ability to blend both `tokenType` and user level metadata.
+- **`tokenIds` are serialized:** traditionally, ERC1155 tokenIds are sequential/static (`uint256`). Soulbound tokens, however, derive tokenIds by serializing a user's address (`address`) and the `badgeType` (`uint96`). Because each user can only have one of each `badgeType`, this allows for unique ids for each user/`badgeType` combination, and in turn the ability to blend both `badgeType` and user level metadata.
 
-- **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each `tokenType`, and ownership state must be transitioned on-chain to a real wallet (if a user links) as gas-efficiently as possible. Copying over bitmaps is easy (a single `uint256` to store 256 tokenType ownership flags)! Individual key/value mappings are not a good fit for these use cases.
+- **Bitmaps:** token ownership is represented via Bitmaps. Bitmaps are a great fit data structure because each user can only own one of each `badgeType`, and ownership state must be transitioned on-chain to a real wallet (if a user links) as gas-efficiently as possible. Copying over bitmaps is easy (a single `uint256` to store 256 badgeType ownership flags)! Individual key/value mappings are not a good fit for these use cases.
 
 - **Orgs decide contract management/ownership:** Soulbound smart contracts are designed so that any community can deploy and manage their own contracts within the Soulbound ecosystem on their own and with their own wallets. However, we will also provide a number of custodial services and user-friendly front end clients to remove complexity and friction for communities (if they so choose).
 
