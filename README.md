@@ -106,11 +106,11 @@ For instance: sharing and proving accomplishments online and through various pla
 
 ## Product timeline and roadmap
 
-1. Smart contracts version 1.0 finished, deployed to testnet (_done_)
-2. Contracts audited and deployed to mainnet (_January 2023_)
-3. Product alpha: 5 initial orgs, tokens managed and minted manually with white-glove service, gather feedback (_January 2023_)
-4. Org and user front ends finished, allowing for self service signup, minting, limited wallet custody, and token management (_March 2023_)
-5. Open beta: 25 orgs (_April 2023_)
+1. **Contracts drafted:** version 1.0 finished, deployed to testnet (_done_)
+2. **Contracts finalized:** audited and deployed to mainnet (_January 2023_)
+3. **Closed alpha:** 5 orgs, tokens managed and minted manually with white-glove service, gather feedback (_January 2023_)
+4. **Client DAPPS:** Org and user front ends finished, allowing for self service signup, minting, basic wallet custody, and token management (_March 2023_)
+5. **Open beta:** 25 orgs (_April 2023_)
 
 ## Risks and unsolved challenges:
 
