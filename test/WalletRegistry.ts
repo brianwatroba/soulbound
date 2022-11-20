@@ -19,42 +19,42 @@ describe("*| WalletRegistry.sol |*", function () {
   });
   describe("getLiteWalletAddress():", () => {
     describe("success", () => {
-      it("hashes userInfo to the correct userAddress", async () => {
+      it("hashes userInfo to the correct liteWallet", async () => {
         const { walletRegistry, userInfo } = await loadFixture(fixtures.deploy);
         const { firstName, lastName, phoneNumber } = userInfo;
         const firstNameBytes = ethers.utils.formatBytes32String(firstName);
         const lastNameBytes = ethers.utils.formatBytes32String(lastName);
         const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
-        const userAddress = await walletRegistry.getLiteWalletAddress(firstName, lastName, phoneNumberBN);
+        const liteWallet = await walletRegistry.getLiteWalletAddress(firstName, lastName, phoneNumberBN);
 
         const hash = ethers.utils.solidityKeccak256(["bytes32", "bytes32", "uint256"], [firstNameBytes, lastNameBytes, phoneNumberBN]);
 
         const hashAsAddress = ethers.utils.getAddress("0x" + hash.slice(-40));
 
-        expect(userAddress).to.be.properAddress;
+        expect(liteWallet).to.be.properAddress;
         expect(hashAsAddress).to.be.properAddress;
-        expect(userAddress).to.equal(hashAsAddress);
+        expect(liteWallet).to.equal(hashAsAddress);
       });
     });
     describe("failure", () => {
       it("firstName longer than 32", async () => {
-        const { walletRegistry, userInfo } = await loadFixture(fixtures.deploy);
+        const { walletRegistry, userInfo, errors } = await loadFixture(fixtures.deploy);
         const { lastName, phoneNumber } = userInfo;
         const firstName = "This is a string that is longer than 32 characters";
         const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
         await expect(walletRegistry.getLiteWalletAddress(firstName, lastName, phoneNumberBN)).to.be.revertedWithCustomError(
           walletRegistry,
-          "StringLongerThan31Bytes"
+          errors.StringLongerThan31Bytes
         );
       });
       it("lastName longer than 32", async () => {
-        const { walletRegistry, userInfo } = await loadFixture(fixtures.deploy);
+        const { walletRegistry, userInfo, errors } = await loadFixture(fixtures.deploy);
         const { firstName, phoneNumber } = userInfo;
         const lastName = "This is a string that is longer than 32 characters";
         const phoneNumberBN = ethers.BigNumber.from(phoneNumber);
         await expect(walletRegistry.getLiteWalletAddress(firstName, lastName, phoneNumberBN)).to.be.revertedWithCustomError(
           walletRegistry,
-          "StringLongerThan31Bytes"
+          errors.StringLongerThan31Bytes
         );
       });
     });
@@ -62,29 +62,29 @@ describe("*| WalletRegistry.sol |*", function () {
   describe("linkWallet():", () => {
     describe("success", () => {
       it("links liteWallet to realWallet", async () => {
-        const { walletRegistry, soulbound, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
-        expect(await walletRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
-        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-        expect(await walletRegistry.getLinkedWallet(userAddress)).to.equal(walletAddress);
+        const { walletRegistry, soulbound, liteWallet, realWallet } = await loadFixture(fixtures.deploy);
+        expect(await walletRegistry.getLinkedWallet(liteWallet)).to.equal(liteWallet);
+        await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
+        expect(await walletRegistry.getLinkedWallet(liteWallet)).to.equal(realWallet);
       });
     });
     describe("failure", () => {
-      it("walletAddress is already linked", async () => {
-        const { walletRegistry, soulbound, user, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
-        expect(await walletRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
-        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-        await expect(walletRegistry.connect(soulbound).linkWallet(user.address, walletAddress)).to.be.revertedWithCustomError(
+      it("realWallet is already linked", async () => {
+        const { walletRegistry, soulbound, user, liteWallet, realWallet, errors } = await loadFixture(fixtures.deploy);
+        expect(await walletRegistry.getLinkedWallet(liteWallet)).to.equal(liteWallet);
+        await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
+        await expect(walletRegistry.connect(soulbound).linkWallet(user.address, realWallet)).to.be.revertedWithCustomError(
           walletRegistry,
-          "WalletAlreadyLinked"
+          errors.WalletAlreadyLinked
         ); // second link
       });
-      it("userAddress is already linked", async () => {
-        const { walletRegistry, soulbound, user, userAddress, walletAddress } = await loadFixture(fixtures.deploy);
-        expect(await walletRegistry.getLinkedWallet(userAddress)).to.equal(userAddress);
-        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
-        await expect(walletRegistry.connect(soulbound).linkWallet(userAddress, user.address)).to.be.revertedWithCustomError(
+      it("liteWallet is already linked", async () => {
+        const { walletRegistry, soulbound, user, liteWallet, realWallet, errors } = await loadFixture(fixtures.deploy);
+        expect(await walletRegistry.getLinkedWallet(liteWallet)).to.equal(liteWallet);
+        await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
+        await expect(walletRegistry.connect(soulbound).linkWallet(liteWallet, user.address)).to.be.revertedWithCustomError(
           walletRegistry,
-          "WalletAlreadyLinked"
+          errors.WalletAlreadyLinked
         ); // second link
       });
     });
@@ -92,37 +92,37 @@ describe("*| WalletRegistry.sol |*", function () {
   describe("transitionBadgesByContracts():", () => {
     describe("success", () => {
       it("transitions all badges in a single call across two contracts", async () => {
-        const { badgeSet, badgeSet2, walletRegistry, soulbound, forbes, padi, userAddress, walletAddress, noExpiry } = await loadFixture(
+        const { badgeSet, badgeSet2, walletRegistry, soulbound, forbes, padi, liteWallet, realWallet, noExpiry } = await loadFixture(
           fixtures.deploy
         );
         const tokenCount = 10; // 0-9
 
         const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        await badgeSet.connect(forbes).mintBatch(userAddress, badgeTypes, expiries);
-        await badgeSet2.connect(padi).mintBatch(userAddress, badgeTypes, expiries);
-        await walletRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
+        await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
+        await badgeSet2.connect(padi).mintBatch(liteWallet, badgeTypes, expiries);
+        await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
 
-        await walletRegistry.transitionBadgesByContracts(userAddress, walletAddress, [badgeSet.address, badgeSet2.address]);
+        await walletRegistry.transitionBadgesByContracts(liteWallet, realWallet, [badgeSet.address, badgeSet2.address]);
 
-        const userAddressesArray = arrayOfSingleString(badgeTypes.length, userAddress);
-        const walletAddressesArray = arrayOfSingleString(badgeTypes.length, walletAddress);
-        const tokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, userAddress)));
+        const liteWalletsArray = arrayOfSingleString(badgeTypes.length, liteWallet);
+        const realWalletsArray = arrayOfSingleString(badgeTypes.length, realWallet);
+        const tokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, liteWallet)));
 
         const balance0 = arrayOfSingleNumber(tokenCount, 0);
         const balance1 = arrayOfSingleNumber(tokenCount, 1);
 
         // Forbes
-        const userAddressBalancesForbes = await badgeSet.balanceOfBatch(userAddressesArray, tokenIds);
-        const walletAddressBalancesForbes = await badgeSet.balanceOfBatch(walletAddressesArray, tokenIds);
-        expect(userAddressBalancesForbes).to.deep.equal(balance0);
-        expect(walletAddressBalancesForbes).to.deep.equal(balance1);
+        const liteWalletBalancesForbes = await badgeSet.balanceOfBatch(liteWalletsArray, tokenIds);
+        const realWalletBalancesForbes = await badgeSet.balanceOfBatch(realWalletsArray, tokenIds);
+        expect(liteWalletBalancesForbes).to.deep.equal(balance0);
+        expect(realWalletBalancesForbes).to.deep.equal(balance1);
 
         // Padi
-        const userAddressBalancesPadi = await badgeSet2.balanceOfBatch(userAddressesArray, tokenIds);
-        const walletAddressBalancesPadi = await badgeSet2.balanceOfBatch(walletAddressesArray, tokenIds);
-        expect(userAddressBalancesPadi).to.deep.equal(balance0);
-        expect(walletAddressBalancesPadi).to.deep.equal(balance1);
+        const liteWalletBalancesPadi = await badgeSet2.balanceOfBatch(liteWalletsArray, tokenIds);
+        const realWalletBalancesPadi = await badgeSet2.balanceOfBatch(realWalletsArray, tokenIds);
+        expect(liteWalletBalancesPadi).to.deep.equal(balance0);
+        expect(realWalletBalancesPadi).to.deep.equal(balance1);
       });
     });
   });
