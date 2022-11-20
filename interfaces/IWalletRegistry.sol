@@ -11,8 +11,8 @@ interface IWalletRegistry {
 
   function getLinkedWallet(address userAddress) external view returns (address);
 
-  function getLiteWalletAddress(string memory firstName, string memory lastName, uint256 phoneNumber) external pure returns (address);
+  function getLiteWalletAddress(string memory firstName, string memory lastName, uint256 phoneNumber) external pure returns (address liteWallet);
 
-  function transitionBadgesByContracts(address userAddress, address walletAddress, address[] memory contracts) external;
+  function transitionBadgesByContracts(address from, address to, address[] memory contracts) external;
   
 }
