@@ -245,12 +245,12 @@ describe("*| BadgeSet.sol |*", () => {
         const { badgeSet, forbes, liteWallet, realWallet, noExpiry, zeroAddress } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
 
-        const mintBatchCall = await badgeSet.connect(forbes).mintBatch(liteWallet, tokenTypes, expiries);
+        const mintBatchCall = await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
 
-        const tokenIds = await Promise.all(tokenTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, liteWallet)));
+        const tokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, liteWallet)));
         const callValues = arrayOfSingleNumber(10, 1);
         const { events } = await mintBatchCall.wait();
 
@@ -274,9 +274,9 @@ describe("*| BadgeSet.sol |*", () => {
         const { badgeSet, walletRegistry, soulbound, forbes, liteWallet, realWallet, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        const mintBatchCall = await badgeSet.connect(forbes).mintBatch(liteWallet, tokenTypes, expiries);
+        const mintBatchCall = await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
         const { events } = await mintBatchCall.wait();
 
         const transferEvents = events?.filter((e) => e.event === "TransferSingle");
@@ -497,14 +497,14 @@ describe("*| BadgeSet.sol |*", () => {
         const { badgeSet, walletRegistry, soulbound, forbes, liteWallet, realWallet, noExpiry } = await loadFixture(fixtures.deploy);
 
         const tokenCount = 10; // 0-9
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        await badgeSet.connect(forbes).mintBatch(liteWallet, tokenTypes, expiries);
+        await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
 
         const userAccounts = arrayOfSingleString(tokenCount, liteWallet);
-        const userTokenIds = await Promise.all(tokenTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, liteWallet)));
+        const userTokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, liteWallet)));
         const walletAccounts = arrayOfSingleString(tokenCount, realWallet);
-        const walletTokenIds = await Promise.all(tokenTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, realWallet)));
+        const walletTokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, realWallet)));
 
         await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
         await badgeSet.connect(forbes).moveUserTokensToWallet(liteWallet, realWallet);
@@ -518,14 +518,14 @@ describe("*| BadgeSet.sol |*", () => {
         const { badgeSet, walletRegistry, soulbound, forbes, liteWallet, realWallet, noExpiry } = await loadFixture(fixtures.deploy);
 
         const tokenCount = 258; // 0-257
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        await badgeSet.connect(forbes).mintBatch(liteWallet, tokenTypes, expiries);
+        await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
 
         const userAccounts = arrayOfSingleString(tokenCount, liteWallet);
-        const userTokenIds = await Promise.all(tokenTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, liteWallet)));
+        const userTokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, liteWallet)));
         const walletAccounts = arrayOfSingleString(tokenCount, realWallet);
-        const walletTokenIds = await Promise.all(tokenTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, realWallet)));
+        const walletTokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, realWallet)));
 
         await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
         await badgeSet.connect(forbes).moveUserTokensToWallet(liteWallet, realWallet);
@@ -539,9 +539,9 @@ describe("*| BadgeSet.sol |*", () => {
         const { badgeSet, walletRegistry, soulbound, forbes, liteWallet, realWallet, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        await badgeSet.connect(forbes).mintBatch(liteWallet, tokenTypes, expiries);
+        await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
         await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
         const transitionWalletCall = await badgeSet.connect(forbes).moveUserTokensToWallet(liteWallet, realWallet);
         const { events } = await transitionWalletCall.wait();
@@ -553,9 +553,9 @@ describe("*| BadgeSet.sol |*", () => {
         const { badgeSet, walletRegistry, soulbound, forbes, liteWallet, realWallet, noExpiry } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        await badgeSet.connect(forbes).mintBatch(liteWallet, tokenTypes, expiries);
+        await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
         await walletRegistry.connect(soulbound).linkWallet(liteWallet, realWallet);
         const transitionWalletCall = await badgeSet.connect(forbes).moveUserTokensToWallet(liteWallet, realWallet);
 
@@ -580,9 +580,9 @@ describe("*| BadgeSet.sol |*", () => {
         const { badgeSet, forbes, liteWallet, realWallet, noExpiry, errors } = await loadFixture(fixtures.deploy);
         const tokenCount = 10; // 0-9
 
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        await badgeSet.connect(forbes).mintBatch(liteWallet, tokenTypes, expiries);
+        await badgeSet.connect(forbes).mintBatch(liteWallet, badgeTypes, expiries);
         await expect(badgeSet.connect(forbes).moveUserTokensToWallet(liteWallet, realWallet)).to.be.revertedWithCustomError(
           badgeSet,
           errors.WalletNotLinked
