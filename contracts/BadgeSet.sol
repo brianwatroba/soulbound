@@ -60,37 +60,43 @@ contract BadgeSet is
         ); // base + address(this) + /
         transferOwnership(_owner);
     }
-
-    /// @notice Return metadata URI for a given token id
-    /// @param id token id
-    /// @return uri string
+    /** 
+     * @notice Return metadata URI for a given token id
+     * @param id token id
+     * @return uri string
+    */
     function uri(uint256 id) public view returns (string memory) {
         return string.concat(_uri, Strings.toString(id));
     }
-
-    /// @notice Update token metadata base URI
-    /// @param newuri new URI
+    /** 
+     * @notice Update token metadata base URI
+     * @param newuri new URI
+    */
     function setURI(string memory newuri) public onlyOwner {
         _uri = newuri;
     }
-
-    /// @notice Update contract metadata URI
-    /// @param newuri new URI
+    /** 
+     * @notice Update contract metadata URI
+     * @param newuri new URI
+    */
     function setContractURI(string memory newuri) public onlyOwner {
         contractURI = newuri;
     }
-
-    /// @notice Get a token's expiry timestamp (unix)
-    /// @param tokenId token id
-    /// @return expiry timestamp (unix)
+    /** 
+     * @notice Get a token's expiry timestamp (unix)
+     * @param tokenId token id
+     * @return expiry timestamp (unix)
+    */
     function expiryOf(uint256 tokenId) public view returns (uint256) {
         return _expiries[tokenId];
     }
 
-    /// @notice Get token balance of an account address
-    /// @param account account address
-    /// @param id token id
-    /// @return balance token balance (1 or 0)
+    /** 
+     * @notice Get token balance of an account address
+     * @param account account address
+     * @param id token id
+     * @return balance token balance (1 or 0)
+    */
     function balanceOf(
         address account,
         uint256 id
@@ -103,11 +109,13 @@ contract BadgeSet is
         return owned ? 1 : 0;
     }
 
-    /// @notice Get token balances for multiple account addresses/token id pairs
-    /// @dev accounts and ids array indexes should match
-    /// @param accounts account addresses
-    /// @param ids token ids
-    /// @return balances of each account/id pair, return value index positions match input array indexes
+    /** 
+     * @notice Get token balances for multiple account addresses/token id pairs
+     * @dev accounts and ids array indexes should match
+     * @param accounts account addresses
+     * @param ids token ids
+     * @return balances of each account/id pair, return value index positions match input array indexes
+    */
     function balanceOfBatch(
         address[] memory accounts,
         uint256[] memory ids
@@ -120,13 +128,14 @@ contract BadgeSet is
         }
         return batchBalances;
     }
-
-    /// @notice Mint a token to an account address
-    /// @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If so, mints to that address, otherwise mints to the given "to" address.
-    /// @param to address to mint to
-    /// @param badgeType desired badge type to mint (must not currently own)
-    /// @param expiry token expiration timestamp (unix). If no expiry, input "0"
-    /// @return tokenId token id of successfully minted token
+    /** 
+     * @notice Mint a token to an account address
+     * @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If so, mints to that address, otherwise mints to the given "to" address.
+     * @param to address to mint to
+     * @param badgeType desired badge type to mint (must not currently own)
+     * @param expiry token expiration timestamp (unix). If no expiry, input "0"
+     * @return tokenId token id of successfully minted token
+    */
     function mint(
         address to,
         uint96 badgeType,
@@ -147,12 +156,14 @@ contract BadgeSet is
         );
     }
 
-    /// @notice Mint multiple tokens to an account address
-    /// @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If so, mints to that address, otherwise mints to the given "account" address.
-    /// @param account address to mint to
-    /// @param badgeTypes desired badge types to mint (must not currently own)
-    /// @param expiries token expiration timestamps (unix). If no expiries, input array of "0" (matching badgeTypes length)
-    /// @return tokenIds token ids of successfully minted tokens
+    /** 
+     * @notice Mint multiple tokens to an account address
+     * @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If so, mints to that address, otherwise mints to the given "account" address.
+     * @param account address to mint to
+     * @param badgeTypes desired badge types to mint (must not currently own)
+     * @param expiries token expiration timestamps (unix). If no expiries, input array of "0" (matching badgeTypes length)
+     * @return tokenIds token ids of successfully minted tokens
+    */
     function mintBatch(
         address account,
         uint96[] memory badgeTypes,
@@ -207,11 +218,13 @@ contract BadgeSet is
         if (badgeType == nextPossibleNewBadgeType) maxBadgeType = badgeType;
     }
 
-    /// @notice Revoke (burn) a token from an account address
-    /// @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If so, revokes from that address, otherwise revokes from the given "account" address. Also deletes token expiry.
-    /// @param account address to revoke from
-    /// @param badgeType badge type to revoke (must currently own)
-    /// @return tokenId token id of successfully revoked token
+    /** 
+     * @notice Revoke (burn) a token from an account address
+     * @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If so, revokes from that address, otherwise revokes from the given "account" address. Also deletes token expiry.
+     * @param account address to revoke from
+     * @param badgeType badge type to revoke (must currently own)
+     * @return tokenId token id of successfully revoked token
+    */
     function revoke(
         address account,
         uint96 badgeType
@@ -221,11 +234,13 @@ contract BadgeSet is
         emit TransferSingle(_msgSender(), user, ZERO_ADDRESS, tokenId, 1);
     }
 
-    /// @notice Revoke (burn) multiple tokens from an account address
-    /// @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If so, revokes from that address, otherwise revokes from the given "account" address. Also deletes token expiries.
-    /// @param account address to revoke from
-    /// @param badgeTypes desired badge types to revoke (must currently own)
-    /// @return tokenIds token ids of successfully revoked tokens
+    /** 
+     * @notice Revoke (burn) multiple tokens from an account address
+     * @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If so, revokes from that address, otherwise revokes from the given "account" address. Also deletes token expiries.
+     * @param account address to revoke from
+     * @param badgeTypes desired badge types to revoke (must currently own)
+     * @return tokenIds token ids of successfully revoked tokens
+    */
     function revokeBatch(
         address account,
         uint96[] memory badgeTypes
@@ -262,10 +277,12 @@ contract BadgeSet is
     }
 
     // TODO: this should have a return check value
-    /// @notice transition tokens from a lite wallet to a validated/linked real wallet (read from WalletRegistry)
-    /// @dev Badge (token) ownership state is stored in bitmaps. To save gas, this function copies over the "from" address's bitmap state (1 uint256 for each 256 token types) to the "to" address, and emits individual transfer events in a loop.
-    /// @param from address to transiton all tokens from
-    /// @param to address to transition all tokens to
+    /** 
+     * @notice transition tokens from a lite wallet to a validated/linked real wallet (read from WalletRegistry)
+     * @dev Badge (token) ownership state is stored in bitmaps. To save gas, this function copies over the "from" address's bitmap state (1 uint256 for each 256 token types) to the "to" address, and emits individual transfer events in a loop.
+     * @param from address to transiton all tokens from
+     * @param to address to transition all tokens to
+    */
     function moveUserTokensToWallet(address from, address to) external {
         if (getUser(from) != to) revert WalletNotLinked(to);
         uint256 bitmapCount = maxBadgeType / BITMAP_SIZE;
@@ -305,11 +322,13 @@ contract BadgeSet is
         return IWalletRegistry(walletRegistry).getLinkedWallet(account);
     }
 
-    /// @notice returns a serialized token id based on a badgeType and owner account address
-    /// @dev Each user can only own one of each badge type. Serializing ids based on a badgeType and owner address allows us to have both shared, badgeType level metadata as well as individual token data (e.g. expiry timestamp). First 12 bytes = badgeType (uint96), next 20 bytes = owner address.
-    /// @param badgeType badge type
-    /// @param account owner account address
-    /// @return tokenId serialized token id
+    /** 
+     * @notice returns a serialized token id based on a badgeType and owner account address
+     * @dev Each user can only own one of each badge type. Serializing ids based on a badgeType and owner address allows us to have both shared, badgeType level metadata as well as individual token data (e.g. expiry timestamp). First 12 bytes = badgeType (uint96), next 20 bytes = owner address.
+     * @param badgeType badge type
+     * @param account owner account address
+     * @return tokenId serialized token id
+    */
     function encodeTokenId(
         uint96 badgeType,
         address account
@@ -317,10 +336,12 @@ contract BadgeSet is
         tokenId = uint256(bytes32(abi.encodePacked(badgeType, account)));
     }
 
-    /// @notice decodes a serialized token id to reveal its badgeType and owner account address
-    /// @param tokenId serialized token id
-    /// @return badgeType badge type
-    /// @return account owner account address
+    /** 
+     * @notice decodes a serialized token id to reveal its badgeType and owner account address
+     * @param tokenId serialized token id
+     * @return badgeType badge type
+     * @return account owner account address
+    */
     function decodeTokenId(
         uint256 tokenId
     ) public pure returns (uint96 badgeType, address account) {
@@ -402,9 +423,7 @@ contract BadgeSet is
             super.supportsInterface(interfaceId);
     }
 
-    /**
-     * No-Ops for ERC1155 transfer and approval functions. BadgeSet tokens are Soulbound and cannot be transferred.
-     */
+    // No-Ops for ERC1155 transfer and approval functions. BadgeSet tokens are Soulbound and cannot be transferred.
 
     /// @notice Warning: this function will always revert. Soulbound tokens are non-transferable, but this function is still included to ensure BadgeSet contract is ERC1155 interface compliant.
     function setApprovalForAll(address operator, bool approved) external pure {

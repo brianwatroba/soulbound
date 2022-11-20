@@ -1,11 +1,12 @@
 {
   "name": "soulbound",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "npx hardhat test",
-    "prettier": "prettier --write 'contracts/**/*.sol' && prettier --write 'interfaces/**/*.sol' "
+    "prettier": "prettier --write 'contracts/**/*.sol' && prettier --write 'interfaces/**/*.sol'",
+    "deploy-mumbai": "npx hardhat run ./scripts/deployMumbai.ts --network mumbai"
   },
   "keywords": [],
   "author": "",

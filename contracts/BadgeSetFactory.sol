@@ -17,9 +17,11 @@ contract BadgeSetFactory is Ownable {
         walletRegistry = _walletRegistry;
     }
 
-    /// @notice Creates and deploys a new BadgeSet contract
-    /// @dev only callable by BadgeSetFactory owner
-    /// @param owner contract owner address
+    /**
+     * @notice Creates and deploys a new BadgeSet contract
+     * @dev only callable by BadgeSetFactory owner
+     * @param owner contract owner address
+     */
     function createBadgeSet(
         address owner,
         string memory baseUri
@@ -30,8 +32,10 @@ contract BadgeSetFactory is Ownable {
         _badgeSets.push(newBadgeSet);
     }
 
-    /// @notice Returns an array of all deployed BadgeSet contract addresses
-    /// @return array of BadgeSet contract addresses
+    /**
+     * @notice Returns an array of all deployed BadgeSet contract addresses
+     * @return array of BadgeSet contract addresses
+     */
     function badgeSets() public view returns (address[] memory) {
         return _badgeSets;
     }

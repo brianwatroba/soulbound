@@ -12,16 +12,16 @@ async function main() {
   console.log(`STARTING SOULBOUND DEPLOYMENT TO: POLYGON MUMBAI | DEPLOYER: ${signer.address}`);
   console.log("___________________________");
 
-  console.log("Deploying: KycRegistry...");
-  const KycRegistry = await ethers.getContractFactory("KycRegistry");
-  const kycRegistry = await KycRegistry.connect(signer).deploy();
-  await kycRegistry.deployed();
-  console.log("SUCCESS: KycRegistry deployed to: ", kycRegistry.address);
+  console.log("Deploying: WalletRegistry...");
+  const WalletRegistry = await ethers.getContractFactory("WalletRegistry");
+  const walletRegistry = await WalletRegistry.connect(signer).deploy();
+  await walletRegistry.deployed();
+  console.log("SUCCESS: WalletRegistry deployed to: ", walletRegistry.address);
   console.log("___________________________");
 
   console.log("Deploying: BadgeSetFactory...");
   const BadgeSetFactory = await ethers.getContractFactory("BadgeSetFactory");
-  const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy(kycRegistry.address)).deployed();
+  const badgeSetFactory = await (await BadgeSetFactory.connect(signer).deploy(walletRegistry.address)).deployed();
   console.log("SUCCESS: BadgeSetFactory deployed to:", badgeSetFactory.address);
   console.log("___________________________");
 
@@ -41,18 +41,18 @@ async function main() {
   console.log("SUCCESS: TC Dive deployed to: ", tcDiveAddress);
   console.log("___________________________");
 
-  console.log("Verifying KycRegistry...");
+  console.log("Verifying WalletRegistry...");
   await hre.run("verify:verify", {
-    address: kycRegistry.address,
+    address: walletRegistry.address,
     constructorArguments: [],
   });
-  console.log("SUCCESS: KycRegistry verified");
+  console.log("SUCCESS: WalletRegistry verified");
   console.log("___________________________");
 
   console.log("Verifying BadgeSetFactory...");
   await hre.run("verify:verify", {
     address: badgeSetFactory.address,
-    constructorArguments: [kycRegistry.address],
+    constructorArguments: [walletRegistry.address],
   });
   console.log("SUCCESS: BadgeSetFactory verified");
   console.log("___________________________");
@@ -60,7 +60,7 @@ async function main() {
   console.log("Verifying Northern Michigan Athletic Club...");
   await hre.run("verify:verify", {
     address: nmaaAddress,
-    constructorArguments: [signer.address, kycRegistry.address, uri],
+    constructorArguments: [signer.address, walletRegistry.address, uri],
   });
   console.log("SUCCESS: Northern Michigan Athletic Club verified");
   console.log("___________________________");
@@ -68,7 +68,7 @@ async function main() {
   console.log("Verifying TCDive...");
   await hre.run("verify:verify", {
     address: tcDiveAddress,
-    constructorArguments: [signer.address, kycRegistry.address, uri],
+    constructorArguments: [signer.address, walletRegistry.address, uri],
   });
   console.log("SUCCESS: TC Dive verified");
   console.log("___________________________");
