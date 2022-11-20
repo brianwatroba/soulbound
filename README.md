@@ -127,7 +127,7 @@ For instance: sharing and proving accomplishments online and through various pla
 
 ## System Design
 
-![Smart contract systems design](https://brianwatroba.s3.amazonaws.com/soulboundsc4.png)
+![Smart contract systems design](https://brianwatroba.s3.amazonaws.com/soulboundsc5.png)
 
 ## Contract addresses
 
