@@ -97,17 +97,17 @@ describe("*| KycRegistry.sol |*", function () {
         );
         const tokenCount = 10; // 0-9
 
-        const tokenTypes = arrayOfNums(tokenCount);
+        const badgeTypes = arrayOfNums(tokenCount);
         const expiries = arrayOfSingleNumber(tokenCount, noExpiry);
-        await badgeSet.connect(forbes).mintBatch(userAddress, tokenTypes, expiries);
-        await badgeSet2.connect(padi).mintBatch(userAddress, tokenTypes, expiries);
+        await badgeSet.connect(forbes).mintBatch(userAddress, badgeTypes, expiries);
+        await badgeSet2.connect(padi).mintBatch(userAddress, badgeTypes, expiries);
         await kycRegistry.connect(soulbound).linkWallet(userAddress, walletAddress);
 
         await kycRegistry.transitionTokensByContracts(userAddress, walletAddress, [badgeSet.address, badgeSet2.address]);
 
-        const userAddressesArray = arrayOfSingleString(tokenTypes.length, userAddress);
-        const walletAddressesArray = arrayOfSingleString(tokenTypes.length, walletAddress);
-        const tokenIds = await Promise.all(tokenTypes.map((tokenType) => badgeSet.encodeTokenId(tokenType, userAddress)));
+        const userAddressesArray = arrayOfSingleString(badgeTypes.length, userAddress);
+        const walletAddressesArray = arrayOfSingleString(badgeTypes.length, walletAddress);
+        const tokenIds = await Promise.all(badgeTypes.map((badgeType) => badgeSet.encodeTokenId(badgeType, userAddress)));
 
         const balance0 = arrayOfSingleNumber(tokenCount, 0);
         const balance1 = arrayOfSingleNumber(tokenCount, 1);

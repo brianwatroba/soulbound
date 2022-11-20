@@ -3,9 +3,9 @@ pragma solidity ^0.8.12;
 
 interface IBadgeSet {
 
-    error IncorrectExpiry(address user, uint96 tokenType, uint256 expiry);
-    error IncorrectBalance(address user, uint96 tokenType, uint256 balance);
-    error NewTokenTypeNotIncremental(uint96 tokenType, uint256 maxTokenType);
+    error IncorrectExpiry(address user, uint96 badgeType, uint256 expiry);
+    error IncorrectBalance(address user, uint96 badgeType, uint256 balance);
+    error NewBadgeTypeNotIncremental(uint96 badgeType, uint256 maxBadgeType);
     error ArrayParamsUnequalLength();
     error WalletNotLinked(address walletAddress);
     error SoulboundTokenNoSetApprovalForAll(address operator, bool approved);
@@ -47,8 +47,8 @@ interface IBadgeSet {
 
     function moveUserTokensToWallet(address kycAddress, address walletAddress) external;
 
-    function encodeTokenId(uint96 tokenType, address account) external pure returns (uint256 tokenId);
+    function encodeTokenId(uint96 badgeType, address account) external pure returns (uint256 tokenId);
 
-    function decodeTokenId(uint256 tokenId) external pure returns (uint96 tokenType, address account);
+    function decodeTokenId(uint256 tokenId) external pure returns (uint96 badgeType, address account);
 
 }

@@ -23,7 +23,7 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     using BitMaps for BitMaps.BitMap;
 
     address public kycRegistry;
-    uint96 public maxTokenType;
+    uint96 public maxBadgeType;
     string public contractURI;
     string private _uri;
     mapping(address => BitMaps.BitMap) private _balances;
@@ -55,11 +55,11 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
     }
 
     function balanceOf(address account, uint256 id) public view returns (uint256 balance) {
-        (uint96 _tokenType, address _account) = decodeTokenId(id);
+        (uint96 _badgeType, address _account) = decodeTokenId(id);
         address user = getUser(_account);
         if (user != account) return 0;
         BitMaps.BitMap storage bitmap = _balances[user];
-        bool owned = BitMaps.get(bitmap, _tokenType);
+        bool owned = BitMaps.get(bitmap, _badgeType);
         return owned ? 1 : 0;
     }
 
@@ -75,12 +75,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
 
     function mint(
         address to,
-        uint96 tokenType,
+        uint96 badgeType,
         uint256 expiry
     ) external onlyOwner returns (uint256 tokenId) {
         address user = getUser(to);
         
-        tokenId = _mint(user, tokenType, expiry);
+        tokenId = _mint(user, badgeType, expiry);
 
         emit TransferSingle(_msgSender(), ZERO_ADDRESS, user, tokenId, 1);
         _doSafeTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, user, tokenId, 1, "");
@@ -108,29 +108,29 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         _doSafeBatchTransferAcceptanceCheck(_msgSender(), ZERO_ADDRESS, user, tokenIds, amounts, "");
     }
 
-    function _mint(address user, uint96 tokenType, uint256 expiry) internal returns (uint256 tokenId) {
-        tokenId = encodeTokenId(tokenType, user);
+    function _mint(address user, uint96 badgeType, uint256 expiry) internal returns (uint256 tokenId) {
+        tokenId = encodeTokenId(badgeType, user);
 
         bool isExpired = expiry > 0 && expiry <= block.timestamp;
         uint256 priorBalance = balanceOf(user, tokenId);
-        if (isExpired) revert IncorrectExpiry(user, tokenType, expiry);
-        if (priorBalance > 0) revert IncorrectBalance(user, tokenType, priorBalance); // token already owned
+        if (isExpired) revert IncorrectExpiry(user, badgeType, expiry);
+        if (priorBalance > 0) revert IncorrectBalance(user, badgeType, priorBalance); // token already owned
         
         BitMaps.BitMap storage balances = _balances[user];
-        BitMaps.set(balances, tokenType);
+        BitMaps.set(balances, badgeType);
         _expiries[tokenId] = expiry;  
 
-        uint96 nextPossibleNewTokenType = uint96(maxTokenType) + 1; // ensure new tokenTypes are one greater, pack bitmaps sequentially
-        if (tokenType > nextPossibleNewTokenType) revert NewTokenTypeNotIncremental(tokenType, maxTokenType);
-        if (tokenType == nextPossibleNewTokenType) maxTokenType = tokenType;
+        uint96 nextPossibleNewBadgeType = uint96(maxBadgeType) + 1; // ensure new tokenTypes are one greater, pack bitmaps sequentially
+        if (badgeType > nextPossibleNewBadgeType) revert NewBadgeTypeNotIncremental(badgeType, maxBadgeType);
+        if (badgeType == nextPossibleNewBadgeType) maxBadgeType = badgeType;
     }
 
     function revoke(
         address account,
-        uint96 tokenType
+        uint96 badgeType
     ) public onlyOwner returns(uint256 tokenId) {
         address user = getUser(account);
-        tokenId = _revoke(user, tokenType);
+        tokenId = _revoke(user, badgeType);
         emit TransferSingle(_msgSender(), user, ZERO_ADDRESS, tokenId, 1);
     }
 
@@ -153,20 +153,20 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         emit TransferBatch(_msgSender(), user, ZERO_ADDRESS, tokenIds, amounts);
     }
 
-     function _revoke(address user, uint96 tokenType) internal returns (uint256 tokenId) {
-        tokenId = encodeTokenId(tokenType, user);
+     function _revoke(address user, uint96 badgeType) internal returns (uint256 tokenId) {
+        tokenId = encodeTokenId(badgeType, user);
         
         uint256 priorBalance = balanceOf(user, tokenId);
-        if (priorBalance == 0) revert IncorrectBalance(user, tokenType, priorBalance); // token not owned
+        if (priorBalance == 0) revert IncorrectBalance(user, badgeType, priorBalance); // token not owned
         
         BitMaps.BitMap storage balances = _balances[user];
-        BitMaps.unset(balances, tokenType);
+        BitMaps.unset(balances, badgeType);
         delete _expiries[tokenId];
     }
 
     function moveUserTokensToWallet(address from, address to) external {
         if (getUser(from) != to) revert WalletNotLinked(to);
-        uint256 bitmapCount = maxTokenType / BITMAP_SIZE;
+        uint256 bitmapCount = maxBadgeType / BITMAP_SIZE;
         for (uint256 i = 0; i <= bitmapCount; i++) {
             uint256 bitmap = _balances[from]._data[i];
             if (bitmap != 0) {
@@ -190,12 +190,12 @@ contract BadgeSet is Context, ERC165, IERC1155, IBadgeSet, Ownable, IERC1155Meta
         return IKycRegistry(kycRegistry).getLinkedWallet(account);
     }
 
-    function encodeTokenId(uint96 tokenType, address account) public pure returns (uint256 tokenId){
-        tokenId = uint256(bytes32(abi.encodePacked(tokenType, account)));
+    function encodeTokenId(uint96 badgeType, address account) public pure returns (uint256 tokenId){
+        tokenId = uint256(bytes32(abi.encodePacked(badgeType, account)));
     }
 
-    function decodeTokenId(uint256 tokenId) public pure returns (uint96 tokenType, address account) {
-        tokenType = uint96(tokenId >> 160);
+    function decodeTokenId(uint256 tokenId) public pure returns (uint96 badgeType, address account) {
+        badgeType = uint96(tokenId >> 160);
         account = address(uint160(uint256(((bytes32(tokenId) << 96) >> 96))));
     }
 
