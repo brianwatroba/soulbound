@@ -19,8 +19,8 @@ contract BadgeSetFactory is Ownable {
 
     /**
      * @notice Creates and deploys a new BadgeSet contract
-     * @dev only callable by BadgeSetFactory owner
-     * @param owner contract owner address
+     * @dev Only callable by BadgeSetFactory owner
+     * @param owner Contract owner address
      */
     function createBadgeSet(
         address owner,
@@ -34,7 +34,7 @@ contract BadgeSetFactory is Ownable {
 
     /**
      * @notice Returns an array of all deployed BadgeSet contract addresses
-     * @return array of BadgeSet contract addresses
+     * @return Array of BadgeSet contract addresses
      */
     function badgeSets() public view returns (address[] memory) {
         return _badgeSets;

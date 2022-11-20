@@ -16,12 +16,12 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     mapping(address => address) private _usersToWallets;
     address private constant ZERO_ADDRESS = address(0);
 
-    /** 
+    /**
      * @notice Link and save a liteWallet to a realWallet association
-     * @dev only callable by WalletRegistry owner
+     * @dev Only callable by WalletRegistry owner
      * @param liteWallet liteWallet address
      * @param realWallet realWallet address
-    */
+     */
     function linkWallet(
         address liteWallet,
         address realWallet
@@ -34,11 +34,11 @@ contract WalletRegistry is IWalletRegistry, Ownable {
         _usersToWallets[realWallet] = liteWallet;
     }
 
-    /** 
+    /**
      * @notice Return an associated linked realWallet for a given liteWallet (if exists)
      * @param liteWallet liteWallet address
      * @return linked realWallet address if it exists, otherwise the initial liteWallet address
-    */
+     */
     function getLinkedWallet(
         address liteWallet
     ) external view returns (address) {
@@ -49,11 +49,11 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     /**
      * @notice Return the liteWallet address for a given user's first name, last name, and phone number
      * @dev liteWallet address id derived from hashing a user's the first name, last name, and phone number. Input validation should happen on the front end.
-     * @param firstName user's first name (lowercase)
-     * @param lastName user's last name (lowercase)
-     * @param phoneNumber user's phone number (only numbers, including country/area code, no special characters)
-     * @return liteWallet user's liteWallet address
-    */
+     * @param firstName User's first name (lowercase)
+     * @param lastName User's last name (lowercase)
+     * @param phoneNumber User's phone number (only numbers, including country/area code, no special characters)
+     * @return liteWallet User's liteWallet address
+     */
     function getLiteWalletAddress(
         string memory firstName,
         string memory lastName,
@@ -75,13 +75,13 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     }
 
     // TODO: should have a return value to check
-    /** 
+    /**
      * @notice Transition all owned badges from a liteWallet to a realWallet for a set (array) of contracts
      * @dev Uses multicall pattern and has a few nested loops. If too many contracts/badges are involved, it's best to split up into a few calls
      * @param from liteWallet to transition badges from
      * @param to realWallet to transition badges to
-     * @param contracts set of contracts to transition all badges for
-    */
+     * @param contracts Set of contracts to transition all badges for
+     */
     function transitionBadgesByContracts(
         address from,
         address to,
