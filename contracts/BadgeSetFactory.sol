@@ -8,27 +8,31 @@ import "./BadgeSet.sol";
  * @author Brian Watroba
  * @dev Factory to deploy and store BadgeSet Soulbound token contracts
  * @custom:version 1.0.4
-*/
+ */
 contract BadgeSetFactory is Ownable {
-  
-  address public walletRegistry;
-  address[] private _badgeSets;
+    address public walletRegistry;
+    address[] private _badgeSets;
 
-  constructor(address _walletRegistry) {
-    walletRegistry = _walletRegistry;
-  }
+    constructor(address _walletRegistry) {
+        walletRegistry = _walletRegistry;
+    }
 
-  /// @notice Creates and deploys a new BadgeSet contract
-  /// @dev only callable by BadgeSetFactory owner
-  /// @param owner contract owner address
-  function createBadgeSet(address owner, string memory baseUri) external onlyOwner {
-    address newBadgeSet = address(new BadgeSet(owner, walletRegistry, baseUri));
-    _badgeSets.push(newBadgeSet);
-  }
+    /// @notice Creates and deploys a new BadgeSet contract
+    /// @dev only callable by BadgeSetFactory owner
+    /// @param owner contract owner address
+    function createBadgeSet(
+        address owner,
+        string memory baseUri
+    ) external onlyOwner {
+        address newBadgeSet = address(
+            new BadgeSet(owner, walletRegistry, baseUri)
+        );
+        _badgeSets.push(newBadgeSet);
+    }
 
-  /// @notice Returns an array of all deployed BadgeSet contract addresses
-  /// @return array of BadgeSet contract addresses
-  function badgeSets() public view returns (address[] memory) {
-    return _badgeSets;
-  }
+    /// @notice Returns an array of all deployed BadgeSet contract addresses
+    /// @return array of BadgeSet contract addresses
+    function badgeSets() public view returns (address[] memory) {
+        return _badgeSets;
+    }
 }

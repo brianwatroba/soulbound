@@ -10,7 +10,7 @@ import "../interfaces/IBadgeSet.sol";
  * @author Brian Watroba
  * @dev Registry mapping of user read-only user lite wallet addresses to linked real wallet addresses. Used in BadgeSet contract to verify user ownership of wallet address
  * @custom:version 1.0.4
-*/
+ */
 contract WalletRegistry is IWalletRegistry, Ownable {
     mapping(address => address) private _walletsToUsers;
     mapping(address => address) private _usersToWallets;
@@ -20,10 +20,10 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     /// @dev only callable by WalletRegistry owner
     /// @param liteWallet liteWallet address
     /// @param realWallet realWallet address
-    function linkWallet(address liteWallet, address realWallet)
-        external
-        onlyOwner
-    {
+    function linkWallet(
+        address liteWallet,
+        address realWallet
+    ) external onlyOwner {
         bool walletLinked = _walletsToUsers[liteWallet] != ZERO_ADDRESS;
         bool userLinked = _usersToWallets[realWallet] != ZERO_ADDRESS;
         if (walletLinked) revert WalletAlreadyLinked(realWallet);
@@ -35,11 +35,9 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     /// @notice Return an associated linked realWallet for a given liteWallet (if exists)
     /// @param liteWallet liteWallet address
     /// @return linked realWallet address if it exists, otherwise the initial liteWallet address
-    function getLinkedWallet(address liteWallet)
-        external
-        view
-        returns (address)
-    {
+    function getLinkedWallet(
+        address liteWallet
+    ) external view returns (address) {
         address linkedWallet = _walletsToUsers[liteWallet];
         return linkedWallet == ZERO_ADDRESS ? liteWallet : linkedWallet;
     }
@@ -57,10 +55,15 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     ) external pure returns (address liteWallet) {
         bytes memory firstNameBytes = bytes(firstName);
         bytes memory lastNameBytes = bytes(lastName);
-        if (firstNameBytes.length > 31) revert StringLongerThan31Bytes(firstName);
+        if (firstNameBytes.length > 31)
+            revert StringLongerThan31Bytes(firstName);
         if (lastNameBytes.length > 31) revert StringLongerThan31Bytes(lastName);
         bytes32 userHash = keccak256(
-            abi.encodePacked(bytes32(firstNameBytes), bytes32(lastNameBytes), phoneNumber)
+            abi.encodePacked(
+                bytes32(firstNameBytes),
+                bytes32(lastNameBytes),
+                phoneNumber
+            )
         );
         liteWallet = address(uint160(uint256(userHash)));
     }
@@ -78,10 +81,7 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     ) public {
         for (uint256 i = 0; i < contracts.length; i++) {
             address contractAddress = contracts[i];
-            IBadgeSet(contractAddress).moveUserTokensToWallet(
-                from,
-                to
-            );
+            IBadgeSet(contractAddress).moveUserTokensToWallet(from, to);
         }
     }
 }
