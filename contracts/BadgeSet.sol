@@ -15,8 +15,8 @@ import "./BitMaps.sol";
 /**
 * @title BadgeSet
 * @author Brian Watroba
-* @notice Non-transferrable ERC1155 Token standard for accomplishments certifications, and proof of completion
-@dev Standard ERC1155 approval and transfer functions are overridden to revert
+* @notice Non-transferrable ERC1155 Token standard for accomplishments, certifications, and proof of completion
+* @dev Standard ERC1155 approval and transfer functions are overridden to revert
 * @custom:version 1.0.4
 */
 contract BadgeSet is
@@ -62,16 +62,16 @@ contract BadgeSet is
     }
 
     /**
-     * @notice Return metadata URI for a given token id
+     * @notice Get token metadata URI
      * @param id token id
-     * @return uri string
+     * @return URI string
      */
     function uri(uint256 id) external view returns (string memory) {
         return string.concat(_uri, Strings.toString(id));
     }
 
     /**
-     * @notice Get a token's expiry timestamp (unix)
+     * @notice Get token expiry timestamp (unix)
      * @param tokenId token id
      * @return expiry timestamp (unix)
      */
@@ -80,11 +80,10 @@ contract BadgeSet is
     }
 
     /**
-     * @notice Get token balances for multiple account addresses/token id pairs
-     * @dev accounts and ids array indexes should match
+     * @notice Get balances for a list of token/address pairs
      * @param accounts account addresses
      * @param ids token ids
-     * @return balances of each account/id pair, return value index positions match input array indexes
+     * @return array of balances for each token/address pair
      */
     function balanceOfBatch(
         address[] memory accounts,
@@ -100,8 +99,8 @@ contract BadgeSet is
     }
 
     /**
-     * @notice Mint a token to an account address
-     * @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If so, mints to that address, otherwise mints to the given "to" address. Only callable by contract owner.
+     * @notice Mint token to an account address
+     * @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If yes, mints to that address. If no, mints to the "to" address. Only callable by contract owner.
      * @param to Address to mint to
      * @param badgeType Desired badge type to mint (must not currently own)
      * @param expiry Token expiration timestamp (unix). If no expiry, input "0"
@@ -129,9 +128,9 @@ contract BadgeSet is
 
     /**
      * @notice Mint multiple tokens to an account address
-     * @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If so, mints to that address, otherwise mints to the given "account" address. Only callable by contract owner.
+     * @dev Checks if "to" address param has an associated linked wallet (in WalletRegistry). If yes, mints to that address. If no, mints to the "to" address. Only callable by contract owner.
      * @param account Address to mint to
-     * @param badgeTypes Desired badge types to mint (must not currently own)
+     * @param badgeTypes Badge types to mint
      * @param expiries Token expiration timestamps (unix). If no expiries, input array of "0" (matching badgeTypes length)
      * @return tokenIds Token ids of successfully minted tokens
      */
@@ -167,7 +166,7 @@ contract BadgeSet is
 
     /**
      * @notice Revoke (burn) a token from an account address
-     * @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If so, revokes from that address, otherwise revokes from the given "account" address. Also deletes token expiry. Only callable by contract owner.
+     * @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If yes, revokes from that address. If no, revokes from the "account" address. Only callable by contract owner. Deletes token expiry.
      * @param account Address to revoke from
      * @param badgeType Badge type to revoke (must currently own)
      * @return tokenId Token id of successfully revoked token
@@ -183,7 +182,7 @@ contract BadgeSet is
 
     /**
      * @notice Revoke (burn) multiple tokens from an account address
-     * @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If so, revokes from that address, otherwise revokes from the given "account" address. Also deletes token expiries. Only callable by contract owner.
+     * @dev Checks if "account" address param has an associated linked wallet (in WalletRegistry). If yes, revokes from that address. If no, revokes from the "account" address. Only callable by contract owner. Deletes token expiry.
      * @param account Address to revoke from
      * @param badgeTypes Desired badge types to revoke (must currently own)
      * @return tokenIds Token ids of successfully revoked tokens
@@ -209,7 +208,7 @@ contract BadgeSet is
 
     // TODO: this should have a return check value
     /**
-     * @notice Transition tokens from a lite wallet to a validated/linked real wallet (read from WalletRegistry)
+     * @notice Transition tokens from a lite wallet to a linked real wallet
      * @dev Badge (token) ownership state is stored in bitmaps. To save gas, this function copies over the "from" address's bitmap state (1 uint256 for each 256 token types) to the "to" address, and emits individual transfer events in a loop.
      * @param from Address to transiton all tokens from
      * @param to Address to transition all tokens to
@@ -228,14 +227,18 @@ contract BadgeSet is
         emit TransitionWallet(from, to);
     }
 
-    // No-Ops for ERC1155 transfer and approval functions. BadgeSet tokens are Soulbound and cannot be transferred.
+    // No-Ops for ERC1155 transfer and approval functions. BadgeSet tokens are Soulbound and cannot be transferred. Functions are included for ERC1155 interface compliance
 
-    /// @notice Warning: this function will always revert. Soulbound tokens are non-transferable, but this function is still included to ensure BadgeSet contract is ERC1155 interface compliant.
+    /** 
+     * @notice will revert. Soulbound tokens cannot be transferred.
+    */
     function setApprovalForAll(address operator, bool approved) external pure {
         revert SoulboundTokenNoSetApprovalForAll(operator, approved);
     }
 
-    /// @notice Warning: this function will always revert. Soulbound tokens are non-transferable, but this function is still included to ensure BadgeSet contract is ERC1155 interface compliant.
+    /** 
+     * @notice will revert. Soulbound tokens cannot be transferred.
+    */
     function isApprovedForAll(
         address account,
         address operator
@@ -243,7 +246,9 @@ contract BadgeSet is
         revert SoulboundTokenNoIsApprovedForAll(account, operator);
     }
 
-    /// @notice Warning: this function will always revert. Soulbound tokens are non-transferable, but this function is still included to ensure BadgeSet contract is ERC1155 interface compliant.
+    /** 
+     * @notice will revert. Soulbound tokens cannot be transferred.
+    */
     function safeTransferFrom(
         address from,
         address to,
@@ -254,7 +259,9 @@ contract BadgeSet is
         revert SoulboundTokenNoSafeTransferFrom(from, to, id, amount, data);
     }
 
-    /// @notice Warning: this function will always revert. Soulbound tokens are non-transferable, but this function is still included to ensure BadgeSet contract is ERC1155 interface compliant.
+    /** 
+     * @notice will revert. Soulbound tokens cannot be transferred.
+    */
     function safeBatchTransferFrom(
         address from,
         address to,
