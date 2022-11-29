@@ -23,7 +23,7 @@ What if we could collect our experiences in a central place? What if the communi
 
 ## Our solution
 
-A protocol where:
+A platform where:
 
 - Communities can issue proof of completion/endorsement for _anything_
 - Users can collect, share, and prove their endorsements without necessarily managing a wallet
