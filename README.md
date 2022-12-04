@@ -6,20 +6,19 @@ Empowering communities to govern their own "blue checkmarks".
 
 ## Access
 
-- Landing: https://www.placeholderwebsite.com
-- App client: TBD
-
 _Alpha launching Winter 2022_
+- Landing: www.soulbound.fyi
+
 
 ## The problem
 
 What we do makes up who we are.
 
-But our accomplishments don't "live anywhere" central. And it's hard to prove and share them.
+But our accomplishments don't "live anywhere" and it's hard to prove and share them.
 
-If they do exist online, they're scattered. Career history on LinkedIn. Travel history on Instagram. My scuba diving certification is a plastic card in my wallet.
+If they do exist online, they're scattered. Career history is on LinkedIn. Travel history is on Instagram. My scuba diving certification is a plastic card in my wallet.
 
-What if we could collect our experiences in a central place? What if the community that shared in those accomplishments could issue them? What if they were provable and trustworthy? What if other apps and services could easily integrate them?
+What if we could collect our experiences in a single place? What if the community that shared in those accomplishments could issue them? What if they were provable and trustworthy? What if other apps and services could easily integrate them?
 
 ## Our solution
 
@@ -33,6 +32,7 @@ A platform where:
 
 - **New York Road Runners (Marathon/Race Org):** issues race medals as Soulbound tokens to participants. Includes rich metadata for race placement, timing, age group, and charity involvement.
 - **Padi Scuba Diving Organization:** represents various diving certifications (Open Water Diver, Underwater Hunter, Master Diver, etc.) via Soulbound tokens with expiration date stored on chain. Tokens are proveable and recognizable at any international dive shop.
+- **Forbes 30 under 30 Award:** represents being a recipeient of the Forbes 30 under 30 award. This badge can then be shared across socials including Instagram (Instagram Collectibles) and Twitter.
 
 ## How it works
 
