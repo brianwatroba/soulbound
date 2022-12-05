@@ -17,7 +17,7 @@ contract WalletRegistry is IWalletRegistry, Ownable {
     address private constant ZERO_ADDRESS = address(0);
 
     /**
-     * @notice Link and save a liteWallet to a realWallet association
+     * @notice Saves a liteWallet to a realWallet association
      * @dev Only callable by WalletRegistry owner
      * @param liteWallet liteWallet address
      * @param realWallet realWallet address
