@@ -6,11 +6,10 @@ Empowering communities to govern their own "blue checkmarks".
 
 ## Access
 
-- Landing: https://www.soulbound.fyi
+- Landing: https://www.soulbound.fyi (coming soon)
 - App client: TBD
 
 _Alpha launching Winter 2022_
-- Landing: www.soulbound.fyi
 
 ## The problem
 
