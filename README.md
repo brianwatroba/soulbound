@@ -4,12 +4,14 @@ Non-transferrable ERC1155 token standard for accomplishments, certifications, an
 
 Empowering communities to govern their own "blue checkmarks".
 
+_Built on [Base](https://base.org/) 🔵_
+
 ## Access
 
 - Landing: https://www.soulbound.fyi (coming soon)
 - App client: TBD
 
-_Alpha launching Winter 2022_
+_Alpha launching Summer 2023_
 
 ## The problem
 
@@ -127,57 +129,40 @@ For instance: sharing and proving accomplishments online and through various pla
 
 ## Contract addresses
 
-#### Mainnet (Polygon)
+#### Test (Base - Goerli)
 
-- _BadgeSetFactory.sol:_ `0xdAb981A6655e5E3b85b46e0f2D741537C60E8259`
-- _WalletRegistry.sol:_ `0x60352Ff30f4698eA5FB0A2cf17D28Afe2CBeb775`
-- _BadgeSet.sol (Test1):_ `0x72E8B2FcAd08F2dc0568Ab1A6eBcf09eC49d7b88`
-- _BadgeSet.sol (Test2):_ `0xe686929B0Aad06AB8EF867506B72753392798687`
-
-_Note: Mainnet contracts are still under development and not final_
-
-#### Test (Polygon - Mumbai)
-
-- _BadgeSetFactory.sol:_ `0xe3dbFA4C842A16f99fA2F685B72937C759E3e2E6`
-- _WalletRegistry.sol:_ `0xfd8e336523b0f6F1f5DC343D9FB47c3c90C972E4`
-- _BadgeSet.sol (Test1):_ `0xD850DA80Fc37fDe3D2eb1d4A5d5319B22A4Be45e`
-- _BadgeSet.sol (Test2):_ `0x1eDc0DC5C5adb18EEA135BB8eA298B8E006fE975`
+- _BadgeSetFactory.sol:_ `0x41469267878F9F0cF668A1bda2daB9CdB3838e26`
+- _WalletRegistry.sol:_ `0x62dD845af0614234865E5D2A15B8C133eDC51E1b`
 
 ## Local setup
 
 1. Clone repository: `git clone https://github.com/brianwatroba/soulbound.git`
 2. Install base project dependencies: cd into root, run `npm install`
 3. Add local .env file to project root. Include below env variables (replace keys with your own):
+4. If you're deploying, ensure you have Base Goerli ETH in your deployer address
 
 ```bash
 /.env
 
 # Wallet private keys for deployment
-POLYGON_PRIVATE_KEY=xxx
-POLYGON_MUMBAI_PRIVATE_KEY=xxx
+PRIVATE_KEY=xxx
 
-# Alchemy api URL (with your api key at end)
-POLYGON_MAINNET_URL=https://polygon-mainnet.g.alchemy.com/v2/xxx
-POLYGON_MUMBAI_URL=https://polygon-mumbai.g.alchemy.com/v2/xxx
-POLYGON_MAINNET_KEY=xxx
-POLYGON_MUMBAI_KEY=xxx
-
-# Etherscan keys for contract verification (specific to chain)
-ETHERSCAN_API_KEY=xxx
+# RPC URL
+BASE_GOERLI_URL=https://goerli.base.org
 ```
 
 ## Usage
 
 1. Local testing: tests written in Chai/Mocha using Hardhat/Ethers.js. Run `npx hardhat test` for test suite.
 2. Deployment to Polygon Test (Mumbai): ensure your .env file includes your Alchemy key, Polygon Mumbai wallet private key, as well as your etherscan key (for contract verification). Then run `npx hardhat run scripts/deployMumbai.ts --network polygon-mumbai`. Deploy script deploys BadgeSetFactory, two test BadgetSet contracts, WalletRegistry, and verifies all bytecode.
-3. Deployment to other networks: add your desired network to the `networks` object in `hardhat-config.js` using the following format:
+3. Deployment to other networks: add your desired network to the `networks` object in `hardhat-config.ts` using the following format:
 
-```javascript
-/hardhat.config.js
+```typescript
+/hardhat.config.ts
 
 polygon: {
       url: `https://polygon-mumbai.g.alchemy.com/v2${process.env.ALCHEMY_API_KEY}`,
-      accounts: [`${process.env.POLYGON_TEST_PRIVATE_KEY}`],
+      accounts: [`${process.env.PRIVATE_KEY}`],
     },
 ```
 

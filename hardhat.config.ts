@@ -12,6 +12,7 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: { enabled: false },
+  defaultNetwork: "hardhat",
   networks: {
     hardhat: {
       accounts: {
@@ -19,7 +20,7 @@ const config: HardhatUserConfig = {
         accountsBalance: "50000000000000000000000",
       },
     },
-    baseGoerli: {
+    "base-goerli": {
       url: process.env.BASE_GOERLI_URL || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
@@ -33,7 +34,17 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: { "base-goerli": "PLACEHOLDER_STRING" },
+    customChains: [
+      {
+        network: "base-goerli",
+        chainId: 84531,
+        urls: {
+          apiURL: "https://api-goerli.basescan.org/api",
+          browserURL: "https://goerli.basescan.org",
+        },
+      },
+    ],
   },
 };
 
