@@ -77,7 +77,6 @@ async function main() {
   });
   console.log("SUCCESS: TC Dive verified");
   console.log("___________________________");
-
   console.log("DEPLOYMENT SUCCESSFUL");
 }
 

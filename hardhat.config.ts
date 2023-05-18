@@ -19,17 +19,17 @@ const config: HardhatUserConfig = {
         accountsBalance: "50000000000000000000000",
       },
     },
-    rinkeby: {
-      url: process.env.RINKEBY_URL || "",
+    baseGoerli: {
+      url: process.env.BASE_GOERLI_URL || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     matic: {
       url: process.env.POLYGON_MAINNET_URL || "",
-      accounts: process.env.POLYGON_PRIVATE_KEY !== undefined ? [process.env.POLYGON_PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     mumbai: {
       url: process.env.POLYGON_MUMBAI_URL || "",
-      accounts: process.env.POLYGON_MUMBAI_PRIVATE_KEY !== undefined ? [process.env.POLYGON_MUMBAI_PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   },
   etherscan: {
