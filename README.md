@@ -154,7 +154,7 @@ BASE_GOERLI_URL=https://goerli.base.org
 ## Usage
 
 1. Local testing: tests written in Chai/Mocha using Hardhat/Ethers.js. Run `npx hardhat test` for test suite.
-2. Deployment to Polygon Test (Mumbai): ensure your .env file includes your Alchemy key, Polygon Mumbai wallet private key, as well as your etherscan key (for contract verification). Then run `npx hardhat run scripts/deployMumbai.ts --network polygon-mumbai`. Deploy script deploys BadgeSetFactory, two test BadgetSet contracts, WalletRegistry, and verifies all bytecode.
+2. Deployment to Base (Goerli): ensure your .env file includes your `BASE_GOERLI_URL` and private key corresponding to a funded account. Then run `npx hardhat run scripts/deployContracts.ts --network base-goerli`. Deploy script deploys BadgeSetFactory, two test BadgetSet contracts, WalletRegistry, and verifies all bytecode.
 3. Deployment to other networks: add your desired network to the `networks` object in `hardhat-config.ts` using the following format:
 
 ```typescript
