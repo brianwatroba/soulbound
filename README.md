@@ -116,7 +116,7 @@ For instance: sharing and proving accomplishments online and through various pla
 
 - **Orgs decide contract management/ownership:** Soulbound smart contracts are designed so that any community can deploy and manage their own contracts within the Soulbound ecosystem on their own and with their own wallets. However, we will also provide a number of custodial services and user-friendly front end clients to remove complexity and friction for communities (if they so choose).
 
-- **Built on Polygon:** Soulbound smart contracts will be deployed to Polygon (to start). Polygon is a good fit for transaction costs, existing partnerships with other services (Instagram, etc), and EVM compatibility.
+- **Built on Base:** Soulbound smart contracts will be deployed to Base.
 
 ## Product timeline and roadmap
 
