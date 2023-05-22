@@ -171,9 +171,9 @@ BASE_GOERLI_URL=https://goerli.base.org
 ```typescript
 /hardhat.config.ts
 
-polygon: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2${process.env.ALCHEMY_API_KEY}`,
-      accounts: [`${process.env.PRIVATE_KEY}`],
+"base-goerli": {
+      url: process.env.BASE_GOERLI_URL || "",
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
 ```
 
